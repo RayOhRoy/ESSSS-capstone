@@ -1,0 +1,34 @@
+{
+    "total_projects": 4,
+    "total_documents": 4,
+    "stored_documents": 3,
+    "released_documents": 1,
+    "percentage_stored": 75,
+    "percentage_released": 25,
+    "recent_activities": [
+        {
+            "type": "TAX DECLARATION",
+            "status": "UPLOADED",
+            "project_name": "N\/A",
+            "date": "August 15, 2025"
+        },
+        {
+            "type": "TAX DECLARATION",
+            "status": "UPLOADED",
+            "project_name": "N\/A",
+            "date": "August 15, 2025"
+        },
+        {
+            "type": "TAX DECLARATION",
+            "status": "UPLOADED",
+            "project_name": "N\/A",
+            "date": "August 15, 2025"
+        },
+        {
+            "type": "Relocation",
+            "status": "UPLOADED",
+            "project_name": "HAG-001",
+            "date": "August 13, 2025"
+        }
+    ]
+}

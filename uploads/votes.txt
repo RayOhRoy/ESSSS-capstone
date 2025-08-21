@@ -1,0 +1,1 @@
+{"Louis Vuitton":0,"Gucci":0,"Prada":0,"Chanel":0,"Fendi":0}

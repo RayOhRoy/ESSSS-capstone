@@ -1,0 +1,76 @@
+<style> 
+  #sidetoggle {
+    font-size: 1.5cqw;
+    position: absolute;
+    margin-left: 10cqw;
+    cursor: pointer;
+    transition: filter 0.3s ease;
+  }
+
+  #sidetoggle:hover {
+    filter: brightness(0.7);
+  }
+  
+  .sidebar.collapsed {
+    width: 4.5cqw; 
+    overflow: hidden;
+  }
+
+  .sidebar.collapsed .logo-text {
+    display: none;
+  }
+
+  .sidebar.collapsed .menu-item span:nth-child(2) {
+    display: none;
+  }
+
+  .sidebar.collapsed .logo img {
+    width: 3cqw;       /* reduce the logo size */
+    margin-left: 3.75cqw; /* move it a bit to the right */
+    transition: all 0.3s ease;
+  }
+
+  .sidebar.collapsed #sidetoggle  {
+    width: 3cqw;       /* reduce the logo size */
+    margin-left: 5.5cqw; /* move it a bit to the right */
+    font-size: 0.75cqw;
+    margin-top: -1cqw;
+    transition: all 0.3s ease;
+  }
+
+</style>
+
+<div class="container">
+  <div class="sidebar">
+    <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span>
+    <div class="logo">
+      <img src="picture/logo.jpg" alt="Logo">
+      <div class="logo-text">
+        <div>ES Santos</div>
+        <div>Surveying Services</div>
+      </div>
+    </div>
+
+    <div class="menu-icons">
+      <a href="#" class="menu-item active" data-page="user_dashboard.php">
+        <span  class="fa fa-home" alt="Dashboard"></span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="menu-item" data-page="user_upload.php">
+        <span  class="fa fa-upload" alt="Upload"></span>
+        <span>Upload</span>
+      </a>
+      <a href="#" class="menu-item" data-page="user_projectlist.php">
+        <span  class="fa fa-list" alt="Project List"></span>
+        <span>Project List</span>
+      </a>
+      <a href="#" class="menu-item" data-page="user_qr_toggle.php">
+        <span  class="fa fa-qrcode" alt="QR Toggle"></span>
+        <span>QR Toggle</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="main" id="content-area"></div>
+  
+</div>
