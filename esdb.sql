@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 17, 2025 at 02:03 PM
+-- Generation Time: Aug 25, 2025 at 06:42 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,12 +44,20 @@ CREATE TABLE `activity_log` (
 
 CREATE TABLE `address` (
   `AddressID` varchar(10) NOT NULL,
-  `AddressCode` varchar(10) NOT NULL,
   `Address` varchar(255) NOT NULL,
   `Barangay` varchar(50) NOT NULL,
   `Municipality` varchar(50) NOT NULL,
   `Province` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `address`
+--
+
+INSERT INTO `address` (`AddressID`, `Address`, `Barangay`, `Municipality`, `Province`) VALUES
+('CAL-001', 'Purok 6 Dike', 'Balungao', 'Calumpit', 'Bulacan'),
+('CAL-002', '', 'Frances', 'Calumpit', 'Bulacan'),
+('HAG-001', '', 'San Miguel', 'Hagonoy', 'Bulacan');
 
 -- --------------------------------------------------------
 
@@ -65,6 +73,17 @@ CREATE TABLE `document` (
   `DigitalLocation` varchar(255) NOT NULL,
   `DocumentQR` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `document`
+--
+
+INSERT INTO `document` (`DocumentID`, `DocumentName`, `ProjectID`, `PhysicalLocation`, `DigitalLocation`, `DocumentQR`) VALUES
+('', 'CAL-001-original-plan', 'CAL-001', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-001/original-plan/original-plan-1.jpg', 'uploads/CAL-001/original-plan/doc_qr_1.png'),
+('DOC-00001', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-1.jpg', 'uploads/CAL-002/tax-declaration/doc_qr_1.png'),
+('DOC-00002', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-2.jpg', 'uploads/CAL-002/tax-declaration/doc_qr_2.png'),
+('DOC-00003', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-3.jpg', 'uploads/CAL-002/tax-declaration/doc_qr_3.png'),
+('DOC-00004', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-4.png', 'uploads/CAL-002/tax-declaration/doc_qr_4.png');
 
 -- --------------------------------------------------------
 
@@ -104,16 +123,32 @@ CREATE TABLE `project` (
   `ClientFName` varchar(50) NOT NULL,
   `SurveyType` enum('Relocation Survey','Verification Survey','Subdivision Survey','Consolidation Survey','Topographic Survey','AS-Built Survey','Sketch Plan / Vicinity Map','Land Titling / Transfer','Real Estate') NOT NULL,
   `PhysicalLocation` varchar(255) NOT NULL,
-  `DigiticalLocation` varchar(255) NOT NULL,
+  `DigitalLocation` varchar(255) NOT NULL,
   `SurveyStartDate` date NOT NULL,
   `SurveyEndDate` date NOT NULL,
   `Agent` varchar(255) NOT NULL,
+  `RequestType` enum('For Approval','Sketch Plan') NOT NULL,
+  `Approval` enum('LRA','BUREAU','CENRO') DEFAULT NULL,
   `ProjectQR` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Dumping data for table `project`
+--
+
+INSERT INTO `project` (`ProjectID`, `AddressID`, `LotNo`, `ClientLName`, `ClientFName`, `SurveyType`, `PhysicalLocation`, `DigitalLocation`, `SurveyStartDate`, `SurveyEndDate`, `Agent`, `RequestType`, `Approval`, `ProjectQR`) VALUES
+('CAL-001', 'CAL-001', 'LOT-10213', 'Balatayo', 'Leila Anne', 'Real Estate', 'CAL-01-001', '', '2025-08-02', '2025-08-30', '', 'Sketch Plan', NULL, 'uploads/CAL-001/project_qr.png'),
+('CAL-002', 'CAL-002', 'LOT-00125', 'Miranda', 'Francine Louisse', 'Subdivision Survey', 'CAL-01-002', '', '2025-09-01', '2025-09-06', '', 'For Approval', 'LRA', 'uploads/CAL-002/project_qr.png');
+
+--
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  ADD PRIMARY KEY (`ActivityLogID`);
 
 --
 -- Indexes for table `address`
@@ -122,10 +157,40 @@ ALTER TABLE `address`
   ADD PRIMARY KEY (`AddressID`);
 
 --
+-- Indexes for table `document`
+--
+ALTER TABLE `document`
+  ADD PRIMARY KEY (`DocumentID`),
+  ADD KEY `fk_document_project` (`ProjectID`);
+
+--
 -- Indexes for table `employee`
 --
 ALTER TABLE `employee`
   ADD PRIMARY KEY (`EmployeeID`);
+
+--
+-- Indexes for table `project`
+--
+ALTER TABLE `project`
+  ADD PRIMARY KEY (`ProjectID`),
+  ADD KEY `fk_project_address` (`AddressID`);
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `document`
+--
+ALTER TABLE `document`
+  ADD CONSTRAINT `fk_document_project` FOREIGN KEY (`ProjectID`) REFERENCES `project` (`ProjectID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `project`
+--
+ALTER TABLE `project`
+  ADD CONSTRAINT `fk_project_address` FOREIGN KEY (`AddressID`) REFERENCES `address` (`AddressID`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

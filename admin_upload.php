@@ -1,15 +1,10 @@
 <style>
-  * {
-    overflow: hidden;
-  }
-
   select,
   input[type="text"],
   input[type="date"] {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     margin-bottom: 1%;
   }
-
   .search-input {
     width: 100%;
     padding: 1.2vh 1vw;
@@ -52,7 +47,6 @@
     color: #7B0302;
     text-decoration: none;
     font-size: 0.8cqw;
-
   }
 
   .dropdown-menu a:first-child:hover {
@@ -70,30 +64,6 @@
   .dropdown-menu a:not(:first-child):not(:last-child):hover {
     background-color: #7B0302;
     color: white;
-  }
-
-  .file-preview {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .file-preview img {
-    max-width: 50px;
-    max-height: 50px;
-    margin-bottom: 5px;
-  }
-
-  .file-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .file-label {
-    font-size: 11px;
-    text-align: center;
-    word-break: break-word;
-    max-width: 80px;
   }
 
   .search-upload {
@@ -123,13 +93,6 @@
     vertical-align: middle;
   }
 
-  .file-preview img {
-    max-width: 80px;
-    max-height: 80px;
-    border: 1px solid #ccc;
-    margin-top: 5px;
-  }
-
   .note {
     margin-top: 20px;
     font-style: italic;
@@ -143,7 +106,250 @@
     display: flex;
     gap: 10px;
   }
+
+  /* --- Digital Document column --- */
+  .digital-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+  }
+  .upload-form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 200px;
+  }
+
+  .file-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .file-preview {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f1f1f1;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .remove-file {
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+  }
+
+  .attach-icon {
+    cursor: pointer;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .hidden-file {
+    display: none;
+  }
+
+  .attach-icon input[type="file"] {
+    display: none;
+  }
+
+  .attach-icon i {
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .attach-icon:hover i {
+    transform: scale(1.2);
+    color: #7B0302;
+  }
+
+  /* --- Scrollable table container --- */
+  .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  /* keep header visible while scrolling */
+  .document-table thead th {
+    position: sticky;
+    top: 0;
+    background: #fafafa;
+    z-index: 2;
+  }
+
+  .document-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 13px;
+    background-color: #fafafa;
+    table-layout: fixed;
+  }
+
+  .document-table th,
+  .document-table td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    text-align: center;
+    vertical-align: middle;
+    word-wrap: break-word;
+  }
+
+  /* column widths */
+  .document-table th:nth-child(1),
+  .document-table td:nth-child(1) {
+    width: 20%;
+  }
+
+  .document-table th:nth-child(2),
+  .document-table td:nth-child(2) {
+    width: 10%;
+  }
+
+  .document-table th:nth-child(3),
+  .document-table td:nth-child(3) {
+    width: 55%;
+  }
+
+  .document-table th:nth-child(4),
+  .document-table td:nth-child(4) {
+    width: 15%;
+  }
+
+/* Custom radio base */
+.approval-group input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #7B0302;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Fully filled when checked */
+.approval-group input[type="radio"]:checked {
+  background-color: #7B0302;
+}
+
+/* --- Custom checkbox --- */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #7B0302;
+  border-radius: 4px; /* square */
+  cursor: pointer;
+  position: relative;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #7B0302;
+}
+
+/* Optional: white checkmark inside checkbox */
+input[type="checkbox"]:checked::after {
+  content: "✔";
+  color: white;
+  font-size: 0.6cqw;
+  position: absolute;
+  top: 0;
+  left: 2px;
+}
+
+.btn-grey {
+  background-color: gray;
+  pointer-events: none;
+}
+
+.btn-cancel {
+  background-color: #6c757d;
+}
+
+
+/* Modal background */
+.qr-modal {
+  display: none; 
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.3); /* smaller opacity for less harsh background */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal content (QR image) */
+.qr-modal-content {
+  min-width: 300px;   /* bigger image for document QR */
+  min-height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.qr-preview {
+    margin-left: 40px;
+    text-align: center;
+}
+
+.qr-preview h4 {
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.qr-box {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border: 1px solid #ccc; /* optional */
+  background: #800000;
+  overflow: hidden;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-box::before {
+    content: "";
+    width: 80%;
+    height: 80%;
+    border: 2px solid white;
+}
+
+.qr-box img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;   /* smaller than container */
+  height: 80%;
+  transform: translate(-50%, -50%); /* center */
+  z-index: 10;
+}
+
+.storage-status {
+  margin-left: 8px;
+  padding: 2px 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 60%;
+  font-size: 0.6cqw;
+}
+
 </style>
+
 
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Upload Project</span>
@@ -224,108 +430,214 @@
               type="date" /></div>
           <div class="form-row"><label>Survey End Date:</label><input id="endDate" name="survey_end" type="date" />
           </div>
-          <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text" required /></div>
+          <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text"/></div>
 
-          <form id="projectForm">
-            <div class="form-row">
-              <label for="surveyType">Request Type:</label>
-              <select id="requestType" name="requestType">
-                <option value="For Approval">For Approval</option>
-                <option value="Sketch Plan">Sketch Plan</option>
-              </select>
+
+          <div class="form-row">
+            <label for="surveyType">Request Type:</label>
+            <select id="requestType" name="requestType">
+              <option value="For Approval">For Approval</option>
+              <option value="Sketch Plan">Sketch Plan</option>
+            </select>
+          </div>
+          <div id="toBeApprovedBy">
+            <label>To be approved by:</label>
+            <div class="approval-group" style="margin-left: 23.5%">
+              <label><input type="radio" name="approval" value="LRA"> LRA</label>
+              <label><input type="radio" name="approval" value="BUREAU"> BUREAU</label>
+              <label><input type="radio" name="approval" value="CENRO"> CENRO</label>
             </div>
-            <div id="toBeApprovedBy">
-              <label>To be approved by:</label>
-              <div class="approval-group" style="margin-left: 23.5%">
-                <label><input type="radio" name="approval" value="LRA"> LRA</label>
-                <label><input type="radio" name="approval" value="BUREAU"> BUREAU</label>
-                <label><input type="radio" name="approval" value="CENRO"> CENRO</label>
-              </div>
-            </div>
+          </div>
         </div>
+
+      </div>
+
+      <div class="qr-preview">
+        <h4>PROJECT QR CODE</h4>
+        <div class="qr-box"></div>
+      </div>
+    </div>
+
+    <div class="note">Select all that apply and upload digital document if applicable</div>
+
+    <div class="table-container">
+  <table class="document-table" id="documentTable">
+    <thead>
+      <tr>
+        <th>Document Name</th>
+        <th>Physical Documents</th>
+        <th>Digital Documents</th>
+        <th>QR Code</th>
+      </tr>
+    </thead>
+    <tbody>
+  <tr>
+    <td>Original Plan</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Original Plan" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[original_plan]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[original_plan][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+
+  <tr>
+    <td>Lot Title</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Lot Title" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[lot_title]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[lot_title][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+
+  <tr>
+    <td>Deed of Sale</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Deed of Sale" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[deed_of_sale]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[deed_of_sale][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+
+  <tr>
+    <td>Tax Declaration</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Tax Declaration" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[tax_declaration]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[tax_declaration][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+
+  <tr>
+    <td>Building Permit</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Building Permit" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[building_permit]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[building_permit][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+
+  <tr>
+    <td>Authorization Letter</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Authorization Letter" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[authorization_letter]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[authorization_letter][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+
+  <tr>
+    <td>Others</td>
+    <td>
+      <input type="checkbox" name="physical[]" value="Others" onchange="toggleStorageStatus(this)">
+      <select class="storage-status" name="status[others]" style="display:none;">
+        <option value="Stored">Stored</option>
+        <option value="Released">Released</option>
+      </select>
+    </td>
+    <td>
+      <div class="digital-cell">
+        <div class="file-list"></div>
+        <label class="attach-icon">
+          <i class="fa fa-paperclip"></i>
+          <input type="file" name="digital[others][]" multiple
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+        </label>
+      </div>
+    </td>
+    <td class="qr-code"></td>
+  </tr>
+</tbody>
+
+  </table>
+</div>
+
+
+    <div class="footer-buttons">
+      <button type="button" id="generateQRBtn" class="btn-red" onclick="toggleGenerateQR()">Generate QR Code</button>
+      <button type="button" id="uploadBtn" class="btn-grey" onclick="submitForm()" disabled>Upload</button>
+    </div>
   </form>
 </div>
 
-<div class="qr-preview">
-  <h4>PROJECT QR CODE</h4>
-  <div class="qr-box"></div>
-</div>
-</div>
-
-<div class="note">Select all that apply and upload digital document if applicable</div>
-
-<table class="document-table" id="documentTable">
-  <thead>
-    <tr>
-      <th>Document Name</th>
-      <th>Physical Documents</th>
-      <th>Digital Documents</th>
-      <th>Preview / File Name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Original Plan</td>
-      <td><input type="checkbox" name="physical[]" value="Original Plan"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>Lot Title</td>
-      <td><input type="checkbox" name="physical[]" value="Lot Title"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>Ref Plan/Lot Data</td>
-      <td><input type="checkbox" name="physical[]" value="Ref Plan/Lot Data"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>TD</td>
-      <td><input type="checkbox" name="physical[]" value="TD"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>Transmittal</td>
-      <td><input type="checkbox" name="physical[]" value="Transmittal"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>Field Notes</td>
-      <td><input type="checkbox" name="physical[]" value="Field Notes"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>Deed of Sale/Transfer</td>
-      <td><input type="checkbox" name="physical[]" value="Deed of Sale/Transfer"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-    <tr>
-      <td>Tax Declaration</td>
-      <td><input type="checkbox" name="physical[]" value="Tax Declaration"></td>
-      <td><input type="file" name="digital[]" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-          onchange="previewFile(this)"></td>
-      <td class="file-preview"></td>
-    </tr>
-  </tbody>
-</table>
-
-<div class="footer-buttons">
-  <button type="button" class="btn btn-red" onclick="generateQR()">Generate QR Code</button>
-  <button type="button" class="btn btn-grey" onclick="submitForm()">Upload</button>
-</div>
-</form>
+<div id="qrModal" class="qr-modal">
+  <span class="close">&times;</span>
+  <img id="qrModalImg" class="qr-modal-content">
 </div>

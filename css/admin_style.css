@@ -423,33 +423,6 @@ select {
     font-weight: normal;
 }
 
-.qr-preview {
-    margin-left: 40px;
-    text-align: center;
-}
-
-.qr-preview h4 {
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.qr-box {
-    background: #800000;
-    width: 160px;
-    height: 160px;
-    margin: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.qr-box::before {
-    content: "";
-    width: 80%;
-    height: 80%;
-    border: 2px solid white;
-}
-
 .document-table {
     width: 50%;
     margin-top: 20px;
@@ -517,17 +490,6 @@ input[type="checkbox"] {
     border: none;
     cursor: pointer;
     font-size: 14px;
-}
-
-.btn-red {
-    background: #800000;
-    color: white;
-}
-
-.btn-grey {
-    background: #ccc;
-    color: #000;
-    margin-right: 150px;
 }
 
 .note {
