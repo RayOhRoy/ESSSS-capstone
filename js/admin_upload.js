@@ -141,27 +141,152 @@ function submitForm() {
   })
     .then(res => res.text())
     .then(data => {
-      alert(data);
 
       if (data.includes("successfully")) {
-        // Reset form
-        form.reset();
-        document.querySelector("#documentTable tbody").innerHTML = "";
+        // Create custom modal
+        const modal = document.createElement("div");
+        modal.style.position = "fixed";
+        modal.style.top = "0";
+        modal.style.left = "0";
+        modal.style.width = "100%";
+        modal.style.height = "100%";
+        modal.style.background = "rgba(0,0,0,0.5)";
+        modal.style.display = "flex";
+        modal.style.alignItems = "center";
+        modal.style.justifyContent = "center";
+        modal.style.zIndex = "9999";
 
-        // Reset QR button state
-        qrGenerated = false;
-        const generateQRBtn = document.getElementById("generateQRBtn");
-        if (generateQRBtn) {
-          generateQRBtn.textContent = "Generate QR Code";
-          generateQRBtn.classList.remove("btn-cancel");
-          generateQRBtn.classList.add("btn-red");
-        }
-        // Simulate click on the sidebar menu item
-        const menuItem = document.querySelector('.menu-item[data-page="admin_projectlist.php"]');
-        if (menuItem) {
-          menuItem.click();  // <-- triggers your existing click listener
-        }
+        modal.innerHTML = `
+    <div style="background:white; padding:50px; border-radius:10px; text-align:center; max-width:300px;">
+      <h3>Project uploaded successfully.</h3>
+      <div style="margin-top:15px;">
+        <button id="printQRBtn" style="margin-right:10px; padding:8px 15px;">Print QR</button>
+        <button id="okBtn" style="padding:8px 15px;">OK</button>
+      </div>
+    </div>
+  `;
+
+        document.body.appendChild(modal);
+
+        // Handle Print QR
+document.getElementById("printQRBtn").addEventListener("click", () => {
+  const qrImages = [];
+
+  // Project QR
+  const projectQR = document.getElementById("projectQRImg");
+  if (projectQR) {
+    qrImages.push({ src: projectQR.src, label: "Project QR" });
+  }
+
+  // Document QRs (hidden imgs you added earlier)
+  document.querySelectorAll(".doc-qr-img").forEach(img => {
+    qrImages.push({ src: img.src, label: img.dataset.docname });
+  });
+
+  if (qrImages.length === 0) {
+    alert("No QR codes found to print.");
+    return;
+  }
+
+  // Build HTML
+  let qrHTML = "";
+  qrImages.forEach((qr) => {
+    qrHTML += `
+      <div class="qr-block">
+        <img src="${qr.src}" alt="QR Code">
+        <div class="label">${qr.label}</div>
+      </div>
+    `;
+  });
+
+  // Create hidden iframe
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(`
+    <html>
+      <head>
+        <title>Print QR Codes</title>
+        <style>
+          @page { size: A4 portrait; margin: 5mm; }
+          body {
+            display: grid;
+            grid-template-columns: repeat(4, 48mm);
+            grid-auto-rows: 55mm;
+            gap: 2mm;
+            margin: 0;
+            padding: 5mm;
+            font-family: Arial, sans-serif;
+          }
+          .qr-block {
+            width: 48mm;
+            height: 55mm;
+            border: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 2mm;
+          }
+          .qr-block img {
+            width: 44mm;
+            height: 36mm;
+          }
+          .label {
+            margin-top: 1.5mm;
+            font-size: 11px;
+          }
+        </style>
+      </head>
+      <body>
+        ${qrHTML}
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); }
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  doc.close();
+});
+
+
+
+        // Handle OK
+        document.getElementById("okBtn").addEventListener("click", () => {
+          document.body.removeChild(modal);
+
+          // Reset form
+          form.reset();
+          document.querySelector("#documentTable tbody").innerHTML = "";
+
+          // Reset QR button state
+          qrGenerated = false;
+          const generateQRBtn = document.getElementById("generateQRBtn");
+          if (generateQRBtn) {
+            generateQRBtn.textContent = "Generate QR Code";
+            generateQRBtn.classList.remove("btn-cancel");
+            generateQRBtn.classList.add("btn-red");
+          }
+          // Simulate click on sidebar menu item
+          const menuItem = document.querySelector('.menu-item[data-page="admin_projectlist.php"]');
+          if (menuItem) {
+            menuItem.click();
+          }
+        });
       }
+
     })
     .catch(err => console.error(err));
 }
@@ -240,20 +365,31 @@ function generateQR() {
     .then(data => {
       const projectQRBox = document.querySelector(".qr-box");
       if (projectQRBox && data.projectQR) {
-        projectQRBox.innerHTML = `<img src="${data.projectQR}">`;
+        projectQRBox.innerHTML = `<img id="projectQRImg" src="${data.projectQR}" alt="Project QR">`;
       }
-      rows.forEach(row => {
-        const qrCell = row.querySelector(".qr-code");
-        const checkbox = row.querySelector("input[type='checkbox']");
-        const docName = row.cells[0].innerText.trim();
-        const hasDigitalFile = row.filesArray && row.filesArray.length > 0;
-        const hasPhysical = checkbox && checkbox.checked;
-        if ((hasDigitalFile || hasPhysical) && data.documentQRs && data.documentQRs[docName]) {
-          qrCell.innerHTML = `<span class="view-qr-text" 
-            style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
-            onclick="showQRPopup('${data.documentQRs[docName]}')">View</span>`;
-        } else if (qrCell) qrCell.innerHTML = '';
-      });
+   rows.forEach(row => {
+  const qrCell = row.querySelector(".qr-code");
+  const checkbox = row.querySelector("input[type='checkbox']");
+  const docName = row.cells[0].innerText.trim();
+  const hasDigitalFile = row.filesArray && row.filesArray.length > 0;
+  const hasPhysical = checkbox && checkbox.checked;
+
+  if ((hasDigitalFile || hasPhysical) && data.documentQRs && data.documentQRs[docName]) {
+    qrCell.innerHTML = `
+      <span class="view-qr-text" 
+        style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
+        onclick="showQRPopup('${data.documentQRs[docName]}')">View</span>
+      <img src="${data.documentQRs[docName]}" 
+           alt="QR for ${docName}" 
+           style="display:none;" 
+           class="doc-qr-img" 
+           data-docname="${docName}">
+    `;
+  } else if (qrCell) {
+    qrCell.innerHTML = '';
+  }
+});
+
 
       const uploadBtn = document.getElementById("uploadBtn");
       if (uploadBtn) {

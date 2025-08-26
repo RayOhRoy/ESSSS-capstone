@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 25, 2025 at 06:42 AM
+-- Generation Time: Aug 26, 2025 at 09:14 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -50,15 +50,6 @@ CREATE TABLE `address` (
   `Province` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `address`
---
-
-INSERT INTO `address` (`AddressID`, `Address`, `Barangay`, `Municipality`, `Province`) VALUES
-('CAL-001', 'Purok 6 Dike', 'Balungao', 'Calumpit', 'Bulacan'),
-('CAL-002', '', 'Frances', 'Calumpit', 'Bulacan'),
-('HAG-001', '', 'San Miguel', 'Hagonoy', 'Bulacan');
-
 -- --------------------------------------------------------
 
 --
@@ -68,22 +59,12 @@ INSERT INTO `address` (`AddressID`, `Address`, `Barangay`, `Municipality`, `Prov
 CREATE TABLE `document` (
   `DocumentID` varchar(10) NOT NULL,
   `DocumentName` varchar(50) NOT NULL,
+  `DocumentType` enum('Original Plan','Lot Title','Deed of Sale','Tax Declaration','Building Permit','Authorization Letter','Others') NOT NULL,
   `ProjectID` varchar(10) NOT NULL,
-  `PhysicalLocation` varchar(255) NOT NULL,
-  `DigitalLocation` varchar(255) NOT NULL,
-  `DocumentQR` varchar(255) NOT NULL
+  `DigitalLocation` varchar(255) DEFAULT NULL,
+  `DocumentStatus` enum('STORED','RELEASED') DEFAULT NULL,
+  `DocumentQR` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `document`
---
-
-INSERT INTO `document` (`DocumentID`, `DocumentName`, `ProjectID`, `PhysicalLocation`, `DigitalLocation`, `DocumentQR`) VALUES
-('', 'CAL-001-original-plan', 'CAL-001', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-001/original-plan/original-plan-1.jpg', 'uploads/CAL-001/original-plan/doc_qr_1.png'),
-('DOC-00001', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-1.jpg', 'uploads/CAL-002/tax-declaration/doc_qr_1.png'),
-('DOC-00002', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-2.jpg', 'uploads/CAL-002/tax-declaration/doc_qr_2.png'),
-('DOC-00003', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-3.jpg', 'uploads/CAL-002/tax-declaration/doc_qr_3.png'),
-('DOC-00004', 'CAL-002-tax-declaration', 'CAL-002', '', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/CAL-002/tax-declaration/tax-declaration-4.png', 'uploads/CAL-002/tax-declaration/doc_qr_4.png');
 
 -- --------------------------------------------------------
 
@@ -107,7 +88,8 @@ CREATE TABLE `employee` (
 --
 
 INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password`, `JobPosition`, `AccountType`, `AccountStatus`) VALUES
-('ADMN001', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$rFbT8T2sNF9yPoVdqd8WqeIAJWg9k.wKglaTeTNR3ZwmHAJza/eu.', 'Chief Operating Officer', 'Admin', 'Active');
+('ADMN001', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$rFbT8T2sNF9yPoVdqd8WqeIAJWg9k.wKglaTeTNR3ZwmHAJza/eu.', 'Chief Operating Officer', 'Admin', 'Active'),
+('USR0001', 'Lopez', 'Aleck Joseph', 'benchudgugu@gmail.com', '$2y$10$jMTGzdzG564C2Vl5zzPjSurmzqsJA8cy.LlObxdfi9bdZLSO6tyx2', 'Compliance Officer', 'User', 'Active');
 
 -- --------------------------------------------------------
 
@@ -131,14 +113,6 @@ CREATE TABLE `project` (
   `Approval` enum('LRA','BUREAU','CENRO') DEFAULT NULL,
   `ProjectQR` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `project`
---
-
-INSERT INTO `project` (`ProjectID`, `AddressID`, `LotNo`, `ClientLName`, `ClientFName`, `SurveyType`, `PhysicalLocation`, `DigitalLocation`, `SurveyStartDate`, `SurveyEndDate`, `Agent`, `RequestType`, `Approval`, `ProjectQR`) VALUES
-('CAL-001', 'CAL-001', 'LOT-10213', 'Balatayo', 'Leila Anne', 'Real Estate', 'CAL-01-001', '', '2025-08-02', '2025-08-30', '', 'Sketch Plan', NULL, 'uploads/CAL-001/project_qr.png'),
-('CAL-002', 'CAL-002', 'LOT-00125', 'Miranda', 'Francine Louisse', 'Subdivision Survey', 'CAL-01-002', '', '2025-09-01', '2025-09-06', '', 'For Approval', 'LRA', 'uploads/CAL-002/project_qr.png');
 
 --
 -- Indexes for dumped tables

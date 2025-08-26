@@ -38,37 +38,41 @@
     transition: all 0.3s ease;
   }
 
+  .side-logo {
+    max-width: 10cqw;
+  }
 </style>
 
 <div class="container">
   <div class="sidebar">
-    <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span>
-    <div class="logo">
-      <img src="picture/logo.jpg" alt="Logo">
-      <div class="logo-text">
-        <div>ES Santos</div>
-        <div>Surveying Services</div>
-      </div>
-    </div>
+    <!-- <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span> -->
+    <!-- <div class="logo"> -->
+      <img class="side-logo" src="picture/logoOutlined.png" alt="Logo">
+      <!-- <div class="logo-text">
+        <div>ESSSS Centralized Document</div>
+        <div>Management System with QR Technology</div>
+      </div> -->
+    <!-- </div> -->
 
     <div class="menu-icons">
       <a href="#" class="menu-item active" data-page="user_dashboard.php">
         <span  class="fa fa-home" alt="Dashboard"></span>
         <span>Dashboard</span>
       </a>
-      <a href="#" class="menu-item" data-page="user_upload.php">
+      <a href="#" class="menu-item" data-page="admin_upload.php">
         <span  class="fa fa-upload" alt="Upload"></span>
         <span>Upload</span>
       </a>
-      <a href="#" class="menu-item" data-page="user_projectlist.php">
+      <a href="#" class="menu-item" data-page="admin_projectlist.php">
         <span  class="fa fa-list" alt="Project List"></span>
         <span>Project List</span>
       </a>
-      <a href="#" class="menu-item" data-page="user_qr_toggle.php">
+      <a href="#" class="menu-item">
         <span  class="fa fa-qrcode" alt="QR Toggle"></span>
         <span>QR Toggle</span>
       </a>
     </div>
+    
   </div>
 
   <div class="main" id="content-area"></div>

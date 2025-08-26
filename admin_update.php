@@ -381,9 +381,13 @@ input[type="checkbox"]:checked::after {
 <?php
 include 'server/server.php'; // DB connection
 
-if (isset($_GET['projectId'])) {
-    $projectId = $_GET['projectId']; // <-- keep as string
+if (!isset($_GET['projectId'])) {
+    die("Project ID not provided.");
+}
 
+$projectId = $_GET['projectId'];
+
+// --- Fetch Project Data ---
 $sql = "SELECT 
             p.ProjectID,
             p.LotNo,
@@ -409,17 +413,26 @@ $stmt->bind_param("s", $projectId);
 $stmt->execute();
 $result = $stmt->get_result();
 $project = $result->fetch_assoc();
-} else {
-    die("Project ID not provided.");
-}
 
+// --- Fetch Related Documents ---
+$documents = [];
+$docSql = "SELECT DocumentType, DocumentStatus, DocumentQR, DigitalLocation 
+           FROM document 
+           WHERE ProjectID = ?";
+$docStmt = $conn->prepare($docSql);
+$docStmt->bind_param("s", $projectId);
+$docStmt->execute();
+$docResult = $docStmt->get_result();
+
+while ($docRow = $docResult->fetch_assoc()) {
+    $typeKey = strtolower(str_replace(' ', '_', $docRow['DocumentType']));
+    $documents[$typeKey] = $docRow;
+}
 ?>
 
-
+<!-- Top Bar and Page Heading -->
 <div class="topbar">
-  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">
-    Update <?= htmlspecialchars($projectId) ?>
-  </span>
+  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Update <?= htmlspecialchars($projectId) ?></span>
   <div class="topbar-content">
     <div class="search-bar">
       <input class="search-input" type="text" placeholder="Search Project" />
@@ -428,7 +441,7 @@ $project = $result->fetch_assoc();
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
       <div class="dropdown-menu" id="user-menu">
-        <a href="profile.php">Profile</a>
+        <a data-page="profile.php">Profile</a>
         <a href="model/logout.php">Sign Out</a>
       </div>
     </div>
@@ -437,302 +450,186 @@ $project = $result->fetch_assoc();
 
 <hr class="top-line" />
 
+<!-- Project Info Form (Read-only) -->
 <div class="content">
-  <form id="update_projectForm" enctype="multipart/form-data">
+  <form id="update_projectForm">
     <div class="form-wrapper">
       <div class="form-grid">
         <div class="column">
-          <input type="hidden" name="project_name" value="<?= htmlspecialchars($project['ProjectName'] ?? '') ?>">
 
           <div class="form-row">
             <label>Lot Number:</label>
-            <input name="lot_no" type="text" value="<?= htmlspecialchars($project['LotNo'] ?? '') ?>" readonly />
+            <input type="text" value="<?= htmlspecialchars($project['LotNo']) ?>" readonly />
           </div>
 
           <div class="form-row">
             <label>Client First Name:</label>
-            <input name="client_name" type="text" value="<?= htmlspecialchars($project['ClientFName'] ?? '') ?>" readonly />
+            <input type="text" value="<?= htmlspecialchars($project['ClientFName']) ?>" readonly />
           </div>
 
           <div class="form-row">
             <label>Client Last Name:</label>
-            <input name="last_name" type="text" value="<?= htmlspecialchars($project['ClientLName'] ?? '') ?>" readonly />
+            <input type="text" value="<?= htmlspecialchars($project['ClientLName']) ?>" readonly />
           </div>
-<div class="form-row">
-    <label>Province:</label>
-    <select name="province" id="update_province" disabled>
-        <option value="">Select Province</option>
-        <option value="Bulacan" <?= ($project['Province'] ?? '') === 'Bulacan' ? 'selected' : '' ?> >Bulacan</option>
-    </select>
-</div>
 
-<div class="form-row">
-    <label>Municipality:</label>
-    <select name="municipality" id="update_municipality" disabled>
-        <option value="">Select Municipality</option>
-        <option value="<?= htmlspecialchars($project['Municipality'] ?? '') ?>" selected>
-            <?= htmlspecialchars($project['Municipality'] ?? '') ?>
-        </option>
-    </select>
-</div>
+          <div class="form-row">
+            <label>Province:</label>
+            <select disabled>
+              <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>Bulacan</option>
+            </select>
+          </div>
 
-<div class="form-row">
-    <label>Barangay:</label>
-    <select name="barangay" id="update_barangay" disabled>
-        <option value="">Select Barangay</option>
-        <option value="<?= htmlspecialchars($project['Barangay'] ?? '') ?>" selected>
-            <?= htmlspecialchars($project['Barangay'] ?? '') ?>
-        </option>
-    </select>
-</div>
+          <div class="form-row">
+            <label>Municipality:</label>
+            <select disabled>
+              <option selected><?= htmlspecialchars($project['Municipality']) ?></option>
+            </select>
+          </div>
 
-<div class="form-row">
-    <label>Street/Subdivision:</label>
-    <input name="address" type="text" value="<?= htmlspecialchars($project['Address'] ?? '') ?>" readonly />
-</div>
+          <div class="form-row">
+            <label>Barangay:</label>
+            <select disabled>
+              <option selected><?= htmlspecialchars($project['Barangay']) ?></option>
+            </select>
+          </div>
 
+          <div class="form-row">
+            <label>Street/Subdivision:</label>
+            <input type="text" value="<?= htmlspecialchars($project['Address']) ?>" readonly />
+          </div>
         </div>
 
         <div class="column">
           <div class="form-row">
             <label>Survey Type:</label>
-            <select name="survey_type" disabled>
-              <option value="">Select Survey Type</option>
+            <select disabled>
               <?php
-              $surveyTypes = [
-                "Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey",
-                "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling/ Transfer", "Real Estate"
-              ];
-              foreach ($surveyTypes as $type): ?>
-                <option value="<?= $type ?>" <?= ($project['SurveyType'] ?? '') === $type ? 'selected' : '' ?>>
-                  <?= $type ?>
-                </option>
+              $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling/ Transfer", "Real Estate"];
+              foreach ($types as $type): ?>
+                <option value="<?= $type ?>" <?= ($project['SurveyType'] === $type) ? 'selected' : '' ?>><?= $type ?></option>
               <?php endforeach; ?>
             </select>
           </div>
 
           <div class="form-row">
             <label>Survey Start Date:</label>
-            <input name="survey_start" type="date" value="<?= htmlspecialchars($project['SurveyStartDate'] ?? '') ?>" readonly/>
+            <input type="date" value="<?= htmlspecialchars($project['SurveyStartDate']) ?>" readonly />
           </div>
 
           <div class="form-row">
             <label>Survey End Date:</label>
-            <input name="survey_end" type="date" value="<?= htmlspecialchars($project['SurveyEndDate'] ?? '') ?>" readonly/>
+            <input type="date" value="<?= htmlspecialchars($project['SurveyEndDate']) ?>" readonly />
           </div>
 
           <div class="form-row">
             <label>Agent:</label>
-            <input name="agent" type="text" value="<?= htmlspecialchars($project['Agent'] ?? '') ?>" readonly/>
+            <input type="text" value="<?= htmlspecialchars($project['Agent']) ?>" readonly />
           </div>
 
           <div class="form-row">
             <label>Request Type:</label>
-            <select name="requestType" disabled>
-              <option value="For Approval" <?= ($project['RequestType'] ?? '') === 'For Approval' ? 'selected' : '' ?>>For Approval</option>
-              <option value="Sketch Plan" <?= ($project['RequestType'] ?? '') === 'Sketch Plan' ? 'selected' : '' ?>>Sketch Plan</option>
+            <select disabled>
+              <option <?= ($project['RequestType'] === 'For Approval') ? 'selected' : '' ?>>For Approval</option>
+              <option <?= ($project['RequestType'] === 'Sketch Plan') ? 'selected' : '' ?>>Sketch Plan</option>
             </select>
           </div>
 
           <div id="toBeApprovedBy">
             <label>To be approved by:</label>
-            <div class="approval-group" style="margin-left: 23.5%">
+            <div class="approval-group">
               <?php
               $approvals = ["LRA", "BUREAU", "CENRO"];
-              foreach ($approvals as $approval): ?>
+              foreach ($approvals as $a): ?>
                 <label>
-                  <input type="radio" name="approval" value="<?= $approval ?>" <?= ($project['Approval'] ?? '') === $approval ? 'checked' : '' ?> disabled>
-                  <?= $approval ?>
+                  <input type="radio" disabled <?= ($project['Approval'] === $a) ? 'checked' : '' ?> />
+                  <?= $a ?>
                 </label>
               <?php endforeach; ?>
             </div>
-
+          </div>
         </div>
-                </div>
-</div>
+      </div>
 
-<div class="qr-preview">
-  <h4>PROJECT QR CODE</h4>
-  <div class="qr-box">
-    <?php if (!empty($project['ProjectQR'])): ?>
-      <img src="<?= htmlspecialchars($project['ProjectQR']) ?>" alt="Project QR Code">
-    <?php else: ?>
-      <span style="color:white;">No QR code available</span>
-    <?php endif; ?>
-  </div>
-</div>
+      <div class="qr-preview">
+        <h4>PROJECT QR CODE</h4>
+        <div class="qr-box">
+          <?php if (!empty($project['ProjectQR'])): ?>
+            <img src="<?= htmlspecialchars($project['ProjectQR']) ?>" alt="QR Code" />
+          <?php else: ?>
+            <span style="color:white;">No QR Code</span>
+          <?php endif; ?>
+        </div>
+      </div>
     </div>
 
-    <div class="note">Select all that apply and upload digital document if applicable</div>
+    <div class="note">Attached documents:</div>
 
+    <!-- Document Table -->
     <div class="table-container">
-  <table class="document-table" id="update_documentTable">
-    <thead>
-      <tr>
-        <th>Document Name</th>
-        <th>Physical Documents</th>
-        <th>Digital Documents</th>
-        <th>QR Code</th>
-      </tr>
-    </thead>
-    <tbody>
-  <tr>
-    <td>Original Plan</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Original Plan" onchange="toggleStorageStatus(this)">
-      <select class="storage-status" name="status[original_plan]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[original_plan][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
+      <table class="document-table">
+        <thead>
+          <tr>
+            <th>Document Name</th>
+            <th>Physical Documents</th>
+            <th>Digital Documents</th>
+            <th>QR Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          $docTypes = [
+            "original_plan" => "Original Plan",
+            "lot_title" => "Lot Title",
+            "deed_of_sale" => "Deed of Sale",
+            "tax_declaration" => "Tax Declaration",
+            "building_permit" => "Building Permit",
+            "authorization_letter" => "Authorization Letter",
+            "others" => "Others"
+          ];
 
-  <tr>
-    <td>Lot Title</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Lot Title" onchange="toggleStorageStatus(this)">
-      <select class="storage-status" name="status[lot_title]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[lot_title][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
+          foreach ($docTypes as $key => $label):
+            $doc = $documents[$key] ?? null;
+            $isChecked = $doc ? 'checked' : '';
+            $status = $doc['DocumentStatus'] ?? '';
+            $qr = $doc['DocumentQR'] ?? '';
+           $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
+          ?>
+          <tr>
+            <td><?= $label ?></td>
 
-  <tr>
-    <td>Deed of Sale</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Deed of Sale" onchange="toggleStorageStatus(this)" >
-      <select class="storage-status" name="status[deed_of_sale]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[deed_of_sale][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
+            <td>
+              <input type="checkbox" disabled <?= $isChecked ?> />
+              <select class="storage-status" disabled style="<?= $doc ? '' : 'display:none;' ?>">
+                <option value="Stored" <?= $status === 'STORED' ? 'selected' : '' ?>>Stored</option>
+                <option value="Released" <?= $status === 'RELEASED' ? 'selected' : '' ?>>Released</option>
+              </select>
+            </td>
 
-  <tr>
-    <td>Tax Declaration</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Tax Declaration" onchange="toggleStorageStatus(this)">
-      <select class="storage-status" name="status[tax_declaration]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[tax_declaration][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
+            <td>
+              <div class="digital-cell">
+                <div class="file-list">
+                  <?= $fileName ? htmlspecialchars($fileName) : '<i>No file</i>' ?>
+                </div>
+              </div>
+            </td>
 
-  <tr>
-    <td>Building Permit</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Building Permit" onchange="toggleStorageStatus(this)">
-      <select class="storage-status" name="status[building_permit]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[building_permit][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
+<td class="qr-code">
+  <?php if (!empty($doc['DocumentQR'])): ?>
+    <span class="view-qr-text" 
+          style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
+          onclick="showQRPopup('<?= htmlspecialchars($doc['DocumentQR']) ?>')">
+      View
+    </span>
+  <?php else: ?>
+    <span style="color:gray; font-style: italic;"></span>
+  <?php endif; ?>
+</td>
 
-  <tr>
-    <td>Authorization Letter</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Authorization Letter" onchange="toggleStorageStatus(this)">
-      <select class="storage-status" name="status[authorization_letter]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[authorization_letter][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
-
-  <tr>
-    <td>Others</td>
-    <td>
-      <input type="checkbox" name="physical[]" value="Others" onchange="toggleStorageStatus(this)">
-      <select class="storage-status" name="status[others]" style="display:none;">
-        <option value="Stored">Stored</option>
-        <option value="Released">Released</option>
-      </select>
-    </td>
-    <td>
-      <div class="digital-cell">
-        <div class="file-list"></div>
-        <label class="attach-icon">
-          <i class="fa fa-paperclip"></i>
-          <input type="file" name="digital[others][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
-        </label>
-      </div>
-    </td>
-    <td class="qr-code"></td>
-  </tr>
-</tbody>
-
-  </table>
-</div>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
 
 
     <div class="footer-buttons">
@@ -742,7 +639,7 @@ $project = $result->fetch_assoc();
   </form>
 </div>
 
-<div id="update_qrModal" class="qr-modal">
+<div id="qrModal" class="qr-modal">
   <span class="close">&times;</span>
-  <img id="update_qrModalImg" class="qr-modal-content">
+  <img id="qrModalImg" class="qr-modal-content">
 </div>

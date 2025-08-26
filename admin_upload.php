@@ -373,7 +373,7 @@ button {
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
       <div class="dropdown-menu" id="user-menu">
-        <a href="profile.php">Profile</a>
+        <a data-page="profile.php">Profile</a>
         <a href="model/logout.php">Sign Out</a>
       </div>
     </div>

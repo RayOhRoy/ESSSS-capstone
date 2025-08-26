@@ -168,7 +168,6 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
 }
 
-
 /* Close button */
 #previewModal #closeModal {
   position: absolute;
@@ -185,21 +184,108 @@
   transform: scale(1.2);
 }
 
-/* Modal body content */
-#previewModal #modalBody p {
-  margin: 1vh 0;
-  font-size: 1cqw;
-  color: #333;
+/* QR Code section */
+.qr-section {
+  text-align: center;
+  margin-bottom: 2vh;
 }
 
-#previewModal #modalBody strong {
+.qr-img {
+  width: 120px;
+  height: 120px;
+}
+
+.qr-code-text {
+  font-weight: bold;
+  margin-top: 1vh;
+}
+
+/* Project details */
+.project-details p {
+  font-size: 0.85cqw;
+  margin: 0.5vh 0;
+  color: black;
+}
+
+.document-table {
+  width: 100%;
+  overflow-x: auto; /* enables horizontal scroll on smaller screens */
+}
+
+.document-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5vh 0;
+  font-size: 0.7cqw;  /* smaller font */
+  table-layout: fixed; /* make columns distribute evenly */
+}
+
+.document-table th,
+.document-table td {
+  border: 1px solid #ccc;
+  padding: 0.5vh 0.3vw;
+  text-align: center;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+
+.status {
+  font-weight: bold;
+  border-radius: 1vw; /* smaller pill shape */
+  padding: 0.2vh 0.6vw; /* reduced padding */
+  font-size: 0.65cqw;  /* optional: slightly smaller text */
+  text-align: center;
+  min-width: 60px; /* optional: helps maintain pill look */
+}
+
+
+.status.stored {
+  background-color: #7B0302;
+  color: white;
+}
+
+.status.released {
+  background-color: #c2c2c2;
   color: #7B0302;
 }
 
-.test-btn {
-  font-size: 5cqw;
-  background-color: black;
+.status.available {
+  background-color: #7B0302;
+  color: #fff;
+}
 
+/* Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2vh;
+}
+
+.open-btn,
+.close-btn {
+  background-color: #7B0302;
+  color: white;
+  padding: 0.5vw 2vw;
+  border: none;
+  border-radius: 0.5vw;
+  font-size: 1cqw;
+  cursor: pointer;
+}
+
+.open-btn:hover,
+.close-btn:hover {
+  background-color: #a10000;
+}
+
+.qr-section img {
+  min-width: 250px;
+  min-height: 250px;
+}
+
+.qr-section p {
+  font-size: 1cqw;
+  font-weight: 700;
 }
 </style>
 
@@ -213,7 +299,7 @@
       <span  id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
       <div class="dropdown-menu" id="user-menu">
-        <a href="profile.php">Profile</a>
+        <a data-page="profile.php">Profile</a>
         <a href="model/logout.php">Sign Out</a>
       </div>
     </div>
@@ -294,7 +380,6 @@ function maskName($fname, $lname) {
 
 </table>
 
-<button class="test-btn">test</button>
 <div class="floating-add-project" data-page="admin_upload.php">
   <span class="fa fa-plus" style="font-size: 1.5cqw; color: white;"></span>
 </div>
@@ -304,10 +389,85 @@ function maskName($fname, $lname) {
 <!-- Modal Structure -->
 <div id="previewModal" class="modal">
   <div class="modal-content">
-    <span id="closeModal" >&times;</span>
-    <h2>Project Preview</h2>
+    <span id="closeModal">&times;</span>
     <div id="modalBody">
-      <!-- Project info will be loaded here -->
+
+      <!-- QR Code & Reference -->
+      <div class="qr-section">
+        <img src="picture/project_qr.png" alt="QR Code" class="qr-img">
+        <p class="preview-projectname">HAG-001</p>
+      </div>
+
+      <!-- Project Details -->
+      <div class="project-details">
+        <p><strong>Lot No.:</strong> LOT L - 11</p>
+        <p><strong>Address:</strong> San Miguel, Calumpit, Bulacan</p>
+        <p><strong>Survey Type:</strong> Sketch Plan</p>
+        <p><strong>Client:</strong> Juan Dela Cruz</p>
+        <p><strong>Physical Location:</strong> HAG-101</p>
+        <p><strong>Agent:</strong> Juanito Cruz</p>
+        <p><strong>Survey Period:</strong> April 3, 2025 - April 10, 2025</p>
+      </div>
+
+      <!-- Document Table -->
+      <div class="document-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Document Name</th>
+              <th>Physical Documents</th>
+              <th>Digital Documents</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Original Plan</td>
+              <td class="status stored">STORED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>Lot Title</td>
+              <td class="status released">RELEASED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>Ref Plan/Lot Data</td>
+              <td class="status stored">STORED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>TD</td>
+              <td class="status stored">STORED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>Transmittal</td>
+              <td class="status stored">STORED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>Field Notes</td>
+              <td class="status released">RELEASED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>Deed of Sale/Transfer</td>
+              <td class="status stored">STORED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+            <tr>
+              <td>Tax Declaration</td>
+              <td class="status stored">STORED</td>
+              <td class="status available">AVAILABLE</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Buttons -->
+      <div class="modal-buttons">
+        <button class="open-btn">OPEN</button>
+      </div>
     </div>
   </div>
 </div>

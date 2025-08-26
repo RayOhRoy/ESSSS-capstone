@@ -64,19 +64,3 @@ function redirectToUpdate(button) {
   loadAdminPage('admin_update.php?projectId=' + encodeURIComponent(projectId));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.test-btn').forEach(button => {
-        button.addEventListener('click', () => {
-            document.getElementById('previewModal').style.display = 'block';
-        });
-    });
-
-    document.getElementById('closeModal').addEventListener('click', () => {
-        document.getElementById('previewModal').style.display = 'none';
-    });
-
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('previewModal');
-        if (e.target === modal) modal.style.display = 'none';
-    });
-});

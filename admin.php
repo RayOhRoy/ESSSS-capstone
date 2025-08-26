@@ -37,18 +37,22 @@
     margin-top: -1cqw;
     transition: all 0.3s ease;
   }
+
+  .side-logo {
+    max-width: 10cqw;
+  }
 </style>
 
 <div class="container">
   <div class="sidebar">
     <!-- <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span> -->
-    <div class="logo">
-      <img src="picture/logo.jpg" alt="Logo">
-      <div class="logo-text">
-        <div>ES Santos</div>
-        <div>Surveying Services</div>
-      </div>
-    </div>
+    <!-- <div class="logo"> -->
+      <img class="side-logo" src="picture/logoOutlined.png" alt="Logo">
+      <!-- <div class="logo-text">
+        <div>ESSSS Centralized Document</div>
+        <div>Management System with QR Technology</div>
+      </div> -->
+    <!-- </div> -->
 
     <div class="menu-icons">
       <a href="#" class="menu-item active" data-page="admin_dashboard.php">
@@ -71,7 +75,7 @@
         <span  class="fa fa-clock-o" alt="Activity Log"></span>
         <span>Activity Log</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_qr_toggle.php">
+      <a href="#" class="menu-item">
         <span  class="fa fa-qrcode" alt="QR Toggle"></span>
         <span>QR Toggle</span>
       </a>
