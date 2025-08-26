@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 26, 2025 at 10:24 PM
+-- Generation Time: Aug 27, 2025 at 12:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -104,7 +104,7 @@ CREATE TABLE `employee` (
 --
 
 INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password`, `JobPosition`, `AccountType`, `AccountStatus`) VALUES
-('ADMN001', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$rFbT8T2sNF9yPoVdqd8WqeIAJWg9k.wKglaTeTNR3ZwmHAJza/eu.', 'Chief Operating Officer', 'Admin', 'Active'),
+('ADMN001', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$zp2zCPH9JOBb4kht332IRuFd.dhfgIdHpFI7FogFNhjweo/G2.Md6', 'Chief Operating Officer', 'Admin', 'Active'),
 ('USR0001', 'Lopez', 'Aleck Joseph', 'benchudgugu@gmail.com', '$2y$10$jMTGzdzG564C2Vl5zzPjSurmzqsJA8cy.LlObxdfi9bdZLSO6tyx2', 'Compliance Officer', 'User', 'Active');
 
 -- --------------------------------------------------------

@@ -6,7 +6,7 @@ function initAdminPage() {
     loadScript('js/admin_projectlist.js');
     loadScript('js/profile.js');
     loadScript('js/qr_search.js');
-     loadScript('js/admin_userlist.js');
+    loadScript('js/admin_userlist.js');
   }
 
   // Universal listener for any element with data-page

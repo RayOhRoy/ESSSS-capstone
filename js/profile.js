@@ -1,23 +1,3 @@
-function initAdminPage() {
-  const contentArea = document.getElementById('content-area');
-  if (contentArea) {
-    loadAdminPage('admin_dashboard.php');
-  }
-
-  // Handle sidebar menu clicks
-  document.querySelectorAll('.menu-item').forEach(menu => {
-    menu.addEventListener('click', function (e) {
-      e.preventDefault();
-
-      const page = this.getAttribute('data-page');
-      if (page) loadAdminPage(page);
-
-      document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-}
-
 function loadAdminPage(page) {
   const contentArea = document.getElementById('content-area');
   if (!contentArea) return;
