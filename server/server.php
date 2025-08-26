@@ -1,7 +1,7 @@
 <?php 
 $database	= 'u977775529_esdb';
 $username	= 'u977775529_escdms';
-$host		= 'essss-centralized-dms.com';
+$host		= 'srv2050.hstgr.io';
 $password	= 'Essss1999';
 
 $conn = new mysqli($host,$username,$password,$database);
