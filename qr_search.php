@@ -85,8 +85,8 @@ $employee = $result->fetch_assoc();
     color: white;
   }
 
-#previewModal {
-  display: block; /* visible */
+#testModal {
+  display: none; /* visible */
   position: fixed;
   top: 0;
   left: 0;
@@ -96,7 +96,7 @@ $employee = $result->fetch_assoc();
   z-index: 9999;
 }
 
-#previewModal .modal-content {
+#testModal .modal-content {
   background: white;
   padding: 2vw;
   border-radius: 1vw;
@@ -110,7 +110,7 @@ $employee = $result->fetch_assoc();
 }
 
 /* Close button */
-#previewModal #closeModal {
+#testModal #closeTestModal {
   position: absolute;
   top: 1vw;
   right: 1vw;
@@ -120,7 +120,7 @@ $employee = $result->fetch_assoc();
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
-#previewModal #closeModal:hover {
+#testModal #closeTestModal:hover {
   color: #a10000;
   transform: scale(1.2);
 }
@@ -251,9 +251,12 @@ $employee = $result->fetch_assoc();
 
 <hr class="top-line" />
 
-<div id="previewModal" class="modal">
+<!-- <button id=qr-search-btn style="background-color: black; height: 10cqw; width: 10cqw;">QR</button> -->
+
+
+<div id="testModal" class="modal">
   <div class="modal-content">
-    <span id="closeModal">&times;</span>
+    <span id="closeTestModal">&times;</span>
     <div id="modalBody">
 
       <!-- QR Code & Reference -->

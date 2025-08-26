@@ -67,7 +67,7 @@
         <span  class="fa fa-list" alt="Project List"></span>
         <span>Project List</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-page="qr_search.php">
         <span  class="fa fa-qrcode" alt="QR Toggle"></span>
         <span>QR Search</span>
       </a>
