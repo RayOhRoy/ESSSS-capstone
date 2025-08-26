@@ -380,7 +380,7 @@ $employee = $result->fetch_assoc();
 <div id="changePasswordModal">
   <div>
     <h3 >Change Password</h3>
-    <form id="changePasswordForm" method="post" action="change-password.php">
+    <form id="changePasswordForm" method="post" action="model/change_password.php">
       <label for="current_password">Current Password</label><br/>
       <input type="password" id="current_password" name="current_password" required><br/><br/>
 

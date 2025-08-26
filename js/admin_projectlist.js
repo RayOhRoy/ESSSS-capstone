@@ -64,3 +64,55 @@ function redirectToUpdate(button) {
   loadAdminPage('admin_update.php?projectId=' + encodeURIComponent(projectId));
 }
 
+function loadAdminPage(page) {
+  const contentArea = document.getElementById('content-area');
+  if (!contentArea) return;
+
+  // Reset page-specific flags before loading a new page
+  previewModalInitialized = false;
+
+  fetch(page)
+    .then(res => res.text())
+    .then(html => {
+      contentArea.innerHTML = html;
+
+      // Initialize page-specific functionality
+      if (page === 'admin_projectlist.php') {
+        initPreviewModal();
+      }
+      // Add more initializers here as needed
+    })
+    .catch(err => {
+      console.error('Failed to load admin page:', err);
+    });
+}
+
+let previewModalInitialized = false;
+
+function initPreviewModal() {
+  if (previewModalInitialized) return;
+  previewModalInitialized = true;
+
+  const body = document.body;
+  const modal = document.getElementById('previewModal');
+  const closeBtn = document.getElementById('closeModal');
+
+  if (!modal || !closeBtn) {
+    console.warn("Preview modal or close button not found.");
+    return;
+  }
+
+  // Event delegation for preview buttons
+  body.addEventListener('click', function (e) {
+    const previewBtn = e.target.closest('.preview-btn');
+    if (previewBtn) {
+      modal.style.display = 'flex';
+      return;
+    }
+
+    if (e.target === closeBtn || e.target === modal) {
+      modal.style.display = 'none';
+      return;
+    }
+  });
+}

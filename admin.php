@@ -75,9 +75,9 @@
         <span  class="fa fa-clock-o" alt="Activity Log"></span>
         <span>Activity Log</span>
       </a>
-      <a href="#" class="menu-item">
+      <a href="#" class="menu-item" data-page="qr_search.php">
         <span  class="fa fa-qrcode" alt="QR Toggle"></span>
-        <span>QR Toggle</span>
+        <span>QR Search</span>
       </a>
     </div>
     

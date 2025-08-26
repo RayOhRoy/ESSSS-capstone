@@ -41,7 +41,8 @@ function loadForm(path) {
   'admin_dashboard.php',
   'admin_projectlist.php',
   'admin_upload.php',
-  'admin_userlist.php'
+  'admin_userlist.php',
+  'profile.php'
 ];
 
 const userPages = [

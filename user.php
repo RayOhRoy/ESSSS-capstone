@@ -69,7 +69,7 @@
       </a>
       <a href="#" class="menu-item">
         <span  class="fa fa-qrcode" alt="QR Toggle"></span>
-        <span>QR Toggle</span>
+        <span>QR Search</span>
       </a>
     </div>
     
