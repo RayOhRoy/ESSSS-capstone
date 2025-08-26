@@ -1,8 +1,8 @@
 <?php 
-$database	= 'esdb';
-$username	= 'root';
-$host		= 'localhost';
-$password	= '';
+$database	= 'u977775529_esdb';
+$username	= 'u977775529_escdms';
+$host		= 'essss-centralized-dms.com';
+$password	= 'Essss1999';
 
 $conn = new mysqli($host,$username,$password,$database);
 
