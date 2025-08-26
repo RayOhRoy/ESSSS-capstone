@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 26, 2025 at 09:14 PM
+-- Generation Time: Aug 26, 2025 at 10:24 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -50,6 +50,13 @@ CREATE TABLE `address` (
   `Province` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `address`
+--
+
+INSERT INTO `address` (`AddressID`, `Address`, `Barangay`, `Municipality`, `Province`) VALUES
+('HAG-001', '', 'Iba', 'Hagonoy', 'Bulacan');
+
 -- --------------------------------------------------------
 
 --
@@ -65,6 +72,15 @@ CREATE TABLE `document` (
   `DocumentStatus` enum('STORED','RELEASED') DEFAULT NULL,
   `DocumentQR` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `document`
+--
+
+INSERT INTO `document` (`DocumentID`, `DocumentName`, `DocumentType`, `ProjectID`, `DigitalLocation`, `DocumentStatus`, `DocumentQR`) VALUES
+('DOC-00001', 'HAG-001-Original-Plan', 'Original Plan', 'HAG-001', NULL, 'STORED', 'uploads/HAG-001/Original-Plan/doc_qr.png'),
+('DOC-00002', 'HAG-001-Deed-Of-Sale', 'Deed of Sale', 'HAG-001', NULL, 'STORED', 'uploads/HAG-001/Deed-Of-Sale/doc_qr.png'),
+('DOC-00003', 'HAG-001-Tax-Declaration', 'Tax Declaration', 'HAG-001', NULL, 'RELEASED', 'uploads/HAG-001/Tax-Declaration/doc_qr.png');
 
 -- --------------------------------------------------------
 
@@ -113,6 +129,13 @@ CREATE TABLE `project` (
   `Approval` enum('LRA','BUREAU','CENRO') DEFAULT NULL,
   `ProjectQR` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `project`
+--
+
+INSERT INTO `project` (`ProjectID`, `AddressID`, `LotNo`, `ClientLName`, `ClientFName`, `SurveyType`, `PhysicalLocation`, `DigitalLocation`, `SurveyStartDate`, `SurveyEndDate`, `Agent`, `RequestType`, `Approval`, `ProjectQR`) VALUES
+('HAG-001', 'HAG-001', 'LOT-19982', 'Verano', 'John Sandrex', 'Subdivision Survey', 'HAG-01-001', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/HAG-001', '2025-08-07', '2025-08-28', '', 'Sketch Plan', NULL, 'uploads/HAG-001/project_qr.png');
 
 --
 -- Indexes for dumped tables

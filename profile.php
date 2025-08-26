@@ -373,7 +373,7 @@ $employee = $result->fetch_assoc();
 
   <!-- Removed password for security -->
 
-  <a class="edit-profile-link">Change Password</a>
+  <a id="change-pass-btn" class="edit-profile-link">Change Password</a>
 </div>
 
 <!-- Change Password Modal -->
