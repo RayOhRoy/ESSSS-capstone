@@ -1,4 +1,27 @@
+<?php
+session_start();
+include 'server/server.php';  // your database connection
 
+if (!isset($_SESSION['employeeid'])) {
+    header('Location: login.php');
+    exit();
+}
+
+$employeeid = $_SESSION['employeeid'];
+
+$sql = "SELECT EmployeeID, EmpFName, EmpLName, Email, JobPosition FROM employee WHERE EmployeeID = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $employeeid);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    echo "Employee not found.";
+    exit;
+}
+
+$employee = $result->fetch_assoc();
+?>
   <style>
   input {
       width: 100%;
@@ -215,6 +238,83 @@
   color: #a00000;
 }
 
+/* Modal Overlay */
+#changePasswordModal {
+  display: none;
+  position: fixed;
+  top: 0; 
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Modal Content Box */
+#changePasswordModal > div {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* Modal Heading */
+#changePasswordModal h3 {
+  color: #7B0302;
+  margin-bottom: 1rem;
+}
+
+/* Form Labels */
+#changePasswordModal label {
+  font-weight: bold;
+  color: #7B0302;
+}
+
+/* Form Inputs */
+#changePasswordModal input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+/* Buttons */
+#changePasswordModal button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+#changePasswordModal button[type="submit"] {
+  background-color: #7B0302;
+  color: white;
+}
+
+#changePasswordModal button[type="button"] {
+  background-color: #ccc;
+  margin-left: 1rem;
+  color: #333;
+}
+
+#changePasswordModal button[type="button"]:hover {
+  background-color: #a00000;
+  color: white;
+}
+
+#changePasswordModal button[type="submit"]:hover {
+  background-color: #a00000;
+}
 
 @media (max-width: 900px) {
   .profile-content {
@@ -253,37 +353,53 @@
 
   <div class="profile-content">
     
-    <!-- <div class="profile-pic-section">
-      <img src="picture/project_qr.png" id="profileImage" class="profile-pic" alt="Profile Picture">
-      <input type="file" id="uploadProfile" accept="image/*" style="display:none;">
-      <label for="uploadProfile" class="upload-btn">Upload Profile</label>
-    </div> -->
 
-    <div class="profile-details">
-      <label>Employee ID</label>
-      <input type="text" value="USR00001" readonly>
 
-      <label>First Name</label>
-      <input type="text" value="JUAN" readonly>
+<div class="profile-details">
+  <label>Employee ID</label>
+  <input type="text" value="<?php echo htmlspecialchars($employee['EmployeeID']); ?>" readonly>
 
-      <label>Middle Name</label>
-      <input type="text" value="CRUZ" readonly>
+  <label>First Name</label>
+  <input type="text" value="<?php echo htmlspecialchars($employee['EmpFName']); ?>" readonly>
 
-      <label>Last Name</label>
-      <input type="text" value="DELA CRUZ" readonly>
+  <label>Last Name</label>
+  <input type="text" value="<?php echo htmlspecialchars($employee['EmpLName']); ?>" readonly>
 
-      <label>Position</label>
-      <input type="text" value="SECRETARY" readonly>
+  <label>Email</label>
+  <input type="text" value="<?php echo htmlspecialchars($employee['Email']); ?>" readonly>
 
-      <label>Password</label>
-      <input type="password" value="password123" readonly>
+  <label>Position</label>
+  <input type="text" value="<?php echo htmlspecialchars($employee['JobPosition']); ?>" readonly>
 
-      <a href="edit-profile.php" class="edit-profile-link">Edit Profile</a>
-    </div>
+  <!-- Removed password for security -->
+
+  <a class="edit-profile-link">Change Password</a>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal">
+  <div>
+    <h3 >Change Password</h3>
+    <form id="changePasswordForm" method="post" action="change-password.php">
+      <label for="current_password">Current Password</label><br/>
+      <input type="password" id="current_password" name="current_password" required><br/><br/>
+
+      <label for="new_password">New Password</label><br/>
+      <input type="password" id="new_password" name="new_password" required><br/><br/>
+
+      <label for="confirm_password">Confirm New Password</label><br/>
+      <input type="password" id="confirm_password" name="confirm_password" required><br/><br/>
+
+      <button type="submit">Proceed</button>
+      <button type="button" id="cancelChangePassword" >Cancel</button>
+    </form>
   </div>
 </div>
 
-<script>
+  </div>
+</div>
+
+<!-- <script>
 
 const uploadInput = document.getElementById("uploadProfile");
 const profileImage = document.getElementById("profileImage");
@@ -300,4 +416,4 @@ uploadInput.addEventListener("change", function() {
     reader.readAsDataURL(file);
   }
 });
-</script>
+</script> -->

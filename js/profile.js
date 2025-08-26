@@ -1,15 +1,28 @@
-const uploadInput = document.getElementById("uploadProfile");
-const profileImage = document.getElementById("profileImage");
+function initProfilePage() {
+  const openBtn = document.querySelector('.edit-profile-link');
+  const modal = document.getElementById('changePasswordModal');
+  const cancelBtn = document.getElementById('cancelChangePassword');
 
-uploadInput.addEventListener("change", function() {
-  console.log("File input changed");  // <-- Add this for debugging
-  const file = this.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      profileImage.src = e.target.result;
-      console.log("Image src updated");  // <-- Also for debugging
-    }
-    reader.readAsDataURL(file);
+  if (openBtn && modal && cancelBtn) {
+    openBtn.addEventListener('click', () => {
+      modal.style.display = 'flex';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // Close modal if clicking outside the modal content
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  } else {
+    console.warn('Profile modal elements missing!');
   }
-});
+
+  console.log("Profile.js initialized!");
+}
+
+window.initProfilePage = initProfilePage;
