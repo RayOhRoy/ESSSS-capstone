@@ -79,7 +79,7 @@ function populateDocumentTable() {
           <label class="attach-icon">📎
             <input type="file" name="digital_${id}" class="hidden-file" multiple
                    accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-                   onchange="uploadFile(this, '${doc}')">
+                   onchange="uploadFile(this, '${doc}')" disabled>
           </label>
         </div>
       </td>
@@ -103,17 +103,14 @@ function setupStorageStatusHandlers() {
 function submitForm() {
   const form = document.getElementById("projectForm");
   const formData = new FormData(form);
-
   const rows = document.querySelectorAll("#documentTable tbody tr");
 
-  // Manually append all collected files
+  // Collect status and files
   rows.forEach(row => {
     const docName = row.cells[0].innerText.trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
 
     const statusSelect = row.querySelector(".storage-status");
-    if (statusSelect) {
-      formData.append(`status_${docName}`, statusSelect.value || "");
-    }
+    if (statusSelect) formData.append(`status_${docName}`, statusSelect.value || "");
 
     if (row.filesArray && row.filesArray.length > 0) {
       row.filesArray.forEach(file => {
@@ -122,36 +119,53 @@ function submitForm() {
     }
   });
 
-  // ------------------------------
-  // Append disabled checkboxes/radios
-  // ------------------------------
+  // Collect disabled checkboxes/radios
   rows.forEach(row => {
     const checkbox = row.querySelector("input[type='checkbox']");
-    const docName = row.cells[0].innerText.trim().toLowerCase().replace(/[^a-z0-9]/g,"_");
+    const docName = row.cells[0].innerText.trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
 
-    // Append checkbox if it was disabled
     if (checkbox && checkbox.disabled && checkbox.checked) {
       formData.append(`physical_${docName}`, checkbox.value);
     }
 
     const radios = row.querySelectorAll("input[type='radio']");
     radios.forEach(r => {
-      if (r.disabled && r.checked) {
-        formData.append(r.name, r.value);
-      }
+      if (r.disabled && r.checked) formData.append(r.name, r.value);
     });
   });
 
+  // Submit via fetch
   fetch("model/upload_project.php", {
     method: "POST",
     body: formData
   })
-  .then(res => res.text())
-  .then(data => {
-    alert(data);
-  })
-  .catch(err => console.error(err));
+    .then(res => res.text())
+    .then(data => {
+      alert(data);
+
+      if (data.includes("successfully")) {
+        // Reset form
+        form.reset();
+        document.querySelector("#documentTable tbody").innerHTML = "";
+
+        // Reset QR button state
+        qrGenerated = false;
+        const generateQRBtn = document.getElementById("generateQRBtn");
+        if (generateQRBtn) {
+          generateQRBtn.textContent = "Generate QR Code";
+          generateQRBtn.classList.remove("btn-cancel");
+          generateQRBtn.classList.add("btn-red");
+        }
+        // Simulate click on the sidebar menu item
+        const menuItem = document.querySelector('.menu-item[data-page="admin_projectlist.php"]');
+        if (menuItem) {
+          menuItem.click();  // <-- triggers your existing click listener
+        }
+      }
+    })
+    .catch(err => console.error(err));
 }
+
 
 
 function generateQR() {
@@ -192,11 +206,22 @@ function generateQR() {
   });
   if (!anyDocSelected) missingFields.push("At least one document selected or file uploaded");
 
+  // ✅ If there are missing fields, show error and stop
   if (missingFields.length > 0) {
     alert("Please fill/select the following before generating QR Code:\n- " + missingFields.join("\n- "));
     return false;
   }
 
+  // ✅ Check date validity before proceeding
+  const startDate = new Date(document.getElementById("startDate").value);
+  const endDate = new Date(document.getElementById("endDate").value);
+
+  if (startDate > endDate) {
+    alert("Start date cannot be later than end date.");
+    return false;
+  }
+
+  // ✅ Continue with QR generation
   const formData = new FormData(projectForm);
   rows.forEach(row => {
     const docName = row.cells[0].innerText.trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
@@ -243,6 +268,7 @@ function generateQR() {
     .catch(err => { console.error("Error generating QR codes:", err); return false; });
 }
 
+
 function showQRPopup(path) {
   const modal = document.getElementById("qrModal");
   const modalImg = document.getElementById("qrModalImg");
@@ -285,17 +311,20 @@ function afterGenerate() {
   // Lock table rows
   tableRows.forEach(row => {
     row.querySelectorAll("input").forEach(el => {
-      if (el.type === "checkbox" || el.type === "radio" || el.type === "file") {
+      if (el.type === "checkbox" || el.type === "file") {
         el.disabled = true;
-      } else {
+      } else if (el.type !== "radio") {  // leave radios enabled
         el.setAttribute("readonly", true);
       }
     });
   });
 
-  // Lock approval radios outside the table
+  // Lock approval radios visually but keep them enabled
   const approvalRadios = document.querySelectorAll("#toBeApprovedBy input[type='radio']");
-  approvalRadios.forEach(r => r.disabled = true);
+  approvalRadios.forEach(r => {
+    r.style.pointerEvents = "none";  // prevent clicking
+    r.style.opacity = 0.6;           // faded to indicate locked
+  });
 
   // Change button to Cancel
   generateBtn.textContent = "Cancel";
@@ -304,6 +333,7 @@ function afterGenerate() {
 
   qrGenerated = true;
 }
+
 
 function cancelGenerate() {
   const form = document.getElementById("projectForm");
@@ -328,9 +358,9 @@ function cancelGenerate() {
   // Unlock table rows
   tableRows.forEach(row => {
     row.querySelectorAll("input").forEach(el => {
-      if (el.type === "checkbox" || el.type === "radio" || el.type === "file") {
+      if (el.type === "checkbox" || el.type === "file") {
         el.disabled = false;
-      } else {
+      } else if (el.type !== "radio") {  // leave radios enabled
         el.removeAttribute("readonly");
       }
     });
@@ -348,9 +378,13 @@ function cancelGenerate() {
     row.filesArray = [];
   });
 
-  // Unlock approval radios
+  // Restore approval radios' interactivity and style
   const approvalRadios = document.querySelectorAll("#toBeApprovedBy input[type='radio']");
-  approvalRadios.forEach(r => r.disabled = false);
+  approvalRadios.forEach(r => {
+    r.style.pointerEvents = "";
+    r.style.opacity = "";
+    r.disabled = false; // ensure enabled if it was disabled before
+  });
 
   // Clear project QR
   const projectQRBox = document.querySelector(".qr-box");
@@ -370,6 +404,7 @@ function cancelGenerate() {
 
   qrGenerated = false;
 }
+
 
 // Prevent changes to locked selects
 function preventSelectChange(e) {
@@ -456,31 +491,49 @@ function loadBarangays() {
   barangaySelect.disabled = false;
 }
 
-function enforceApprovalRule() {
-  const requestType = document.getElementById("requestType")?.value;
-  const approvalRadios = document.querySelectorAll("input[name='approval']"); // fixed
-
-  if (requestType === "Sketch Plan") {
-    approvalRadios.forEach(r => {
-      if (r.checked) r.checked = false;
-      r.disabled = true;
-    });
-  } else {
-    approvalRadios.forEach(r => r.disabled = false);
-  }
-}
-
 function toggleStorageStatus(checkbox) {
-  const select = checkbox.parentNode.querySelector(".storage-status");
+  const row = checkbox.closest("tr");
+  const select = row.querySelector(".storage-status");
+  const fileInput = row.querySelector("input[type='file']");
+  const paperclipIcon = row.querySelector(".attach-icon i.fa-paperclip");
+  const fileListDiv = row.querySelector(".file-list");
+
   if (checkbox.checked) {
     select.style.display = "inline-block";
-    select.required = true; // mandatory when checked
+    select.required = true;
+
+    // Enable file input
+    fileInput.disabled = false;
+    fileInput.closest(".attach-icon").style.opacity = "1"; // Optional visual indicator
+
+    // Show paperclip icon
+    if (paperclipIcon) {
+      paperclipIcon.style.display = "inline-block";
+    }
   } else {
     select.style.display = "none";
     select.required = false;
     select.value = "Stored";
+
+    // Disable file input
+    fileInput.disabled = true;
+    fileInput.closest(".attach-icon").style.opacity = "0.4"; // Optional dim
+
+    // Hide paperclip icon
+    if (paperclipIcon) {
+      paperclipIcon.style.display = "none";
+    }
+
+    // Clear file array and UI
+    if (row.filesArray) {
+      row.filesArray = [];
+    }
+    if (fileListDiv) {
+      fileListDiv.innerHTML = "";
+    }
   }
 }
+
 
 window.addEventListener("DOMContentLoaded", function () {
   populateDocumentTable();
@@ -489,9 +542,4 @@ window.addEventListener("DOMContentLoaded", function () {
   document.getElementById("province").addEventListener("change", loadMunicipalities);
   document.getElementById("municipality").addEventListener("change", loadBarangays);
 
-
-  const requestType = document.getElementById("requestType");
-  if (requestType) {
-    requestType.addEventListener("change", enforceApprovalRule);
-  }
 });

@@ -7,28 +7,28 @@
     "percentage_released": 25,
     "recent_activities": [
         {
-            "type": "TAX DECLARATION",
-            "status": "UPLOADED",
-            "project_name": "N\/A",
-            "date": "August 15, 2025"
+            "type": "HAG-001",
+            "status": "MODIFIED",
+            "project_name": "R** R** F****",
+             "date": "08-23-2025 11:30 AM"
         },
         {
-            "type": "TAX DECLARATION",
+            "type": "CAL-001",
             "status": "UPLOADED",
-            "project_name": "N\/A",
-            "date": "August 15, 2025"
+            "project_name": "F**** L*** M**",
+              "date": "08-21-2025 9:30 AM"
         },
         {
-            "type": "TAX DECLARATION",
+            "type": "HAG-003",
             "status": "UPLOADED",
-            "project_name": "N\/A",
-            "date": "August 15, 2025"
+            "project_name": "F**** L*** M**",
+            "date": "08-19-2025 2:30 PM"
         },
         {
-            "type": "Relocation",
-            "status": "UPLOADED",
-            "project_name": "HAG-001",
-            "date": "August 13, 2025"
+            "type": "HAG-002",
+            "status": "MODIFIED",
+            "project_name": "J*** S*** V***",
+              "date": "08-15-2025 1:12 PM"
         }
     ]
 }

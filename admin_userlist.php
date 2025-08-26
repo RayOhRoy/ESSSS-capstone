@@ -224,6 +224,16 @@ border-radius: 0.26vw;
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
+button {
+  width: 100%;
+  padding: 1.11vh 0.83vw;
+  background-color: #7B0302;
+  color: #fff;
+  border: none;
+  border-radius: 0.26vw;
+  cursor: pointer;
+  margin-top: 2vh;
+}
 
 </style>
 

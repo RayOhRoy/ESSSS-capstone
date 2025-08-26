@@ -35,7 +35,7 @@ $endDate    = mysqli_real_escape_string($conn, $_POST['survey_end']);
 $agent      = mysqli_real_escape_string($conn, $_POST['agent']);
 $requestType= mysqli_real_escape_string($conn, $_POST['requestType']);
 $approval   = isset($_POST['approval']) ? mysqli_real_escape_string($conn, $_POST['approval']) : null;
-if (strcasecmp($requestType, 'Sketch Plan') === 0) $approval = null;
+// if (strcasecmp($requestType, 'Sketch Plan') === 0) $approval = null;
 
 // Generate Project ID
 $sqlLastProj = "SELECT ProjectID FROM project WHERE ProjectID LIKE '$prefix-%' ORDER BY ProjectID DESC LIMIT 1";
@@ -71,19 +71,20 @@ QRcode::png($projectFolder, $projQRFile, QR_ECLEVEL_L, 4);
 $projQRPath = "uploads/$projectID/project_qr.png"; 
 $conn->query("UPDATE project SET projectqr='$projQRPath' WHERE ProjectID='$projectID'");
 
-// ================= DOCUMENTS ==================
 $docs = [
-    "original_plan",
-    "lot_title",
-    "deed_of_sale",
-    "tax_declaration",
-    "building_permit",
-    "authorization_letters",
-    "others",
+    "original_plan"         => "Original Plan",
+    "lot_title"             => "Lot Title",
+    "deed_of_sale"          => "Deed of Sale",
+    "tax_declaration"       => "Tax Declaration",
+    "building_permit"       => "Building Permit",
+    "authorization_letters" => "Authorization Letter",
+    "others"                => "Others",
 ];
 
-foreach ($docs as $docKey) {
-    $safeDocName = str_replace("_", "-", $docKey);
+foreach ($docs as $docKey => $docName) {
+    $safeDocName = str_replace("_", " ", $docKey);   // "Original Plan"
+    $safeDocName = ucwords(strtolower($safeDocName)); // "Original Plan"
+    $safeDocName = str_replace(" ", "-", $safeDocName); // "Original-Plan"
     $docFolder = $projectFolder . "/" . $safeDocName;
     if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
 
@@ -98,24 +99,19 @@ foreach ($docs as $docKey) {
             $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
             $newFileName = $safeDocName . "-" . ($i + 1) . "." . $ext;
             $destPath = $docFolder . "/" . $newFileName;
-
             if (move_uploaded_file($files['tmp_name'][$i], $destPath)) {
                 $uploadedFiles[] = $destPath;
             }
         }
     }
 
-    // ✅ Insert if physical checked OR digital files exist
     if ($physicalChecked || count($uploadedFiles) > 0) {
-
         $filesString = count($uploadedFiles) > 0 ? implode(";", $uploadedFiles) : NULL;
 
-        // Document QR
         $docQRFile = $docFolder . "/doc_qr.png";
         QRcode::png($docFolder, $docQRFile, QR_ECLEVEL_L, 4);
         $docQRPath = "uploads/$projectID/$safeDocName/doc_qr.png";
 
-        // DocumentID
         $sqlLastDoc = "SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1";
         $resLastDoc = $conn->query($sqlLastDoc);
         $newDocNum = ($resLastDoc && $resLastDoc->num_rows > 0) 
@@ -126,16 +122,17 @@ foreach ($docs as $docKey) {
         $documentName = "$projectID-$safeDocName";
 
         $sqlDoc = "INSERT INTO document 
-            (DocumentID, DocumentName, ProjectID, PhysicalLocation, DigitalLocation, DocumentStatus, DocumentQR)
+            (DocumentID, DocumentName, ProjectID, DocumentType, DigitalLocation, DocumentStatus, DocumentQR)
             VALUES
-            ('$documentID','$documentName','$projectID',"
-            . ($physicalChecked ? "'$physicalLocation'" : "NULL") . ",
+            ('$documentID','$documentName','$projectID',
+            '$docName',  /* human-readable DocumentType */
             " . ($filesString !== NULL ? "'" . mysqli_real_escape_string($conn, $filesString) . "'" : "NULL") . ",
             " . ($status !== null ? "'$status'" : "NULL") . ",
             '$docQRPath')";
         $conn->query($sqlDoc);
     }
 }
+
 
 echo "✅ Project and documents uploaded with QR codes successfully!";
 $conn->close();

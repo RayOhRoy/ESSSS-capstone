@@ -41,7 +41,7 @@
 
 <div class="container">
   <div class="sidebar">
-    <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span>
+    <!-- <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span> -->
     <div class="logo">
       <img src="picture/logo.jpg" alt="Logo">
       <div class="logo-text">

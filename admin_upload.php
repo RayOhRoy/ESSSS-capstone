@@ -161,6 +161,7 @@
 
   .attach-icon i {
     transition: transform 0.2s ease, color 0.2s ease;
+    display: none;
   }
 
   .attach-icon:hover i {
@@ -348,6 +349,17 @@ input[type="checkbox"]:checked::after {
   font-size: 0.6cqw;
 }
 
+button {
+  width: 100%;
+  padding: 1.11vh 0.83vw;
+  background-color: #7B0302;
+  color: #fff;
+  border: none;
+  border-radius: 0.26vw;
+  cursor: pointer;
+  margin-top: 2vh;
+}
+
 </style>
 
 
@@ -422,7 +434,7 @@ input[type="checkbox"]:checked::after {
               <option value="Topographic Survey ">Topographic Survey</option>
               <option value="AS-Built Survey ">AS-Built Survey</option>
               <option value="Sketch Plan / Vicinity Map">Sketch Plan / Vicinity Map</option>
-              <option value="Land Titling/ Transfer">Land Titling/ Transfer</option>
+              <option value="Land Titling / Transfer">Land Titling / Transfer</option>
               <option value="Real Estate">Real Estate</option>
             </select>
           </div>
@@ -486,7 +498,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[original_plan][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>
@@ -508,7 +520,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[lot_title][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>
@@ -518,7 +530,7 @@ input[type="checkbox"]:checked::after {
   <tr>
     <td>Deed of Sale</td>
     <td>
-      <input type="checkbox" name="physical[]" value="Deed of Sale" onchange="toggleStorageStatus(this)">
+      <input type="checkbox" name="physical[]" value="Deed of Sale" onchange="toggleStorageStatus(this)" >
       <select class="storage-status" name="status[deed_of_sale]" style="display:none;">
         <option value="Stored">Stored</option>
         <option value="Released">Released</option>
@@ -530,7 +542,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[deed_of_sale][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>
@@ -552,7 +564,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[tax_declaration][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>
@@ -574,7 +586,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[building_permit][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>
@@ -596,7 +608,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[authorization_letter][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>
@@ -618,7 +630,7 @@ input[type="checkbox"]:checked::after {
         <label class="attach-icon">
           <i class="fa fa-paperclip"></i>
           <input type="file" name="digital[others][]" multiple
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)">
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(this)" disabled>
         </label>
       </div>
     </td>

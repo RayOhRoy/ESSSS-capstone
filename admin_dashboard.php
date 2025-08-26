@@ -110,20 +110,52 @@ if (file_exists($dataFile)) {
 <div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Admin!</div>
 
 
-<div class="stats">
-  <?php
-  $stats = [
-    ["label" => "TOTAL OF PROJECTS", "value" => $data["total_projects"], "percent" => 100, "icon" => "folder.png", "text" => "PROJECTS"],
-    ["label" => "TOTAL OF DOCUMENTS", "value" => $data["total_documents"], "percent" => 100, "icon" => "File text.png", "text" => "DOCUMENTS"],
-    ["label" => "MY STORED DOCUMENTS", "value" => $data["stored_documents"], "percent" => $data["percentage_stored"], "icon" => "Database.png", "text" => "STORED DOCUMENTS"],
-    ["label" => "MY RELEASED DOCUMENTS", "value" => $data["released_documents"], "percent" => $data["percentage_released"], "icon" => "Box.png", "text" => "RELEASED DOCUMENTS"]
-  ];
+<?php
+include 'server/server.php';
 
-  foreach ($stats as $stat): ?>
+// Fetch total projects
+$total_projects_query = "SELECT COUNT(*) as total FROM project";
+$total_projects_result = $conn->query($total_projects_query);
+$total_projects = $total_projects_result->fetch_assoc()['total'];
+
+// Fetch total documents
+$total_documents_query = "SELECT COUNT(*) as total FROM document";
+$total_documents_result = $conn->query($total_documents_query);
+$total_documents = $total_documents_result->fetch_assoc()['total'];
+
+// Fetch stored documents
+$stored_documents_query = "SELECT COUNT(*) as total FROM document WHERE documentstatus='stored'";
+$stored_documents_result = $conn->query($stored_documents_query);
+$stored_documents = $stored_documents_result->fetch_assoc()['total'];
+
+// Fetch released documents
+$released_documents_query = "SELECT COUNT(*) as total FROM document WHERE documentstatus='released'";
+$released_documents_result = $conn->query($released_documents_query);
+$released_documents = $released_documents_result->fetch_assoc()['total'];
+
+// Calculate percentages safely
+$percentage_stored = $total_documents > 0 ? round(($stored_documents / $total_documents) * 100) : 0;
+$percentage_released = $total_documents > 0 ? round(($released_documents / $total_documents) * 100) : 0;
+
+// Prepare stats array
+$stats = [
+    ["label" => "TOTAL OF PROJECTS", "value" => $total_projects, "icon" => "folder.png", "text" => "PROJECTS"],
+    ["label" => "TOTAL OF DOCUMENTS", "value" => $total_documents, "icon" => "File text.png", "text" => "DOCUMENTS"],
+    ["label" => "MY STORED DOCUMENTS", "value" => $stored_documents, "percent" => $percentage_stored, "icon" => "Database.png", "text" => "STORED DOCUMENTS"],
+    ["label" => "MY RELEASED DOCUMENTS", "value" => $released_documents, "percent" => $percentage_released, "icon" => "Box.png", "text" => "RELEASED DOCUMENTS"]
+];
+
+$conn->close();
+?>
+
+<div class="stats">
+  <?php foreach ($stats as $stat): ?>
     <div class="stat-box">
       <div class="stat-top">
         <p><?= $stat["label"] ?></p>
-        <span class="percent"><?= $stat["percent"] ?>%</span>
+        <?php if (isset($stat["percent"])): ?>
+          <span class="percent"><?= $stat["percent"] ?>%</span>
+        <?php endif; ?>
       </div>
       <div class="stat-bottom">
         <div class="stat-info">
@@ -137,7 +169,6 @@ if (file_exists($dataFile)) {
     </div>
   <?php endforeach; ?>
 </div>
-
 
 <div class="mid-section">
 

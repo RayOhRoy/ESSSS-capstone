@@ -113,13 +113,95 @@
   color: white;
   border-radius: 4cqw;
 }
-</style>
 
-<?php
-$dataFile = 'data.json';
-$data = file_exists($dataFile) ? json_decode(file_get_contents($dataFile), true) : [];
-$projects = $data['projects'] ?? [];
-?>
+.preview-btn {
+  color: black;
+  cursor: pointer;
+  font-size: 1.25cqw;
+  transition: color 0.3s;
+  border: none; 
+}
+
+.preview-btn:hover {
+  color: #7B0302;
+  transform: scale(1.05);
+  transition: scale 0.2s ease;
+  background-color: transparent;
+}
+
+.update-btn {
+  color: black;
+  cursor: pointer;
+  font-size: 1.25cqw;
+  transition: color 0.3s;
+  border: none; 
+}
+
+.update-btn:hover {
+  color: #7B0302;
+  transform: scale(1.05);
+  transition: scale 0.2s ease;
+  background-color: transparent;
+}
+
+#previewModal {
+  display: none; /* visible */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+}
+
+#previewModal .modal-content {
+  background: white;
+  padding: 2vw;
+  border-radius: 1vw;
+  max-width: 600px;
+  width: 90%;
+  position: fixed;       /* fixed so it stays in viewport */
+  top: 50%;              /* vertical center */
+  left: 50%;             /* horizontal center */
+  transform: translate(-50%, -50%); /* center exactly */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+
+/* Close button */
+#previewModal #closeModal {
+  position: absolute;
+  top: 1vw;
+  right: 1vw;
+  cursor: pointer;
+  font-size: 2cqw;
+  color: #7B0302;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#previewModal #closeModal:hover {
+  color: #a10000;
+  transform: scale(1.2);
+}
+
+/* Modal body content */
+#previewModal #modalBody p {
+  margin: 1vh 0;
+  font-size: 1cqw;
+  color: #333;
+}
+
+#previewModal #modalBody strong {
+  color: #7B0302;
+}
+
+.test-btn {
+  font-size: 5cqw;
+  background-color: black;
+
+}
+</style>
 
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Project List</span>
@@ -165,6 +247,18 @@ if ($result && $result->num_rows > 0) {
 }
 ?>
 
+<?php
+function maskName($fname, $lname) {
+    $maskedF = strlen($fname) > 2
+        ? $fname[0] . str_repeat('*', strlen($fname)-2) . $fname[strlen($fname)-1]
+        : $fname;
+    $maskedL = strlen($lname) > 1
+        ? $lname[0] . str_repeat('*', strlen($lname)-1)
+        : $lname;
+    return $maskedF . ' ' . $maskedL;
+}
+?>
+
 <table class="projectlist-table" id="projectTable">
   <thead>
     <tr>
@@ -180,20 +274,40 @@ if ($result && $result->num_rows > 0) {
 <tbody>
   <?php foreach ($projects as $project): ?>
     <tr>
-      <td><?= htmlspecialchars($project['ProjectID']) ?></td> <!-- ProjectID as Project Name -->
-      <td><?= htmlspecialchars($project['ClientFName'] . ' ' . $project['ClientLName']) ?></td>
+      <td><?= htmlspecialchars($project['ProjectID']) ?></td>
+      <td><?= htmlspecialchars(maskName($project['ClientFName'], $project['ClientLName'])) ?></td>
       <td><?= htmlspecialchars($project['Municipality']) ?></td>
       <td><?= htmlspecialchars($project['PhysicalLocation'] ?? '') ?></td>
       <td><?= htmlspecialchars($project['SurveyType']) ?></td>
-      <td>Preview</td>
-      <td><button class="update-btn" data-id="<?= $project['ProjectID'] ?>">Update Here</button></td>
+      <td><button class="preview-btn fa fa-eye"></button></td>
+<td>
+<button class="update-btn fa fa-edit"
+    data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
+    onclick="redirectToUpdate(this)">
+</button>
+</td>
+
+
     </tr>
   <?php endforeach; ?>
 </tbody>
 
 </table>
 
-
+<button class="test-btn">test</button>
 <div class="floating-add-project" data-page="admin_upload.php">
   <span class="fa fa-plus" style="font-size: 1.5cqw; color: white;"></span>
+</div>
+
+
+
+<!-- Modal Structure -->
+<div id="previewModal" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" >&times;</span>
+    <h2>Project Preview</h2>
+    <div id="modalBody">
+      <!-- Project info will be loaded here -->
+    </div>
+  </div>
 </div>

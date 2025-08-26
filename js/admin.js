@@ -1,7 +1,7 @@
 function initAdminPage() {
   const contentArea = document.getElementById('content-area');
   if (contentArea) {
-    loadAdminPage('admin_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
+    loadAdminPage('admin_dashboard.php', initUserMenuDropdown, initTestModal); // Run dropdown init after load
     loadScript('js/admin_upload.js');
     loadScript('js/admin_userlist.js');
     loadScript('js/admin_projectlist.js');
@@ -17,7 +17,7 @@ document.addEventListener('click', function (e) {
 
   if (page) {
     if (page === 'admin_dashboard.php') {
-      loadAdminPage(page, initUserMenuDropdown);
+      loadAdminPage(page, initUserMenuDropdown, initTestModal);
     } else {
       loadAdminPage(page);
     }
@@ -40,10 +40,16 @@ document.addEventListener('click', function (e) {
 });
 }
 
-function loadAdminPage(page) {
+function loadAdminPage(page, callback) {
   const contentArea = document.getElementById('content-area');
   if (!contentArea) return;
 
+  // ✅ Automatically highlight the correct menu item before loading
+  document.querySelectorAll(".menu-item").forEach(i => i.classList.remove("active"));
+  const targetMenu = document.querySelector(`.menu-item[data-page="${page}"]`);
+  if (targetMenu) targetMenu.classList.add("active");
+
+  // Load the page
   fetch(page)
     .then(res => {
       if (!res.ok) throw new Error(`Failed to load ${page}: ${res.status}`);
@@ -52,8 +58,12 @@ function loadAdminPage(page) {
     .then(html => {
       contentArea.innerHTML = html;
 
-      // Rebind dropdown every time new content is loaded
+      // Rebind dropdown each time
       initUserMenuDropdown();
+      initTestModal();
+
+      // ✅ Run callback after page loads
+      if (typeof callback === "function") callback();
     })
     .catch(err => {
       console.error('Failed to load admin page:', err);
@@ -94,6 +104,40 @@ function initUserMenuDropdown() {
     if (!newUserIcon.contains(e.target) && !userMenu.contains(e.target)) {
       userMenu.style.display = "none";
     }
+  });
+}
+
+function initTestModal() {
+  const modal = document.getElementById('previewModal');
+  const modalBody = document.getElementById('modalBody');
+  const closeBtn = document.getElementById('closeModal');
+
+  if (!modal || !modalBody || !closeBtn) return;
+
+  // Remove old listeners by cloning elements (prevents duplicates)
+  const newCloseBtn = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+
+  document.querySelectorAll('.test-btn').forEach(button => {
+    // Remove previous listeners by cloning node
+    const newButton = button.cloneNode(true);
+    button.parentNode.replaceChild(newButton, button);
+
+    newButton.addEventListener('click', () => {
+      modalBody.innerHTML = `<p>Test modal content loaded!</p>`;
+      modal.style.display = 'block';
+    });
+  });
+
+  // Close modal when clicking "×"
+  newCloseBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  // Close modal when clicking outside content
+  document.addEventListener('click', (e) => {
+    if (!modal.contains(e.target) && e.target.classList.contains('test-btn')) return;
+    if (e.target === modal) modal.style.display = 'none';
   });
 }
 

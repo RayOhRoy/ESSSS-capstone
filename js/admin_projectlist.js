@@ -49,13 +49,34 @@ function sortTable(col, btn) {
 
   // Add active style and arrow to clicked button
   btn.classList.add("active-sort");
-  const arrow = sortDirection[col] 
-    ? '<i class="fa fa-long-arrow-up" style="margin-left:5px;"></i>' 
+  const arrow = sortDirection[col]
+    ? '<i class="fa fa-long-arrow-up" style="margin-left:5px;"></i>'
     : '<i class="fa fa-long-arrow-down" style="margin-left:5px;"></i>';
   btn.innerHTML = btn.textContent + arrow;
 }
-  const defaultBtn = document.querySelector(".sort-btn.active-sort");
-  if (defaultBtn) {
-    sortTable(0, defaultBtn);
-  }
-  
+const defaultBtn = document.querySelector(".sort-btn.active-sort");
+if (defaultBtn) {
+  sortTable(0, defaultBtn);
+}
+
+function redirectToUpdate(button) {
+  const projectId = button.getAttribute('data-projectid');
+  loadAdminPage('admin_update.php?projectId=' + encodeURIComponent(projectId));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.test-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('previewModal').style.display = 'block';
+        });
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('previewModal').style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('previewModal');
+        if (e.target === modal) modal.style.display = 'none';
+    });
+});
