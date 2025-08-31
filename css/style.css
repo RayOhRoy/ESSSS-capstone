@@ -1,0 +1,217 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to right, #7B0302 23.70%, #ffffff 23.70%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.main-container {
+  width: 100%;
+  max-width: 100%;
+  height: 74.26%;
+  display: flex;
+  border-radius: 1.3vw;
+  background-color: #d9d9d9;
+  overflow: hidden;
+  flex-direction: row;
+}
+
+.form-container {
+  display: flex;
+  width: 120%;
+}
+
+.image-side,
+.form-side {
+  flex: 1 1 50%;
+  min-width: 15.63%;
+}
+
+.image-side {
+  position: relative;
+  overflow: hidden;
+}
+
+.background-img {
+  width: 100%;
+  height: 100%;
+  max-width: 30.52vw;
+  object-fit: cover;
+  filter: brightness(0.9) sepia(0.4) hue-rotate(-10deg) saturate(1.2);
+}
+
+.form-side {
+  padding: 3.7vh 2.1vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #d9d9d9;
+}
+
+.form-box {
+  width: 50%;
+  max-width: 28vw; 
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.78vw; 
+  margin-bottom: 2.78vh; 
+}
+
+.logo {
+  width: 10.42vw;
+  height: auto;
+}
+
+h2 {
+  font-size: 1.46vw; 
+  color: #7B0302;
+  margin: 0;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3vh 4vw; 
+  width: 100%;
+  margin-top: 2vh;
+  
+}
+
+@media screen and (max-width: 768px) {
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* input {
+  width: 100%;
+  padding: 1.2vh 1vw;
+  border-radius: 0.26vw; 
+  border: 1px solid #ccc;
+  color: #7B0302;
+  background-color: #f5f5f5;
+  box-shadow: 0 0.18vh 0.56vh rgba(0, 0, 0, 0.55); 
+  margin-bottom: 1.5vh;
+} */
+
+ select {
+  width: 127.5%;
+  padding: 1.2vh 1vw;
+  border-radius: 0.26vw; 
+  border: 1px solid #ccc;
+  color: #7B0302;
+  background-color: #f5f5f5;
+  box-shadow: 0 0.18vh 0.56vh rgba(0, 0, 0, 0.55); 
+  margin-bottom: 1.5vh;
+}
+
+input::placeholder {
+  color: #7B0302;
+  opacity: 0.8;
+}
+
+/* button {
+  width: 100%;
+  padding: 1.11vh 0.83vw;
+  background-color: #7B0302;
+  color: #fff;
+  border: none;
+  border-radius: 0.26vw;
+  cursor: pointer;
+  margin-top: 2vh;
+} */
+
+.link {
+  margin-top: 1.39vh;
+  font-size: 0.73vw; 
+  display: flex;
+  justify-content: center;
+  color: #7B0302;
+  gap: 2vh;
+}
+
+.link span {
+  color: #7B0302;
+  cursor: pointer;
+}
+
+
+
+@media screen and (max-width: 1024px) {
+  body {
+    height: auto;
+    background: linear-gradient(to right, #7B0302 35%, #ffffff 35%);
+  }
+
+  .main-container {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .form-side,
+  .image-side {
+    flex: 1 1 100%;
+    min-width: 300px;
+  }
+
+  .form-side {
+    padding: 30px 20px;
+  }
+
+  .logo {
+    width: 160px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .link {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .form-box {
+    max-width: 90%;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  input {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  button {
+    font-size: 14px;
+  }
+
+  .logo {
+    width: 130px;
+  }
+
+  .link {
+    font-size: 12px;
+  }
+}
+
+span[data-load] {
+  cursor: pointer;
+  transition: filter 0.2s, color 0.2s;
+}

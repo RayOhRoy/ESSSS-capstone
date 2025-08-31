@@ -1,0 +1,34 @@
+{
+    "total_projects": 4,
+    "total_documents": 4,
+    "stored_documents": 3,
+    "released_documents": 1,
+    "percentage_stored": 75,
+    "percentage_released": 25,
+    "recent_activities": [
+        {
+            "type": "HAG-001",
+            "status": "MODIFIED",
+            "project_name": "R** R** F****",
+             "date": "08-23-2025 11:30 AM"
+        },
+        {
+            "type": "CAL-001",
+            "status": "UPLOADED",
+            "project_name": "F**** L*** M**",
+              "date": "08-21-2025 9:30 AM"
+        },
+        {
+            "type": "HAG-003",
+            "status": "UPLOADED",
+            "project_name": "F**** L*** M**",
+            "date": "08-19-2025 2:30 PM"
+        },
+        {
+            "type": "HAG-002",
+            "status": "MODIFIED",
+            "project_name": "J*** S*** V***",
+              "date": "08-15-2025 1:12 PM"
+        }
+    ]
+}

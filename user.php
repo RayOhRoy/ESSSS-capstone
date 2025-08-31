@@ -1,0 +1,80 @@
+<style> 
+  #sidetoggle {
+    font-size: 1.5cqw;
+    position: absolute;
+    margin-left: 10cqw;
+    cursor: pointer;
+    transition: filter 0.3s ease;
+  }
+
+  #sidetoggle:hover {
+    filter: brightness(0.7);
+  }
+  
+  .sidebar.collapsed {
+    width: 4.5cqw; 
+    overflow: hidden;
+  }
+
+  .sidebar.collapsed .logo-text {
+    display: none;
+  }
+
+  .sidebar.collapsed .menu-item span:nth-child(2) {
+    display: none;
+  }
+
+  .sidebar.collapsed .logo img {
+    width: 3cqw;       /* reduce the logo size */
+    margin-left: 3.75cqw; /* move it a bit to the right */
+    transition: all 0.3s ease;
+  }
+
+  .sidebar.collapsed #sidetoggle  {
+    width: 3cqw;       /* reduce the logo size */
+    margin-left: 5.5cqw; /* move it a bit to the right */
+    font-size: 0.75cqw;
+    margin-top: -1cqw;
+    transition: all 0.3s ease;
+  }
+
+  .side-logo {
+    max-width: 10cqw;
+  }
+</style>
+
+<div class="container">
+  <div class="sidebar">
+    <!-- <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span> -->
+    <!-- <div class="logo"> -->
+      <img class="side-logo" src="picture/logoOutlined.png" alt="Logo">
+      <!-- <div class="logo-text">
+        <div>ESSSS Centralized Document</div>
+        <div>Management System with QR Technology</div>
+      </div> -->
+    <!-- </div> -->
+
+    <div class="menu-icons">
+      <a href="#" class="menu-item active" data-page="user_dashboard.php">
+        <span  class="fa fa-home" alt="Dashboard"></span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="menu-item" data-page="admin_upload.php">
+        <span  class="fa fa-upload" alt="Upload"></span>
+        <span>Upload</span>
+      </a>
+      <a href="#" class="menu-item" data-page="admin_projectlist.php">
+        <span  class="fa fa-list" alt="Project List"></span>
+        <span>Project List</span>
+      </a>
+      <a href="#" class="menu-item" data-page="qr_search.php">
+        <span  class="fa fa-qrcode" alt="QR Toggle"></span>
+        <span>QR Search</span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="main" id="content-area"></div>
+  
+</div>
