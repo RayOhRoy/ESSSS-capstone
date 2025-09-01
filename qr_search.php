@@ -205,6 +205,9 @@
   font-weight: 700;
 }
 
+.preview-projectname {
+  margin-top: 5%;
+}
 </style>
 
 
@@ -227,31 +230,32 @@
 
 <hr class="top-line" />
 
+ <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
 <div id="qrsearchModal" class="modal">
   <div class="modal-content">
     <span id="closeqrsearchModal">&times;</span>
     <div id="modalBody">
-      <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
+     
       <!-- QR Code & Reference -->
       <div class="qr-section">
         <!-- <img src="picture/project_qr.png" alt="QR Code" class="qr-img" /> -->
-        <p class="preview-projectname" style="margin-top: 45%;">Scan Project QR</p>
+        <p class="preview-projectname">Scan Project QR</p>
       </div>
 
       <!-- Project Details -->
       <div class="project-details">
-        <p><strong>Lot No.:</strong></p>
+        <!-- <p><strong>Lot No.:</strong></p>
         <p><strong>Address:</strong></p>
         <p><strong>Survey Type:</strong></p>
         <p><strong>Client:</strong></p>
         <p><strong>Physical Location:</strong></p>
         <p><strong>Agent:</strong></p>
-        <p><strong>Survey Period:</strong></p>
+        <p><strong>Survey Period:</strong></p> -->
       </div>
 
       <!-- Document Table -->
       <div class="document-table">
-        <table>
+        <!-- <table>
           <thead>
             <tr>
               <th>Document Name</th>
@@ -262,46 +266,46 @@
           <tbody>
             <tr>
               <td>Original Plan</td>
-              <td class="status stored">STORED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>Lot Title</td>
-              <td class="status released">RELEASED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>Ref Plan/Lot Data</td>
-              <td class="status stored">STORED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>TD</td>
-              <td class="status stored">STORED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>Transmittal</td>
-              <td class="status stored">STORED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>Field Notes</td>
-              <td class="status released">RELEASED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>Deed of Sale/Transfer</td>
-              <td class="status stored">STORED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
             <tr>
               <td>Tax Declaration</td>
-              <td class="status stored">STORED</td>
-              <td class="status available">AVAILABLE</td>
+              <td class="status"></td>
+              <td class="status"></td>
             </tr>
           </tbody>
-        </table>
+        </table> -->
       </div>
 
       <!-- Buttons -->

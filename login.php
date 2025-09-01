@@ -19,7 +19,7 @@
                 <input class="Password" name="password" type="password" placeholder="Password" required />
             </div>
             <div id="invalid-error" style="color:red;"></div>
-            <!-- <p class="forgot">forgot password?</p> -->
+            <p class="forgot" data-load="forgot_password.php">forgot password?</p>
             <button class="SignInBtn">Sign in</button>
         </form>
     </div>

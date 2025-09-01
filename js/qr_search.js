@@ -85,6 +85,10 @@ function generateProjectHTML(project) {
         </tbody>
       </table>
     </div>
+
+    <div class="modal-buttons">
+        <button class="open-btn">OPEN</button>
+    </div> 
   `;
 }
 
@@ -99,11 +103,12 @@ function generateDocumentRows(documents) {
   return documents.map(doc => `
     <tr>
       <td>${doc.name}</td>
-      <td class="status ${doc.physical_status.toLowerCase()}">${doc.physical_status.toUpperCase()}</td>
+      <td class="status ${doc.physical_status.toLowerCase()}">${doc.physical_status}</td>
       <td class="status ${doc.digital_status.toLowerCase()}">${doc.digital_status.toUpperCase()}</td>
     </tr>
   `).join('');
 }
+
 
 let qrSearchInitialized = false;
 
@@ -145,6 +150,7 @@ function initQRSearch() {
   function closeModal() {
     modal.style.display = 'none';
     enableAllInputs();
+    qrInput.focus();
   }
 
   // Close modal on clicking close button or outside modal content

@@ -139,10 +139,10 @@ function submitForm() {
     method: "POST",
     body: formData
   })
-    .then(res => res.text())
+    .then(res => res.json())
     .then(data => {
-
-      if (data.includes("successfully")) {
+      if (data.status === "success") {
+        const projectId = data.projectID || "Unknown Project ID";
         // Create custom modal
         const modal = document.createElement("div");
         modal.style.position = "fixed";
@@ -188,18 +188,95 @@ function submitForm() {
             return;
           }
 
-          // Build HTML
-          let qrHTML = "";
+          // Build QR grid HTML (without project ID yet)
+          let qrGridHTML = "";
           qrImages.forEach((qr) => {
-            qrHTML += `
-      <div class="qr-block">
-        <img src="${qr.src}" alt="QR Code">
-        <div class="label">${qr.label}</div>
-      </div>
-    `;
+            qrGridHTML += `
+    <div class="qr-block">
+      <img src="${qr.src}" alt="QR Code">
+      <div class="label">${qr.label}</div>
+    </div>
+  `;
           });
 
-          // Create hidden iframe
+          // Build full HTML with project ID and grid inside a wrapper
+          const printHTML = `
+  <html>
+    <head>
+      <title>Print QR Codes</title>
+      <style>
+        @page { size: A4 portrait; margin: 5mm; }
+
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+        }
+
+        .print-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .project-id-header {
+          font-size: 14px;
+          font-weight: bold;
+          text-align: center;
+          margin: 5mm 0 3mm 0;
+        }
+
+        .qr-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 48mm);
+          grid-auto-rows: 55mm;
+          gap: 2mm;
+          padding: 5mm;
+        }
+
+        .qr-block {
+          width: 48mm;
+          height: 55mm;
+          border: 1px solid #000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+          padding: 2mm;
+        }
+
+        .qr-block img {
+          width: 44mm;
+          height: 36mm;
+        }
+
+        .label {
+          margin-top: 1.5mm;
+          font-size: 11px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="print-wrapper">
+        <div class="project-id-header">${projectId}</div>
+        <div class="qr-grid">
+          ${qrGridHTML}
+        </div>
+      </div>
+      <script>
+        window.onload = function() {
+          window.print();
+          window.onafterprint = function() {
+            window.close();
+          }
+        }
+      </script>
+    </body>
+  </html>
+`;
+
+          // Create and inject hidden iframe
           const iframe = document.createElement("iframe");
           iframe.style.position = "fixed";
           iframe.style.right = "0";
@@ -209,55 +286,12 @@ function submitForm() {
           iframe.style.border = "0";
           document.body.appendChild(iframe);
 
+          // Write content
           const doc = iframe.contentWindow.document;
           doc.open();
-          doc.write(`
-    <html>
-      <head>
-        <title>Print QR Codes</title>
-        <style>
-          @page { size: A4 portrait; margin: 5mm; }
-          body {
-            display: grid;
-            grid-template-columns: repeat(4, 48mm);
-            grid-auto-rows: 55mm;
-            gap: 2mm;
-            margin: 0;
-            padding: 5mm;
-            font-family: Arial, sans-serif;
-          }
-          .qr-block {
-            width: 48mm;
-            height: 55mm;
-            border: 1px solid #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            padding: 2mm;
-          }
-          .qr-block img {
-            width: 44mm;
-            height: 36mm;
-          }
-          .label {
-            margin-top: 1.5mm;
-            font-size: 11px;
-          }
-        </style>
-      </head>
-      <body>
-        ${qrHTML}
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() { window.close(); }
-          }
-        </script>
-      </body>
-    </html>
-  `);
+          doc.write(printHTML);
+          doc.close();
+
           doc.close();
         });
 
@@ -596,6 +630,25 @@ function sequentialInputs() {
         }
       }
     });
+  });
+}
+
+function clearApproval() {
+  const requestType = document.getElementById('requestType');
+  const toBeApprovedBy = document.getElementById('toBeApprovedBy');
+
+  requestType.addEventListener('change', () => {
+    if (requestType.value === 'Sketch Plan') {
+      // Clear selected radio buttons
+      const radios = toBeApprovedBy.querySelectorAll('input[type="radio"]');
+      radios.forEach(radio => radio.checked = false);
+
+      // Hide the div
+      toBeApprovedBy.style.display = 'none';
+    } else {
+      // Show the div
+      toBeApprovedBy.style.display = 'block';
+    }
   });
 }
 

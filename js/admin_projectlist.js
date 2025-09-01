@@ -94,12 +94,11 @@ function initPreviewModal() {
   const allDocuments = [
     "Original Plan",
     "Lot Title",
-    "Ref Plan/Lot Data",
-    "TD",
-    "Transmittal",
-    "Field Notes",
-    "Deed of Sale/Transfer",
-    "Tax Declaration"
+    "Deed of Sale",
+    "Tax Declaration",
+    "Building Permit",
+    "Authorization Letter",
+    "Others"
   ];
 
   // Map physical document status to CSS classes
@@ -122,16 +121,23 @@ function initPreviewModal() {
       const municipality = row.cells[2].innerText.trim();
       const physicalLocation = row.cells[3].innerText.trim();
       const surveyType = row.cells[4].innerText.trim();
+      const lotNo = row.getAttribute('data-lotno') || projectId;
+      const address = row.getAttribute('data-address') || 'not available';
+      const agent = row.getAttribute('data-agent') || 'not available';
+      const surveyPeriod = row.getAttribute('data-surveyperiod') || 'not available';
 
-      // Populate modal header/details
+
       modal.querySelector('.preview-projectname').textContent = projectId;
       modal.querySelector('.project-details').innerHTML = `
-        <p><strong>Project ID:</strong> ${projectId}</p>
-        <p><strong>Client:</strong> ${clientName}</p>
-        <p><strong>Municipality:</strong> ${municipality}</p>
-        <p><strong>Physical Location:</strong> ${physicalLocation || '<span class="status released">UNAVAILABLE</span>'}</p>
+        <p><strong>Lot No.:</strong> ${lotNo}</p>
+        <p><strong>Address:</strong> ${address}</p>
         <p><strong>Survey Type:</strong> ${surveyType}</p>
+        <p><strong>Client:</strong> ${clientName}</p>
+        <p><strong>Physical Location:</strong> ${physicalLocation || '<span class="status released">UNAVAILABLE</span>'}</p>
+        <p><strong>Agent:</strong> ${agent}</p>
+        <p><strong>Survey Period:</strong> ${surveyPeriod}</p>
       `;
+
 
       // ✅ Replace QR image source
       const qrImage = modal.querySelector('.qr-section img');
@@ -164,7 +170,7 @@ function initPreviewModal() {
       function getPhysicalStatus(doc) {
         const rawStatus = doc.DocumentStatus ? doc.DocumentStatus.toUpperCase() : 'NULL';
         if (rawStatus === 'NULL' || rawStatus === '') {
-          return { text: 'UNAVAILABLE', css: 'released' };
+          return { text: '', css: '' };
         }
         return { text: rawStatus, css: statusClassMap[rawStatus] || 'released' };
       }
@@ -172,9 +178,9 @@ function initPreviewModal() {
       // Helper to get digital status display text and CSS class
       function getDigitalStatus(doc) {
         if (doc.DigitalLocation && doc.DigitalLocation.trim() !== '') {
-          return { text: 'AVAILABLE', css: 'available' };
+          return { text: 'AVAILABLE', css: 'stored' };
         }
-        return { text: 'UNAVAILABLE', css: 'released' };
+        return { text: '', css: '' };
       }
 
       // Loop over allDocuments to populate modal rows
@@ -182,8 +188,8 @@ function initPreviewModal() {
         const lookupName = docName.toLowerCase();
         const doc = docsMap[lookupName];
 
-        let physical = { text: 'UNAVAILABLE', css: 'released' };
-        let digital = { text: 'UNAVAILABLE', css: 'released' };
+        let physical = { text: '', css: '' };
+        let digital = { text: '', css: '' };
 
         if (doc) {
           physical = getPhysicalStatus(doc);

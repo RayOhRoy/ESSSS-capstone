@@ -1,7 +1,7 @@
 <?php
 include '../server/server.php'; 
 include 'phpqrcode/qrlib.php';
-
+header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') die("❌ POST required");
 
 // ================= ADDRESS ==================
@@ -153,6 +153,10 @@ foreach ($docs as $docKey => $docName) {
     }
 }
 
-echo "✅ Project and documents uploaded with QR codes successfully!";
+echo json_encode([
+  'status' => 'success',
+  'message' => 'Project uploaded successfully.',
+  'projectID' => $projectID
+]);
 $conn->close();
 ?>

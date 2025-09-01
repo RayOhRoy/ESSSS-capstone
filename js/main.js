@@ -33,6 +33,7 @@ function loadForm(path) {
 
       attachClickHandlers();
       attachSubmitHandler();
+      attachForgotPasswordHandler();
       attachRegisterHandler();
 
   const adminPages = [
@@ -122,6 +123,60 @@ function attachSubmitHandler() {
       })
       .catch(error => {
         console.error('Login error:', error);
+      });
+  });
+}
+
+function attachForgotPasswordHandler() {
+  const forgotForm = document.getElementById('forgot-password-form');
+  if (!forgotForm) return;
+
+  forgotForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const data = new FormData(forgotForm);
+
+    fetch('model/forgot_password_processing.php', {
+      method: 'POST',
+      body: data
+    })
+      .then(res => res.json())
+      .then(result => {
+        const errorBox = document.getElementById('forgot-error');
+        if (result.success) {
+          // Assuming you want to show a success message or redirect
+          if (errorBox) {
+            errorBox.style.color = 'green';
+            errorBox.textContent = result.message;
+          } else {
+            const div = document.createElement('div');
+            div.id = 'forgot-error';
+            div.style.color = 'green';
+            div.textContent = result.message;
+            forgotForm.insertBefore(div, forgotForm.querySelector('button'));
+          }
+          // Optionally, clear the form fields after success
+          forgotForm.reset();
+
+          // Or redirect if your server tells you where to go:
+          if (result.redirect) {
+            window.location.href = result.redirect;
+          }
+
+        } else {
+          if (errorBox) {
+            errorBox.style.color = 'red';
+            errorBox.textContent = result.message;
+          } else {
+            const div = document.createElement('div');
+            div.id = 'forgot-error';
+            div.style.color = 'red';
+            div.textContent = result.message;
+            forgotForm.insertBefore(div, forgotForm.querySelector('button'));
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Forgot password error:', error);
       });
   });
 }

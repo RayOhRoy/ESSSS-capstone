@@ -312,16 +312,23 @@
 <?php
 include 'server/server.php'; // db connection
 
-// Fetch projects + address info
 $sql = "SELECT 
             p.ProjectID,
+            p.LotNo,
             p.ClientFName,
             p.ClientLName,
             p.SurveyType,
             p.PhysicalLocation,
-            a.Municipality
+            p.Agent,
+            p.SurveyStartDate,
+            p.SurveyEndDate,
+            a.Address AS StreetAddress,
+            a.Barangay,
+            a.Municipality,
+            a.Province
         FROM project p
         JOIN address a ON p.AddressID = a.AddressID";
+
 
 $result = $conn->query($sql);
 
@@ -353,7 +360,18 @@ if (!empty($projectIds)) {
         $documentsByProject[$doc['ProjectID']][] = $doc;
     }
 }
+?>
 
+<?php
+function formatAddress($street, $barangay, $municipality, $province) {
+    $parts = array_filter([
+        $street,
+        $barangay,
+        $municipality,
+        $province
+    ]);
+    return implode(', ', $parts);
+}
 ?>
 
 <?php
@@ -383,7 +401,19 @@ function maskName($fname, $lname) {
 <tbody>
   <?php foreach ($projects as $project): ?>
 <tr
+  data-lotno="<?= htmlspecialchars($project['LotNo'], ENT_QUOTES) ?>"
   data-clientfullname="<?= htmlspecialchars($project['ClientFName'] . ' ' . $project['ClientLName'], ENT_QUOTES) ?>"
+  data-agent="<?= htmlspecialchars($project['Agent'] ?? 'not available', ENT_QUOTES) ?>"
+  data-surveyperiod="<?= htmlspecialchars(
+      date('F j, Y', strtotime($project['SurveyStartDate'])) . ' - ' . date('F j, Y', strtotime($project['SurveyEndDate'])),
+      ENT_QUOTES
+  ) ?>"
+  data-address="<?= htmlspecialchars(formatAddress(
+      $project['StreetAddress'] ?? '',
+      $project['Barangay'] ?? '',
+      $project['Municipality'] ?? '',
+      $project['Province'] ?? ''
+  ), ENT_QUOTES) ?>"
 >
   <td><?= htmlspecialchars($project['ProjectID']) ?></td>
   <td><?= htmlspecialchars(maskName($project['ClientFName'], $project['ClientLName'])) ?></td>
@@ -398,7 +428,6 @@ function maskName($fname, $lname) {
     </button>
   </td>
 </tr>
-
   <?php endforeach; ?>
 </tbody>
 

@@ -12,6 +12,8 @@ function loadAdminPage(page) {
         initChangePassword();
       } else if (page === 'admin_projectlist.php') {
         initPreviewModal();
+      } else if (page === 'admin_upload.php') {
+        clearApproval();
       } else if (page === 'qr_search.php') {
         initQRSearch();
       } else {
