@@ -142,7 +142,7 @@ function initPreviewModal() {
       // ✅ Replace QR image source
       const qrImage = modal.querySelector('.qr-section img');
       if (qrImage) {
-        qrImage.src = `uploads/${projectId}/${projectId}-qr.png`;
+        qrImage.src = `uploads/${projectId}/${projectId}-QR.png`;
         qrImage.alt = `${projectId} QR Code`;
       }
       // Document table tbody
