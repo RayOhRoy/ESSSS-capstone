@@ -63,7 +63,7 @@ function generateProjectHTML(project) {
 
     <div class="project-details">
       <p><strong>Lot No.:</strong> ${project.LotNo || ''}</p>
-      <p><strong>Address:</strong> ${project.FullAddress  || ''}</p>
+      <p><strong>Address:</strong> ${project.FullAddress || ''}</p>
       <p><strong>Survey Type:</strong> ${project.SurveyType || ''}</p>
       <p><strong>Client:</strong> ${project.ClientFName || ''} ${project.ClientLName || ''}</p>
       <p><strong>Physical Location:</strong> ${project.Physicallocation || ''}</p>
@@ -143,16 +143,30 @@ function initQRSearch() {
   }
 
   function openModal() {
+    qrInput.focus();
     modal.style.display = 'flex';
-    disableAllInputs();
+    if (modal.classList.contains('newmodal')) {
+      modal.style.background = 'rgba(0,0,0,0.5)';
+      const content = modal.querySelector('.new-modal-content');
+      if (content) {
+        content.style.backgroundColor = 'white';
+        content.style.border = 'none';
+      }
+    }
   }
 
   function closeModal() {
     modal.style.display = 'none';
-    enableAllInputs();
     qrInput.focus();
   }
 
+    // Focus the qrInput every second, regardless of modal state
+  setInterval(() => {
+    if (qrInput) {
+      qrInput.focus();
+    }
+  }, 1000);
+  
   // Close modal on clicking close button or outside modal content
   body.addEventListener('click', function (e) {
     if (e.target === closeBtn || e.target === modal) {

@@ -634,7 +634,7 @@ while ($docRow = $docResult->fetch_assoc()) {
 
     <div class="footer-buttons">
       <button type="button" id="update-back-btn" class="fa fa-arrow-circle-left" data-page="admin_projectlist.php"></button>
-      <button type="button" id="update-edit-btn" class="btn-red" onclick="submitForm()">Edit</button>
+      <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
     </div>
   </form>
 </div>

@@ -1,8 +1,11 @@
 <?php
+session_start();
 include '../server/server.php'; 
 include 'phpqrcode/qrlib.php';
 header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') die("❌ POST required");
+
+$employeeID = $_SESSION['employeeid'] ?? null;
 
 // ================= ADDRESS ==================
 $province     = mysqli_real_escape_string($conn, $_POST['province']);
@@ -64,6 +67,17 @@ $sqlProject = "INSERT INTO project
     ",'$addressID','$physicalLocation','" . mysqli_real_escape_string($conn, $projectFolder) . "')";
 if ($conn->query($sqlProject) !== TRUE) die("❌ Error inserting project: " . $conn->error);
 
+// ----------- Log project creation activity --------------
+$sqlLastActivity = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
+$resLastActivity = $conn->query($sqlLastActivity);
+$newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0) 
+                  ? str_pad(intval(substr($resLastActivity->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+                  : "001";
+$activityLogID = "ACT-" . $newActivityNum;
+
+$sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID) VALUES ('$activityLogID', '$projectID', 'CREATED', '$employeeID')";
+$conn->query($sqlActivityLog);
+
 // Generate Project QR with new naming convention
 $projQRFileName = $projectID . "-QR.png";  // e.g., HAG-001-QR.png
 $projQRFile = $projectFolder . "/" . $projQRFileName; // full path ../uploads/HAG-001/HAG-001-QR.png
@@ -98,7 +112,6 @@ foreach ($docs as $docKey => $docName) {
         for ($i = 0; $i < count($files['name']); $i++) {
             if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
             $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
-            // We only prepare the destination path here, folder not yet created.
             $uploadedFiles[] = [
                 'tmp_name' => $files['tmp_name'][$i],
                 'newFileName' => $safeDocName . "-" . ($i + 1) . "." . $ext
@@ -106,13 +119,10 @@ foreach ($docs as $docKey => $docName) {
         }
     }
 
-    // Only proceed if physical doc is checked OR there are digital uploads
     if ($physicalChecked || count($uploadedFiles) > 0) {
-        // Now create the folder since it's needed
         $docFolder = $projectFolder . "/" . $safeDocName;
         if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
 
-        // Move uploaded files now that folder exists
         $uploadedPaths = [];
         foreach ($uploadedFiles as $file) {
             $destPath = $docFolder . "/" . $file['newFileName'];
@@ -123,7 +133,7 @@ foreach ($docs as $docKey => $docName) {
 
         $filesString = count($uploadedPaths) > 0 ? implode(";", $uploadedPaths) : NULL;
 
-        // Generate QR code
+        // Generate QR code for document
         $docQRFileName = $projectID . "-" . $safeDocName . "-QR.png";
         $docQRFile = $docFolder . "/" . $docQRFileName;
         $docQRContent = "uploads/$projectID/$safeDocName";
@@ -131,7 +141,7 @@ foreach ($docs as $docKey => $docName) {
 
         $docQRPath = "uploads/$projectID/$safeDocName/$docQRFileName";
 
-        // Insert document record into DB
+        // Generate DocumentID
         $sqlLastDoc = "SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1";
         $resLastDoc = $conn->query($sqlLastDoc);
         $newDocNum = ($resLastDoc && $resLastDoc->num_rows > 0) 
@@ -149,7 +159,22 @@ foreach ($docs as $docKey => $docName) {
             " . ($filesString !== NULL ? "'" . mysqli_real_escape_string($conn, $filesString) . "'" : "NULL") . ",
             " . ($status !== null ? "'$status'" : "NULL") . ",
             '$docQRPath')";
-        $conn->query($sqlDoc);
+        
+        if ($conn->query($sqlDoc) === TRUE) {
+            // Log document upload activity
+            $sqlLastActivityDoc = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
+            $resLastActivityDoc = $conn->query($sqlLastActivityDoc);
+            $newActivityNumDoc = ($resLastActivityDoc && $resLastActivityDoc->num_rows > 0) 
+                                ? str_pad(intval(substr($resLastActivityDoc->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+                                : "001";
+            $activityLogIDDoc = "ACT-" . $newActivityNumDoc;
+
+            $statusDoc = 'UPLOADED'; // status for document upload
+
+            $sqlActivityLogDoc = "INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID) VALUES 
+                                  ('$activityLogIDDoc', '$projectID', '$documentID', '$statusDoc', '$employeeID')";
+            $conn->query($sqlActivityLogDoc);
+        }
     }
 }
 
@@ -158,5 +183,6 @@ echo json_encode([
   'message' => 'Project uploaded successfully.',
   'projectID' => $projectID
 ]);
+
 $conn->close();
 ?>

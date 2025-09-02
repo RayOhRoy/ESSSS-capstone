@@ -61,56 +61,40 @@
     background-color: #7B0302;
     color: white;
   }
-    .main-content {
-      margin-left: 220px; 
-      padding: 30px;
-    }
+.activitylist-table {
+    width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px; /* Adds vertical space between rows */
+  font-size: 0.8vw;
+  }
 
-    h2 {
-      color: #7a0e0e;
-      font-weight: bold;
-      border-bottom: 2px solid #7a0e0e;
-      padding-bottom: 5px;
-      margin-bottom: 20px;
-    }
+  .activitylist-table th, .activitylist-table td {
+    padding: 8px;
+    text-align: center;
+    min-width: 10cqw;
+  }
 
-    .log-header,
-    .log-entry {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
+  .activitylist-table td {
+    text-align: center; /* center table body text */
+    padding: 8px;
+  }
 
-    .column-title {
-      flex: 1;
-      padding: 12px;
-      background: #fff;
-      text-align: center;
-      border-radius: 10px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      font-weight: bold;
-    }
+.sort-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #7B0302;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 6px;
+  transition: background 0.3s, color 0.3s;
+}
 
-    .log-entry .cell {
-      flex: 1;
-      background-color: #ebdcdc;
-      border-radius: 6px;
-      padding: 14px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .emp-name {
-      color: #7a0e0e;
-      font-weight: bold;
-    }
-
-    .emp-role {
-      font-size: 12px;
-      color: #444;
-    }
-
- 
+.sort-btn.active-sort {
+  background-color: #7B0302;
+  color: white;
+  border-radius: 4cqw;
+}
   </style>
 
 <div class="topbar">
@@ -133,20 +117,76 @@
 
 <hr class="top-line" />
 
-    <div class="log-header">
-      <div class="column-title">Employee</div>
-      <div class="column-title">File ID</div>
-      <div class="column-title">Action</div>
-      <div class="column-title">Timestamp</div>
-    </div>
+<?php
+include 'server/server.php';
 
-    <div class="log-entry">
-      <div class="cell">
-        <div class="emp-name">EMPLOYEE 1</div>
-        <div class="emp-role">Secretary</div>
-      </div>
-      <div class="cell">TD-F3N-HG-001</div>
-      <div class="cell">RETRIEVE</div>
-      <div class="cell">25 APR 2025 20:03</div>
-    </div>
-  </div>
+$activity_logs = [];
+
+$sql = "
+    SELECT 
+        al.ActivityLogID,
+        al.ProjectID,
+        al.DocumentID,
+        al.Status,
+        al.Time,
+        e.EmpFName,
+        e.EmpLName,
+        e.JobPosition,
+        d.DocumentType
+    FROM activity_log al
+    JOIN employee e ON al.EmployeeID = e.EmployeeID
+    LEFT JOIN document d ON al.DocumentID = d.DocumentID
+    ORDER BY al.Time DESC
+";
+
+$result = $conn->query($sql);
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $maskedName = substr($row['EmpFName'], 0, 1) . '*** ' . substr($row['EmpLName'], 0, 1) . '***';
+        $documentInfo = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentType'];
+      $activity_logs[] = [
+          'employee_name' => $maskedName,
+          'job_position' => $row['JobPosition'],
+          'document_info' => $documentInfo,
+          'status' => strtoupper($row['Status']),
+          'time' => date('d M Y H:i', strtotime($row['Time']))
+      ];
+    }
+}
+
+$conn->close();
+?>
+
+<!-- Activity Log Table -->
+<table class="activitylist-table" id="projectTable">
+  <thead>
+    <tr>
+      <th><button class="sort-btn active-sort" onclick="sortTable(0, this)">Employee<i class="fa fa-long-arrow-down" style="margin-left:5px;"></i></button></th>
+      <th><button class="sort-btn" onclick="sortTable(1, this)">Document</button></th>
+      <th><button class="sort-btn" onclick="sortTable(2, this)">Action</button></th>
+      <th><button class="sort-btn" onclick="sortTable(3, this)">Timestamp</button></th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php if (empty($activity_logs)): ?>
+      <tr><td colspan="4">No activity logs available.</td></tr>
+    <?php else: ?>
+      <?php foreach ($activity_logs as $log): ?>
+        <tr>
+          <td>
+            <div style="color: #7B0302; font-weight: bold; text-transform: uppercase;">
+              <?= htmlspecialchars($log['employee_name']) ?>
+            </div>
+            <div style="color: #7B0302; font-weight: normal;">
+              <?= htmlspecialchars($log['job_position']) ?>
+            </div>
+          </td>
+          <td><?= htmlspecialchars($log['document_info']) ?></td>
+          <td><?= htmlspecialchars($log['status']) ?></td>
+          <td><?= htmlspecialchars($log['time']) ?></td>
+        </tr>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </tbody>
+</table>

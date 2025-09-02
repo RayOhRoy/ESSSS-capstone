@@ -1,6 +1,7 @@
 <?php
 session_start();
 $userRole = $_SESSION['role'] ?? null;
+$userID = $_SESSION['employeeid'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -17,6 +18,7 @@ $userRole = $_SESSION['role'] ?? null;
   <div id="form-content"></div>
   <script>
     const SESSION_ROLE = <?php echo json_encode($userRole); ?>;
+    const SESSION_ID = <?php echo json_encode($userID); ?>;
   </script>
 
   <script src="js/main.js"></script>

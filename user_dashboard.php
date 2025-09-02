@@ -62,29 +62,62 @@
     background-color: #7B0302;
     color: white;
   }
+    .recent-list {
+    min-width: 40%;
+    margin: 20px auto;
+    font-family: Arial, sans-serif;
+  }
+
+    .recent-list h3 {
+  color: #7B0302;
+    }
+  .recent-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .employee-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    min-width: 180px;
+    margin-left: 20px;
+  }
+
+  .employee-info strong {
+    font-weight: 900;
+  }
+
+  .employee-role {
+    font-size: 0.8rem;
+    margin-top: 3px;
+  }
+
+  .status {
+    flex: 1;
+    text-align: left;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .display-info {
+  min-width: 100px;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+  .datetime {
+    font-size: 0.8rem;
+    min-width: 150px;
+    text-align: right;
+    margin-right: 20px;
+  }
 </style>
 
 <?php
-$dataFile = 'dashboard_data.json';
-$data = [
-  "total_projects" => 0,
-  "total_documents" => 0,
-  "stored_documents" => 0,
-  "released_documents" => 0,
-  "percentage_stored" => 0,
-  "percentage_released" => 0,
-  "recent_activities" => []
-];
-
-
-
-if (file_exists($dataFile)) {
-  $json = file_get_contents($dataFile);
-  $decoded = json_decode($json, true);
-  if (is_array($decoded)) {
-    $data = array_merge($data, $decoded);
-  }
-}
+session_start();
 ?>
 
 
@@ -107,7 +140,7 @@ if (file_exists($dataFile)) {
 </div>
 
 <hr class="top-line" />
-<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Employee!</div>
+<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Admin!</div>
 
 
 <?php
@@ -199,38 +232,115 @@ $conn->close();
     </div>
   </div>
 
+<?php
+include 'server/server.php';
 
-  <div class="recent-list">
-    <!-- <h3>Recent Activity</h3>
-   <?php foreach ($data["recent_activities"] as $activity): ?>
-  <?php if (!is_array($activity)) continue; ?>
-  <div class="recent-item">
-    <div class="icon-label">
-      <img src="picture/File text.png" alt="Document Icon" class="doc-icon" />
-      <div>
-        <span class="doc-type"><?= htmlspecialchars($activity["type"]) ?></span><br />
-        <small><?= htmlspecialchars($activity["status"]) ?></small>
+$userRole = $_SESSION['role'] ?? null;
+$userID = $_SESSION['employeeid'] ?? null;
+
+$recent_activities = [];
+
+if ($userRole === 'admin') {
+    // Admin sees all activities (limit 5)
+    $sql = "
+    SELECT 
+      al.ActivityLogID,
+      al.ProjectID,
+      al.DocumentID,
+      al.Status,
+      al.Time,
+      e.EmployeeID,
+      e.JobPosition,
+      CONCAT(SUBSTRING(e.EmpFName, 1, 1), '*** ', SUBSTRING(e.EmpLName, 1, 1), '***') AS masked_employee_name,
+      d.DocumentName
+    FROM activity_log al
+    JOIN employee e ON al.EmployeeID = e.EmployeeID
+    LEFT JOIN document d ON al.DocumentID = d.DocumentID
+    ORDER BY al.Time DESC
+    LIMIT 10
+    ";
+} else if ($userRole === 'user' && $userID) {
+    // Regular user sees only their own activities (limit 5)
+    $sql = "
+    SELECT 
+      al.ActivityLogID,
+      al.ProjectID,
+      al.DocumentID,
+      al.Status,
+      al.Time,
+      e.EmployeeID,
+      e.JobPosition,
+      CONCAT(SUBSTRING(e.EmpFName, 1, 1), '*** ', SUBSTRING(e.EmpLName, 1, 1), '***') AS masked_employee_name,
+      d.DocumentName
+    FROM activity_log al
+    JOIN employee e ON al.EmployeeID = e.EmployeeID
+    LEFT JOIN document d ON al.DocumentID = d.DocumentID
+    WHERE al.EmployeeID = ?
+    ORDER BY al.Time DESC
+    LIMIT 10
+    ";
+} else {
+    // No valid role or user id, no activities
+    $recent_activities = [];
+}
+
+if (!empty($sql)) {
+    if ($userRole === 'user' && $userID) {
+        // Prepare statement to avoid injection
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $result = $conn->query($sql);
+    }
+
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $display_info = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentName'];
+
+            $recent_activities[] = [
+                'activity_log_id' => $row['ActivityLogID'],
+                'project_id' => $row['ProjectID'],
+                'document_id' => $row['DocumentID'],
+                'status' => $row['Status'],
+                'time' => $row['Time'],
+                'masked_employee_name' => $row['masked_employee_name'],
+                'JobPosition' => $row['JobPosition'],
+                'display_info' => $display_info
+            ];
+        }
+    }
+}
+
+$conn->close();
+?>
+
+<div class="recent-list">
+  <h3>Recent Activity</h3>
+  <?php if (empty($recent_activities)): ?>
+    <p>No recent activities to display.</p>
+  <?php else: ?>
+    <?php foreach ($recent_activities as $activity): ?>
+      <div class="recent-item">
+        <div class="employee-info">
+          <strong><?= htmlspecialchars($activity['masked_employee_name']) ?></strong>
+          <span class="employee-role"><?= htmlspecialchars($activity['JobPosition']) ?></span>
+        </div>
+        <div class="status">
+          <?= htmlspecialchars(strtoupper($activity['status'])) ?>
+        </div>
+        <div class="display-info">
+          <?= htmlspecialchars($activity['display_info']) ?>
+        </div>
+        <div class="datetime">
+          <?= date('d M Y H:i', strtotime($activity['time'])) ?>
+        </div>
       </div>
-    </div>
-    <span class="doc-lot"><?= htmlspecialchars($activity["project_name"]) ?></span>
-    <span class="doc-date"><?= htmlspecialchars($activity["date"]) ?></span>
+    <?php endforeach; ?>
+  <?php endif; ?>
+</div>
 
-    <?php
-
-      $file = !empty($activity["file"])
-        ? $activity["file"]
-        : (!empty($activity["lot_no"]) && $activity["lot_no"] !== "N/A"
-            ? 'documents/' . $activity["lot_no"] . '.pdf'
-            : '');
-    ?>
-
-    <?php if (!empty($file)): ?>
-      <a href="<?= htmlspecialchars($file) ?>" target="_blank" class="view-doc-link">View file</a>
-    <?php else: ?>
-      <span class="view-file" style="color: gray; pointer-events: none;">view file</span>
-    <?php endif; ?>
-  </div>
-<?php endforeach; ?> -->
 
   </div>
 </div>

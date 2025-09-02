@@ -1,19 +1,19 @@
 <style>
   input {
-width: 100%;
-      padding: 1.2vh 1vw;
-      border-radius: 0.26vw; 
-      border: 1px solid #ccc;
-      color: #7B0302;
-      background-color: #f5f5f5;
-      margin-bottom: 1.5vh;
+    width: 100%;
+    padding: 1.2vh 1vw;
+    border-radius: 0.26vw;
+    border: 1px solid #ccc;
+    color: #7B0302;
+    background-color: #f5f5f5;
+    margin-bottom: 1.5vh;
   }
 
   #user-circle-icon:hover,
   #notification-circle-icon:hover {
-    filter: brightness(1.25); 
+    filter: brightness(1.25);
     transform: scale(1.05);
-    transition: filter 0.2s ease; 
+    transition: filter 0.2s ease;
   }
 
   .dropdown {
@@ -41,10 +41,9 @@ width: 100%;
     color: #7B0302;
     text-decoration: none;
     font-size: 0.8cqw;
-
   }
 
- .dropdown-menu a:first-child:hover {
+  .dropdown-menu a:first-child:hover {
     background-color: #7B0302;
     color: white;
     border-radius: 8px 8px 0 0;
@@ -60,17 +59,15 @@ width: 100%;
     background-color: #7B0302;
     color: white;
   }
-.userlist-grid {
+
+  .userlist-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5%;
-    margin-top: 5%;
-    margin-left: 10%;
-    margin-right: 10%;
-    margin-bottom: 1%;
-}
+    margin: 5% 10% 1% 10%;
+  }
 
-.user-card {
+  .user-card {
     background: #7B0302;
     padding: 1cqw;
     border-radius: 1cqw;
@@ -80,13 +77,13 @@ width: 100%;
     color: white;
     display: flex;
     flex-direction: column;
-    justify-content: center; 
-    align-items: center;    
+    justify-content: center;
+    align-items: center;
     text-align: center;
     position: relative;
-}
+  }
 
-.user-status {
+  .user-status {
     position: absolute;
     top: 1cqw;
     left: 1cqw;
@@ -96,41 +93,41 @@ width: 100%;
     padding: 0.3cqw 0.8cqw;
     border-radius: 0.5cqw;
     color: white;
-}
+  }
 
-.status-active {
+  .status-active {
     background-color: #00830F;
-}
+  }
 
-.status-inactive {
+  .status-inactive {
     background-color: black;
-}
+  }
 
-.user-name {
+  .user-name {
     font-size: 1cqw;
     font-weight: 600;
     margin: 0.3cqw 0;
-}
+  }
 
-.user-position {
+  .user-position {
     font-size: 0.75cqw;
     margin: 0.5cqw 0;
-}
+  }
 
-.iconEllipsis {
+  .iconEllipsis {
     position: absolute;
     top: 1.5cqw;
     left: 12cqw;
     font-size: 1cqw;
     cursor: pointer;
-}
+  }
 
-#iconUL {
+  #iconUL {
     font-size: 3cqw;
     margin-bottom: 0.5cqw;
-}
+  }
 
-.status-dropdown {
+  .status-dropdown {
     position: absolute;
     top: 3cqw;
     left: 11cqw;
@@ -140,33 +137,33 @@ width: 100%;
     box-shadow: 0 0.5cqw 1cqw rgba(0, 0, 0, 0.2);
     display: none;
     flex-direction: column;
-    z-index: 10;    
-}
+    z-index: 10;
+  }
 
-.status-option {
+  .status-option {
     padding: 0.5cqw 1cqw;
     cursor: pointer;
-}
+  }
 
-.status-option:first-child {
+  .status-option:first-child {
     border-top-left-radius: 0.5cqw;
     border-top-right-radius: 0.5cqw;
-}
+  }
 
-.status-option:last-child {
+  .status-option:last-child {
     border-bottom-left-radius: 0.5cqw;
     border-bottom-right-radius: 0.5cqw;
-}
+  }
 
-.status-option:hover {
+  .status-option:hover {
     background-color: #eee;
-    border-radius: 0.5cqw; 
-}
+    border-radius: 0.5cqw;
+  }
 
-.floating-add-user {
+  .floating-add-user {
     position: fixed;
     bottom: 50px;
-    right: 50px; 
+    right: 50px;
     background-color: #7a0000;
     border-radius: 50%;
     width: 70px;
@@ -178,13 +175,13 @@ width: 100%;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     z-index: 50;
     transition: transform 0.3s ease;
-}
+  }
 
-.floating-add-user:hover {
-  transform: scale(1.2); /* increase size by 20% */
-}
+  .floating-add-user:hover {
+    transform: scale(1.2);
+  }
 
-.modal {
+  .modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -196,45 +193,73 @@ width: 100%;
     background-color: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(0.1cqw);
     -webkit-backdrop-filter: blur(0.1cqw);
-}
+  }
 
-.modal-content {
+  .modal-content {
     margin: 3cqw auto;
     max-width: 50cqw;
     max-height: 35cqw;
     border-radius: 1cqw !important;
     border: none;
-}
+  }
 
-label {
+  label {
     color: #7B0302;
-}
+  }
 
-input[disabled] {
-  background-color: #e0e0e0;
-  border: 1px solid #ccc;
-  color: #444;
-  font-weight: 600;
-}
+  input[disabled] {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    color: #444;
+    font-weight: 600;
+  }
 
-.form-section input {
-border-radius: 0.26vw; 
-      border: 1px solid #ccc;
-      background-color: white;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
+  .form-section input {
+    border-radius: 0.26vw;
+    border: 1px solid #ccc;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
 
-button {
-  width: 100%;
-  padding: 1.11vh 0.83vw;
-  background-color: #7B0302;
+  button {
+    width: 100%;
+    padding: 1.11vh 0.83vw;
+    background-color: #7B0302;
+    color: #fff;
+    border: none;
+    border-radius: 0.26vw;
+    cursor: pointer;
+    margin-top: 2vh;
+  }
+
+  .toast {
+  background-color: #333;
   color: #fff;
-  border: none;
-  border-radius: 0.26vw;
-  cursor: pointer;
-  margin-top: 2vh;
+  padding: 1cqw 2cqw;
+  border-radius: 0.5cqw;
+  margin-bottom: 1cqw;
+  min-width: 15cqw;
+  max-width: 25cqw;
+  font-size: 0.9cqw;
+  opacity: 0.95;
+  box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.2);
+  animation: fadeInOut 4s ease forwards;
 }
 
+.toast-success {
+  background-color: #28a745;
+}
+
+.toast-error {
+  background-color: #dc3545;
+}
+
+@keyframes fadeInOut {
+  0%   { opacity: 0; transform: translateY(-10px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  90%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
 </style>
 
 <?php
@@ -245,7 +270,7 @@ $sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'USR%' ORDER BY em
 $result = $conn->query($sql);
 
 if ($result && $row = $result->fetch_assoc()) {
-    $lastId = intval(substr($row['employeeid'], 3)); // remove 'USR' and get number
+    $lastId = intval(substr($row['employeeid'], 3));
     $nextId = $lastId + 1;
     $nextEmployeeId = 'USR' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 }
@@ -254,11 +279,11 @@ if ($result && $row = $result->fetch_assoc()) {
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">User List</span>
   <div class="topbar-content">
-     <div class="search-bar">
+    <div class="search-bar">
       <input type="text" placeholder="Search Project" />
     </div>
     <div class="icons">
-      <span  id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
+      <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
       <div class="dropdown-menu" id="user-menu">
         <a data-page="profile.php">Profile</a>
@@ -333,16 +358,26 @@ echo '<div class="userlist-grid">';
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $accountstatusClass = strtolower($row['AccountStatus']) === 'active' ? 'status-active' : 'status-inactive';
+        $status = strtolower($row['AccountStatus']);
+        $accountstatusClass = $status === 'active' ? 'status-active' : 'status-inactive';
+
+        // Conditionally render status options
+        $activateOption = '';
+        $deactivateOption = '';
+
+        if ($status === 'inactive') {
+            $activateOption = '<div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Active">Activate</div>';
+        } elseif ($status === 'active') {
+            $deactivateOption = '<div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Inactive">Deactivate</div>';
+        }
 
         echo '<div class="user-card">';
         echo '<div class="user-status ' . $accountstatusClass . '">' . strtoupper(htmlspecialchars($row['AccountStatus'])) . '</div>';
         echo '<div class="fa fa-ellipsis-h iconEllipsis" data-id="' . $row['EmployeeID'] . '"></div>';
-        echo '<div class="status-dropdown" id="dropdown-' . $row['EmployeeID'] . '">
-                <div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Active">Active</div>
-                <div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Inactive">Deactivate</div>
-                <div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Delete">Delete</div>
-              </div>';
+        echo '<div class="status-dropdown" id="dropdown-' . $row['EmployeeID'] . '">';
+        echo $activateOption . $deactivateOption;
+        echo '<div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Delete">Delete</div>';
+        echo '</div>';
         echo '<div class="fa fa-user-circle" id="iconUL"></div>';
         echo '<div class="user-name">' . htmlspecialchars($row['fullname']) . '</div>';
         echo '<div class="user-position">' . htmlspecialchars($row['JobPosition']) . '</div>';
@@ -352,3 +387,5 @@ if ($result && $result->num_rows > 0) {
 }
 
 echo '</div></div></section>';
+?>
+<div id="toast-container" style="position: fixed; top: 2vh; right: 2vw; z-index: 9999;"></div>

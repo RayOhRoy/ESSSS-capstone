@@ -61,19 +61,47 @@
     color: white;
   }
 
-#qrsearchModal {
-  display: block; /* visible */
+
+.qr-search-content {
+  border: 1px solid #EC221F;
+  background: #FEE9E7;
+  padding: 2vw;
+  border-radius: 1vw;
+  max-width: 600px;
+  width: 90%;
+  position: fixed;       /* fixed so it stays in viewport */
+  top: 50%;              /* vertical center */
+  left: 50%;             /* horizontal center */
+  transform: translate(-50%, -50%); /* center exactly */
+}
+
+.newmodal {
+  display: none; /* visible */
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
   z-index: 9999;
 }
 
-#qrsearchModal .modal-content {
-  background: white;
+.newmodal .new-modal-content {
+  border: 1px solid #EC221F;
+  background: #FEE9E7;
+  padding: 2vw;
+  border-radius: 1vw;
+  max-width: 600px;
+  width: 90%;
+  position: fixed;       /* fixed so it stays in viewport */
+  top: 50%;              /* vertical center */
+  left: 50%;             /* horizontal center */
+  transform: translate(-50%, -50%); /* center exactly */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+.oldmodal .old-modal-content {
+  border: 1px solid #EC221F;
+  background: #FEE9E7;
   padding: 2vw;
   border-radius: 1vw;
   max-width: 600px;
@@ -86,7 +114,8 @@
 }
 
 /* Close button */
-#qrsearchModal #closeqrsearchModal {
+.newmodal #closeqrsearchModal {
+  opacity: 0;
   position: absolute;
   top: 1vw;
   right: 1vw;
@@ -96,7 +125,7 @@
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
-#qrsearchModal #closeqrsearchModal:hover {
+.newmodal #closeqrsearchModal:hover {
   color: #a10000;
   transform: scale(1.2);
 }
@@ -175,8 +204,9 @@
 /* Buttons */
 .modal-buttons {
   display: flex;
-  justify-content: space-around;
-  margin-top: 2vh;
+  justify-content: center; /* center all buttons */
+  gap: 0.5vw;              /* reduce space between buttons */
+  margin-top: 1vh;         /* optional: reduce top margin */
 }
 
 .open-btn,
@@ -190,9 +220,14 @@
   cursor: pointer;
 }
 
+.close-btn {
+  background-color: #C2C2C2;
+  color: #7B0302;
+}
+
 .open-btn:hover,
 .close-btn:hover {
-  background-color: #a10000;
+  filter: brightness(1.1);   /* subtle visual lift */
 }
 
 .qr-section img {
@@ -208,110 +243,40 @@
 .preview-projectname {
   margin-top: 5%;
 }
+
+.qr-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+}
+
+.qr-indicator-title {
+  color: #900B09;
+  font-size: 1cqw;
+  font-weight: 650;
+}
+
+.qr-indicator-text {
+  color: #900B09;
+  margin-left: 1.4vw;
+}
+
 </style>
 
+ <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
 
-<div class="topbar">
-  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">QR Search</span>
-  <div class="topbar-content">
-    <div class="search-bar">
-      <input type="text" placeholder="Search Project" />
-    </div>
-    <div class="icons">
-      <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
-      <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
-      <div class="dropdown-menu" id="user-menu">
-        <a data-page="profile.php">Profile</a>
-        <a href="model/logout.php">Sign Out</a>
-      </div>
-    </div>
-  </div>
+  <div class="qr-search-content">
+       <div class="qr-indicator">
+      <div class="fa fa-info-circle" style="color: #900B09; font-size: 1cqw;"></div>
+      <p class="qr-indicator-title">QR SEARCH ENABLED</p>
+     </div>
+     <small class="qr-indicator-text">You can now search by scanning QR on physical document.</small>
 </div>
 
-<hr class="top-line" />
 
- <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
-<div id="qrsearchModal" class="modal">
-  <div class="modal-content">
+<div id="qrsearchModal" class="newmodal">
+  <div class="new-modal-content">
     <span id="closeqrsearchModal">&times;</span>
     <div id="modalBody">
-     
-      <!-- QR Code & Reference -->
-      <div class="qr-section">
-        <!-- <img src="picture/project_qr.png" alt="QR Code" class="qr-img" /> -->
-        <p class="preview-projectname">Scan Project QR</p>
-      </div>
 
-      <!-- Project Details -->
-      <div class="project-details">
-        <!-- <p><strong>Lot No.:</strong></p>
-        <p><strong>Address:</strong></p>
-        <p><strong>Survey Type:</strong></p>
-        <p><strong>Client:</strong></p>
-        <p><strong>Physical Location:</strong></p>
-        <p><strong>Agent:</strong></p>
-        <p><strong>Survey Period:</strong></p> -->
-      </div>
-
-      <!-- Document Table -->
-      <div class="document-table">
-        <!-- <table>
-          <thead>
-            <tr>
-              <th>Document Name</th>
-              <th>Physical Documents</th>
-              <th>Digital Documents</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Original Plan</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>Lot Title</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>Ref Plan/Lot Data</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>TD</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>Transmittal</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>Field Notes</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>Deed of Sale/Transfer</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-            <tr>
-              <td>Tax Declaration</td>
-              <td class="status"></td>
-              <td class="status"></td>
-            </tr>
-          </tbody>
-        </table> -->
-      </div>
-
-      <!-- Buttons -->
-      <!-- <div class="modal-buttons">
-        <button class="open-btn">OPEN</button>
-      </div> -->
-    </div>
-  </div>
-</div>
+<div>

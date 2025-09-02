@@ -6,6 +6,8 @@ function loadAdminPage(page) {
     .then(res => res.text())
     .then(html => {
       contentArea.innerHTML = html;
+
+      // Initialize correct handlers after loading content
       if (page === 'admin_userlist.php') {
         initUserListHandlers();
       } else if (page === 'profile.php') {
@@ -25,6 +27,20 @@ function loadAdminPage(page) {
     });
 }
 
+// 🔔 Toast Notification Utility
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  const container = document.getElementById('toast-container');
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 4000);
+}
+
 function initUserListHandlers() {
   console.log("User list handlers initialized with event delegation");
 
@@ -34,7 +50,7 @@ function initUserListHandlers() {
     return;
   }
 
-  container.addEventListener('click', function(e) {
+  container.addEventListener('click', function (e) {
     const ellipsis = e.target.closest('.iconEllipsis');
     if (ellipsis) {
       e.stopPropagation();
@@ -62,47 +78,76 @@ function initUserListHandlers() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ account_id: accountId })
           })
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              // Remove user card from DOM
-              const userCard = option.closest('.user-card');
-              if (userCard) userCard.remove();
-            } else {
-              alert('Failed to delete account: ' + (data.message || 'Unknown error'));
-            }
-          })
-          .catch(() => alert('Error deleting account. Please try again.'));
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                const userCard = option.closest('.user-card');
+                const empId = userCard.querySelector('.user-id')?.textContent || 'Unknown ID';
+
+                if (userCard) userCard.remove();
+                showToast(`Account ${empId} deleted successfully.`, 'success');
+              } else {
+                showToast('Failed to delete account: ' + (data.message || 'Unknown error'), 'error');
+              }
+            })
+            .catch(() => {
+              showToast('Error deleting account. Please try again.', 'error');
+            });
         }
       } else {
-        // Handle Active / Inactive status update
+        // Confirm before status change
+        const confirmMsg = `Are you sure you want to ${newStatus.toLowerCase()} this account?`;
+        if (!confirm(confirmMsg)) return;
+
         fetch("model/update_status.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: `id=${encodeURIComponent(accountId)}&status=${encodeURIComponent(newStatus)}`
         })
-        .then(res => res.text())
-        .then(response => {
-          alert("Status update response: " + response);
+          .then(res => res.text())
+          .then(response => {
+            const userCard = container.querySelector(`.iconEllipsis[data-id="${accountId}"]`).closest('.user-card');
+            const empId = userCard.querySelector('.user-id')?.textContent || 'Unknown ID';
 
-          const statusBadge = container.querySelector(`.iconEllipsis[data-id="${accountId}"]`)
-            .parentElement.querySelector('.user-status');
+            showToast(`Account ${empId} ${newStatus.toLowerCase()}d successfully.`, 'success');
 
-          statusBadge.textContent = newStatus.toUpperCase();
-          statusBadge.className = "user-status " + (newStatus.toLowerCase() === "active" ? "status-active" : "status-inactive");
+            const statusBadge = userCard.querySelector('.user-status');
 
-          const dropdown = document.getElementById(`dropdown-${accountId}`);
-          if (dropdown) dropdown.style.display = 'none';
-        })
-        .catch(err => alert("Error updating status: " + err));
+            // Update status text & class
+            statusBadge.textContent = newStatus.toUpperCase();
+            statusBadge.className = "user-status " + (newStatus.toLowerCase() === "active" ? "status-active" : "status-inactive");
+
+            // Update dropdown
+            const dropdown = document.getElementById(`dropdown-${accountId}`);
+            if (dropdown) {
+              dropdown.innerHTML = '';
+
+              if (newStatus === 'Active') {
+                dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Inactive">Deactivate</div>`;
+              } else {
+                dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Active">Activate</div>`;
+              }
+
+              dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Delete">Delete</div>`;
+              dropdown.style.display = 'none';
+            }
+
+          })
+          .catch(err => {
+            console.error("Error updating status:", err);
+            showToast("Error updating status. Please try again.", 'error');
+          });
       }
+
       return;
     }
   });
 
-  // Close dropdowns on outside click
-  document.addEventListener('click', () => {
-    container.querySelectorAll('.status-dropdown').forEach(dd => dd.style.display = 'none');
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!container.contains(e.target)) {
+      container.querySelectorAll('.status-dropdown').forEach(dd => dd.style.display = 'none');
+    }
   });
 
   const addBtn = document.getElementById('add-account-btn');
