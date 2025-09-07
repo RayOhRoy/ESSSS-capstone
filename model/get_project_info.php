@@ -25,7 +25,6 @@ $sql = "SELECT
             p.ClientLName,
             p.ClientFName,
             p.SurveyType,
-            p.PhysicalLocation,
             p.DigitalLocation,
             p.SurveyStartDate,
             p.SurveyEndDate,

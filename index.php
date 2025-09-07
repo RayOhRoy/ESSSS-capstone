@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set("Asia/Manila");
 session_start();
 $userRole = $_SESSION['role'] ?? null;
 $userID = $_SESSION['employeeid'] ?? null;

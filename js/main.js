@@ -24,7 +24,7 @@ function loadForm(path) {
       if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
       return res.text();
     })
-      .then(html => {
+    .then(html => {
       const container = document.getElementById('form-content');
       container.innerHTML = html;
 
@@ -36,42 +36,37 @@ function loadForm(path) {
       attachForgotPasswordHandler();
       attachRegisterHandler();
 
-  const adminPages = [
-  'admin.php',
-  'admin_activitylog.php',
-  'admin_dashboard.php',
-  'admin_projectlist.php',
-  'admin_upload.php',
-  'admin_userlist.php'
-];
+      const adminPages = [
+        'admin.php',
+        'activity_log.php',
+        'user_list',
+        'admin_dashboard.php'
+      ];
 
-const userPages = [
-  'user.php',
-  'user_dashboard.php',
-  'user_projectlist.php',
-  'user_upload.php',
-  'user_profile.php'
-];
+      const userPages = [
+        'user.php',
+        'user_dashboard.php'
+      ];
 
-if (adminPages.includes(path)) {
-  loadCSS('css/admin_style.css');
+      if (adminPages.includes(path)) {
+        loadCSS('css/admin_style.css');
 
-  if (path === 'admin_userlist.php') {
-    loadScript('js/admin_userlist.js');
-  } else {
-    loadScript('js/admin.js');
-  }
-}
+        if (path === 'userlist.php') {
+          loadScript('js/user_list.js');
+        } else {
+          loadScript('js/admin.js');
+        }
+      }
 
-if (userPages.includes(path)) {
-  loadCSS('css/admin_style.css');
+      if (userPages.includes(path)) {
+        loadCSS('css/admin_style.css');
 
-  if (path === 'user_projectlist.php') {
-    loadScript('js/user_projectlist.js');
-  } else {
-    loadScript('js/user.js');
-  }
-}
+        if (path === 'project_list.php') {
+          loadScript('js/project_list.js');
+        } else {
+          loadScript('js/user.js');
+        }
+      }
 
     })
     .catch(err => {
@@ -107,8 +102,8 @@ function attachSubmitHandler() {
       .then(result => {
         const errorBox = document.getElementById('invalid-error');
         if (result.success) {
-  
-          loadForm(result.redirect); 
+
+          loadForm(result.redirect);
         } else {
           if (errorBox) {
             errorBox.textContent = result.message;
@@ -129,8 +124,14 @@ function attachSubmitHandler() {
 
 function attachForgotPasswordHandler() {
   const forgotForm = document.getElementById('forgot-password-form');
+  const otpModal = document.getElementById('otp-modal');
+  const otpForm = document.getElementById('otp-verify-form');
+  const closeOtpModal = document.getElementById('otp-modal-close');
+  const emailInput = document.querySelector('.Email');
+
   if (!forgotForm) return;
 
+  // Step 1: Send OTP to email
   forgotForm.addEventListener('submit', function (e) {
     e.preventDefault();
     const data = new FormData(forgotForm);
@@ -141,44 +142,83 @@ function attachForgotPasswordHandler() {
     })
       .then(res => res.json())
       .then(result => {
-        const errorBox = document.getElementById('forgot-error');
+        const errorBox = document.getElementById('forgot-error') || createErrorBox(forgotForm, 'forgot-error');
+
         if (result.success) {
-          // Assuming you want to show a success message or redirect
-          if (errorBox) {
-            errorBox.style.color = 'green';
-            errorBox.textContent = result.message;
-          } else {
-            const div = document.createElement('div');
-            div.id = 'forgot-error';
-            div.style.color = 'green';
-            div.textContent = result.message;
-            forgotForm.insertBefore(div, forgotForm.querySelector('button'));
-          }
-          // Optionally, clear the form fields after success
-          forgotForm.reset();
+          errorBox.style.color = 'green';
+          errorBox.textContent = result.message;
 
-          // Or redirect if your server tells you where to go:
-          if (result.redirect) {
-            window.location.href = result.redirect;
-          }
+          // Disable the email input and button
+          emailInput.disabled = true;
+          forgotForm.querySelector('button').disabled = true;
 
+          // Show OTP modal
+          if (otpModal) otpModal.style.display = 'block';
         } else {
-          if (errorBox) {
-            errorBox.style.color = 'red';
-            errorBox.textContent = result.message;
-          } else {
-            const div = document.createElement('div');
-            div.id = 'forgot-error';
-            div.style.color = 'red';
-            div.textContent = result.message;
-            forgotForm.insertBefore(div, forgotForm.querySelector('button'));
-          }
+          errorBox.style.color = 'red';
+          errorBox.textContent = result.message;
         }
       })
       .catch(error => {
         console.error('Forgot password error:', error);
       });
   });
+
+  // Step 2: Verify OTP and Reset Password
+  if (otpForm) {
+    otpForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(otpForm);
+      formData.append('email', emailInput.value); // Reuse original email
+
+      fetch('model/verify_otp.php', {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(result => {
+          const errorBox = document.getElementById('otp-error') || createErrorBox(otpForm, 'otp-error');
+
+          if (result.success) {
+            errorBox.style.color = 'green';
+            errorBox.textContent = result.message;
+
+            alert('Password reset successful! You can now log in.');
+
+            // ✅ Auto-hide modal after success
+            setTimeout(() => {
+              otpModal.style.display = 'none';
+              window.location.href = 'index.php';
+            }, 2000); // 2-second delay
+          }
+          else {
+            errorBox.style.color = 'red';
+            errorBox.textContent = result.message;
+          }
+        })
+        .catch(error => {
+          console.error('OTP verification error:', error);
+        });
+    });
+  }
+
+  // Close modal when clicking the close button (×)
+  if (closeOtpModal) {
+    closeOtpModal.addEventListener('click', function () {
+      otpModal.style.display = 'none';
+    });
+  }
+
+  // Helper function to create reusable error box
+  function createErrorBox(form, id) {
+    let div = document.createElement('div');
+    div.id = id;
+    div.style.color = 'red';
+    div.style.marginTop = '1rem';
+    form.appendChild(div);
+    return div;
+  }
 }
 
 function attachRegisterHandler() {

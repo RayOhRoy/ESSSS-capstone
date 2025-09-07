@@ -7,18 +7,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // ----------------------
-// Determine next Project ID
+// Determine next Project ID (Physical Location style)
 // ----------------------
 $municipality = $_POST['municipality'] ?? 'OTH';
 $prefix = ($municipality === 'Hagonoy') ? 'HAG' : (($municipality === 'Calumpit') ? 'CAL' : 'OTH');
 
+// Get last project number by searching ProjectID with prefix
 $sqlLastProj = "SELECT ProjectID FROM project WHERE ProjectID LIKE '$prefix-%' ORDER BY ProjectID DESC LIMIT 1";
 $resLastProj = $conn->query($sqlLastProj);
-$newNumP = ($resLastProj && $resLastProj->num_rows > 0) 
-           ? str_pad(intval(substr($resLastProj->fetch_assoc()['ProjectID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-           : "001";
 
-$projectID = "$prefix-$newNumP";
+if ($resLastProj && $resLastProj->num_rows > 0) {
+    $lastProjectID = $resLastProj->fetch_assoc()['ProjectID'];
+    // Extract last 3 digits as number (e.g. HAG-01-015 -> 15)
+    $lastNum = intval(substr($lastProjectID, -3));
+    $nextNum = $lastNum + 1;
+} else {
+    $nextNum = 1;
+}
+
+$block = intval(($nextNum - 1) / 50) + 1;
+$slot = $nextNum;
+
+$projectID = sprintf("%s-%02d-%03d", $prefix, $block, $slot);  // e.g., HAG-01-001
 
 // ----------------------
 // Prepare folders
@@ -42,8 +52,8 @@ if (!is_dir($projectFolder)) {
 // ----------------------
 // Generate Project QR
 // ----------------------
-$projQRFile = $projectFolder . '/' . "{$projectID}-QR.png"; // ✅ new filename
-$projQRContent = $projectID; // e.g. "HAG-001"
+$projQRFile = $projectFolder . '/' . "{$projectID}-QR.png"; // new filename
+$projQRContent = $projectID; // e.g. "HAG-01-001"
 QRcode::png($projQRContent, $projQRFile, QR_ECLEVEL_L, 4);
 
 if (!file_exists($projQRFile)) {

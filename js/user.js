@@ -1,12 +1,12 @@
 function initAdminPage() {
   const contentArea = document.getElementById('content-area');
   if (contentArea) {
-    loadAdminPage('admin_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
-    loadScript('js/admin_upload.js');
-    loadScript('js/admin_projectlist.js');
+    loadAdminPage('user_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
+    loadScript('js/upload.js');
+    loadScript('js/project_list.js');
     loadScript('js/profile.js');
     loadScript('js/qr_search.js');
-    loadScript('js/admin_userlist.js');
+    loadScript('js/user_list.js');
   }
 
   // Universal listener for any element with data-page
@@ -18,7 +18,7 @@ document.addEventListener('click', function (e) {
   const page = target.getAttribute('data-page');
 
   if (page) {
-    if (page === 'admin_dashboard.php') {
+    if (page === 'user_dashboard.php') {
       loadAdminPage(page, initUserMenuDropdown);
     } else {
       loadAdminPage(page);

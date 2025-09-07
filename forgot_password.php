@@ -142,6 +142,68 @@ hr{
     color: white;
 }
 
+#otp-modal {
+    display: block; 
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(4px);
+}
+
+#otp-modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+
+.otp-modal-content {
+    position: relative;
+    background-color: white;
+    margin: 10% auto;
+    padding: 2cqw;
+    border: 1px solid #888;
+    width: 30%;
+    border-radius: 1cqw;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    font-family: Arial, Helvetica, sans-serif;
+    color: #7b0302;
+    text-align: center;
+}
+
+.otp-modal-content input {
+    width: 80%;
+    height: 2.5cqw;
+    margin-bottom: 1.5cqw;
+    padding: 0.5cqw 1cqw;
+    border-radius: 0.5cqw;
+    border: 1px solid #ccc;
+    font-size: 1.2cqw;
+}
+
+#otp-modal-close {
+    position: absolute;
+    top: 0.5cqw;
+    right: 0.5cqw;
+    font-size: 2cqw;
+    color: #7b0302;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
 </style>
 
 <div class="mainContainer">
@@ -166,5 +228,19 @@ hr{
             <div id="invalid-error" style="color:red;"></div>
         </form>
         <div id="back-login" class="fa fa-arrow-left" data-load="login.php"></div>
+    </div>
+</div>
+
+<div id="otp-modal">
+    <div class="otp-modal-content">
+        <button id="otp-modal-close" title="Close OTP Modal">&times;</button>
+        <form id="otp-verify-form">
+            <h3>Enter OTP</h3>
+            <input type="text" name="otp" placeholder="6-digit OTP" maxlength="6" required />
+            <input type="password" name="new_password" placeholder="New Password" required />
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+            <button class="Sendemailbtn" type="submit">Reset Password</button>
+            <div id="otp-error" style="color:red; margin-top: 1cqw;"></div>
+        </form>
     </div>
 </div>

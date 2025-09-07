@@ -140,7 +140,7 @@ session_start();
 </div>
 
 <hr class="top-line" />
-<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Admin!</div>
+<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Employee!</div>
 
 
 <?php

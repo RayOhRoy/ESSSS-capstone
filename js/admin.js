@@ -2,11 +2,11 @@ function initAdminPage() {
   const contentArea = document.getElementById('content-area');
   if (contentArea) {
     loadAdminPage('admin_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
-    loadScript('js/admin_upload.js');
-    loadScript('js/admin_projectlist.js');
+    loadScript('js/upload.js');
+    loadScript('js/project_list.js');
     loadScript('js/profile.js');
     loadScript('js/qr_search.js');
-    loadScript('js/admin_userlist.js');
+    loadScript('js/user_list.js');
   }
 
   // Universal listener for any element with data-page

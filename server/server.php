@@ -1,8 +1,8 @@
 <?php 
-$database	= 'u977775529_esdb';
-$username	= 'u977775529_escdms';
+$database	= 'esdb';
+$username	= 'root';
 $host		= 'localhost';
-$password	= 'cT?8B7hL';
+$password	= '';
 
 $conn = new mysqli($host, $username, $password, $database);
 
@@ -13,7 +13,6 @@ if ($conn->connect_error) {
     ]));
 }
 
-// ✅ Optional: Return JSON success message (for debugging/testing only)
 if (php_sapi_name() !== 'cli' && basename($_SERVER['SCRIPT_FILENAME']) === basename(__FILE__)) {
     header('Content-Type: application/json');
     echo json_encode([

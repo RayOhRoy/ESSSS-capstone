@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Prepare statement to prevent SQL injection
-    $stmt = $conn->prepare("SELECT EmployeeID, Password, AccountStatus, AccountType FROM employee WHERE EmployeeID = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT EmployeeID, Password, AccountStatus, AccountType FROM employee WHERE BINARY EmployeeID = ? LIMIT 1");
     $stmt->bind_param("s", $employeeid);
     $stmt->execute();
     $result = $stmt->get_result();

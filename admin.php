@@ -59,19 +59,19 @@
         <span  class="fa fa-home" alt="Dashboard"></span>
         <span>Dashboard</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_upload.php">
+      <a href="#" class="menu-item" data-page="upload.php">
         <span  class="fa fa-upload" alt="Upload"></span>
         <span>Upload</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_projectlist.php">
+      <a href="#" class="menu-item" data-page="project_list.php">
         <span  class="fa fa-list" alt="Project List"></span>
         <span>Project List</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_userlist.php">
+      <a href="#" class="menu-item" data-page="user_list.php">
         <span  class="fa fa-users" alt="User List"></span>
         <span>User List</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_activitylog.php">
+      <a href="#" class="menu-item" data-page="activity_log.php">
         <span  class="fa fa-clock-o" alt="Activity Log"></span>
         <span>Activity Log</span>
       </a>

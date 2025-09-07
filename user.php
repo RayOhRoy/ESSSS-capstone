@@ -59,11 +59,11 @@
         <span  class="fa fa-home" alt="Dashboard"></span>
         <span>Dashboard</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_upload.php">
+      <a href="#" class="menu-item" data-page="upload.php">
         <span  class="fa fa-upload" alt="Upload"></span>
         <span>Upload</span>
       </a>
-      <a href="#" class="menu-item" data-page="admin_projectlist.php">
+      <a href="#" class="menu-item" data-page="project_list.php">
         <span  class="fa fa-list" alt="Project List"></span>
         <span>Project List</span>
       </a>

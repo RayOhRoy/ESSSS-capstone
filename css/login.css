@@ -120,11 +120,12 @@ hr{
     text-decoration: underline;
     text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
+
 .forgot:hover{
     color: white
 }
+
 .SignInBtn:hover{
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
     background-color: #630303;
 }
-
