@@ -27,6 +27,87 @@ function loadAdminPage(page) {
     });
 }
 
+function initPreviewModal() {
+  const previewButtons = document.querySelectorAll('.preview-btn');
+  const modal = document.getElementById('previewModal');
+  const closeModalBtn = document.getElementById('closeModal');
+  const documentsData = document.getElementById('documentsData');
+
+  if (!modal || !closeModalBtn || !documentsData) return;
+
+  const documentsByProject = JSON.parse(documentsData.getAttribute('data-documents') || '{}');
+
+  previewButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tr = button.closest('tr');
+      if (!tr) return;
+
+      // Extract data attributes from row
+      const lotNo = tr.getAttribute('data-lotno') || '';
+      const clientName = tr.getAttribute('data-clientfullname') || '';
+      const agent = tr.getAttribute('data-agent') || 'not available';
+      const surveyPeriod = tr.getAttribute('data-surveyperiod') || '';
+      const address = tr.getAttribute('data-address') || '';
+      const surveyType = tr.querySelector('td:nth-child(4)').textContent || '';
+      const projectID = tr.querySelector('td:nth-child(1)').textContent || '';
+
+      // Update modal content dynamically
+      modal.querySelector('.preview-projectname').textContent = projectID;
+      const details = modal.querySelector('.project-details');
+      if (details) {
+        details.innerHTML = `
+          <p><strong>Lot No.:</strong> ${lotNo}</p>
+          <p><strong>Address:</strong> ${address}</p>
+          <p><strong>Survey Type:</strong> ${surveyType}</p>
+          <p><strong>Client:</strong> ${clientName}</p>
+          <p><strong>Physical Location:</strong> ${projectID}</p>
+          <p><strong>Agent:</strong> ${agent}</p>
+          <p><strong>Survey Period:</strong> ${surveyPeriod}</p>
+        `;
+      }
+
+      // Build document rows dynamically based on documentsByProject data
+      const docTableBody = modal.querySelector('.document-table tbody');
+      if (docTableBody) {
+        docTableBody.innerHTML = ''; // Clear previous rows
+
+        const docs = documentsByProject[projectID] || [];
+
+        if (docs.length === 0) {
+          docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
+        } else {
+          docs.forEach(doc => {
+            // Sample logic for physical/digital status classes (adjust as needed)
+            const physicalStatusClass = doc.DocumentStatus === 'Stored' ? 'stored' : (doc.DocumentStatus === 'Released' ? 'released' : 'available');
+            const digitalStatusClass = doc.DigitalLocation ? 'available' : 'released';
+
+            docTableBody.innerHTML += `
+              <tr>
+                <td>${doc.DocumentName}</td>
+                <td class="status ${physicalStatusClass.toLowerCase()}">${doc.DocumentStatus.toUpperCase()}</td>
+                <td class="status ${digitalStatusClass}">${digitalStatusClass.toUpperCase()}</td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      modal.style.display = 'block';
+    });
+  });
+
+  closeModalBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  // Optional: Close modal if clicking outside content
+  window.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+}
+
 function initUploadHandlers() {
   updateDocumentTableBasedOnSelection();
   clearApproval();

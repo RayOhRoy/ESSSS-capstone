@@ -1,81 +1,12 @@
-function sortTable(col, btn) {
-  const table = document.getElementById("projectTable");
-  const tbody = table.querySelector("tbody");
-
-  let rows = Array.from(tbody.rows); // only body rows
-  rows.sort((a, b) => {
-    const x = a.cells[col].innerText.trim().toLowerCase();
-    const y = b.cells[col].innerText.trim().toLowerCase();
-    return x.localeCompare(y);
-  });
-
-  rows.forEach(row => tbody.appendChild(row)); // re-append sorted rows
-
-  document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active-sort"));
-  btn.classList.add("active-sort");
-}
-
-let sortDirection = {};   // store ascending/descending state per column
-let lastSortedCol = null; // track last sorted column
-
-function sortTable(col, btn) {
-  const table = document.getElementById("projectTable");
-  const tbody = table.querySelector("tbody");
-  let rows = Array.from(tbody.rows);
-
-  // If we clicked a new column, reset to ascending
-  if (lastSortedCol !== col) {
-    sortDirection[col] = true; // ascending
-  } else {
-    sortDirection[col] = !sortDirection[col]; // toggle
-  }
-  lastSortedCol = col;
-
-  // Sort rows
-  rows.sort((a, b) => {
-    const x = a.cells[col].innerText.trim().toLowerCase();
-    const y = b.cells[col].innerText.trim().toLowerCase();
-    return sortDirection[col] ? x.localeCompare(y) : y.localeCompare(x);
-  });
-
-  // Append sorted rows back
-  rows.forEach(row => tbody.appendChild(row));
-
-  // Reset all sort button styles and arrows
-  document.querySelectorAll(".sort-btn").forEach(b => {
-    b.classList.remove("active-sort");
-    b.innerHTML = b.innerHTML.replace(/<i.*<\/i>/, ''); // remove arrow
-  });
-
-  // Add active style and arrow to clicked button
-  btn.classList.add("active-sort");
-  const arrow = sortDirection[col]
-    ? '<i class="fa fa-long-arrow-up" style="margin-left:5px;"></i>'
-    : '<i class="fa fa-long-arrow-down" style="margin-left:5px;"></i>';
-  btn.innerHTML = btn.textContent + arrow;
-}
-const defaultBtn = document.querySelector(".sort-btn.active-sort");
-if (defaultBtn) {
-  sortTable(0, defaultBtn);
-}
-
-function redirectToUpdate(button) {
-  const projectId = button.getAttribute('data-projectid');
-  loadAdminPage('edit_project.php?projectId=' + encodeURIComponent(projectId));
-}
-
-let previewModalInitialized = false;
-
 function initPreviewModal() {
   previewModalInitialized = true;
 
-  // Get documentsByProject from hidden div
   const documentsDataElement = document.getElementById('documentsData');
   let documentsByProject = {};
   if (documentsDataElement) {
     try {
       documentsByProject = JSON.parse(documentsDataElement.getAttribute('data-documents'));
-      console.log("documentsByProject:", documentsByProject); // <-- This line logs the JSON
+      console.log("documentsByProject:", documentsByProject);
     } catch (e) {
       console.error("Failed to parse documents data:", e);
     }
@@ -89,26 +20,6 @@ function initPreviewModal() {
     console.warn("Preview modal or close button not found.");
     return;
   }
-
-  // Predefined document types to always show in the modal
-  const allDocuments = [
-    "Original Plan",
-    "Lot Title",
-    "Deed of Sale",
-    "Tax Declaration",
-    "Building Permit",
-    "Authorization Letter",
-    "Others"
-  ];
-
-  // Map physical document status to CSS classes
-  const statusClassMap = {
-    'STORED': 'stored',
-    'RELEASED': 'released',
-    'NULL': 'released',
-    null: 'released',
-    '': 'released'
-  };
 
   body.addEventListener('click', function (e) {
     const previewBtn = e.target.closest('.preview-btn');
@@ -125,6 +36,9 @@ function initPreviewModal() {
       const agent = row.getAttribute('data-agent') || 'not available';
       const surveyPeriod = row.getAttribute('data-surveyperiod') || 'not available';
 
+      // Use requestType and approvalType from the correct columns (index 10 and 11)
+      const requestType = row.cells[10] ? row.cells[10].innerText.trim() : '';
+      const approvalType = row.cells[11] ? row.cells[11].innerText.trim() : '';
 
       modal.querySelector('.preview-projectname').textContent = projectId;
       modal.querySelector('.project-details').innerHTML = `
@@ -136,35 +50,40 @@ function initPreviewModal() {
         <p><strong>Survey Period:</strong> ${surveyPeriod}</p>
       `;
 
-
-      // ✅ Replace QR image source
       const qrImage = modal.querySelector('.qr-section img');
       if (qrImage) {
         qrImage.src = `uploads/${projectId}/${projectId}-QR.png`;
         qrImage.alt = `${projectId} QR Code`;
       }
-      // Document table tbody
+
       const docTableBody = modal.querySelector('.document-table tbody');
       docTableBody.innerHTML = ''; // Clear existing rows
 
-      // Get docs for project (array of docs)
+      // Get docs for project
       const docs = documentsByProject[projectId] || [];
 
-      // Build map from normalized doc name (without project prefix) to doc object
+      // Normalize doc names map
       const docsMap = {};
       docs.forEach(doc => {
         if (doc.DocumentName) {
-          // Normalize: remove project prefix and dashes/underscores, lowercase
           const normalizedName = doc.DocumentName
-            .replace(new RegExp(`^${projectId}[-_]`, 'i'), '') // remove project ID + dash or underscore prefix
-            .replace(/[-_]/g, ' ') // replace dashes or underscores with space
+            .replace(new RegExp(`^${projectId}[-_]`, 'i'), '')
+            .replace(/[-_]/g, ' ')
             .trim()
             .toLowerCase();
           docsMap[normalizedName] = doc;
         }
       });
 
-      // Helper to get physical status display text and CSS class
+      // Helper for physical status
+      const statusClassMap = {
+        'STORED': 'stored',
+        'RELEASED': 'released',
+        'NULL': 'released',
+        null: 'released',
+        '': 'released'
+      };
+
       function getPhysicalStatus(doc) {
         const rawStatus = doc.DocumentStatus ? doc.DocumentStatus.toUpperCase() : 'NULL';
         if (rawStatus === 'NULL' || rawStatus === '') {
@@ -173,7 +92,7 @@ function initPreviewModal() {
         return { text: rawStatus, css: statusClassMap[rawStatus] || 'released' };
       }
 
-      // Helper to get digital status display text and CSS class
+      // Helper for digital status
       function getDigitalStatus(doc) {
         if (doc.DigitalLocation && doc.DigitalLocation.trim() !== '') {
           return { text: 'AVAILABLE', css: 'stored' };
@@ -181,8 +100,67 @@ function initPreviewModal() {
         return { text: '', css: '' };
       }
 
-      // Loop over allDocuments to populate modal rows
-      allDocuments.forEach(docName => {
+      // Determine docs to render based on requestType and approvalType
+      let docsToRender = [];
+
+      if (requestType === "For Approval" && approvalType === "PSD") {
+        docsToRender = [
+          "Original Plan",
+          "Certified Title",
+          "Ref Plan",
+          "Lot Data",
+          "TD",
+          "Transmital",
+          "Fieldnotes",
+          "Tax Declaration",
+          "Blueprint",
+          "Others"
+        ];
+      } else if (requestType === "For Approval" && approvalType === "CSD") {
+        docsToRender = [
+          "Original Plan",
+          "3 BP",
+          "Ref Plan",
+          "Lot Data",
+          "CM",
+          "TD",
+          "Transmital",
+          "Fieldnotes",
+          "Tax Declaration",
+          "Survey Authority",
+          "Blueprint",
+          "Others"
+        ];
+      } else if (requestType === "For Approval" && approvalType === "LRA") {
+        docsToRender = [
+          "Original Plan",
+          "Certified Title",
+          "Ref Plan",
+          "Lot Data",
+          "TD",
+          "Fieldnotes",
+          "Blueprint",
+          "Others"
+        ];
+      } else if (requestType === "Sketch Plan") {
+        docsToRender = [
+          "Original Plan",
+          "Others"
+        ];
+      } else {
+        docsToRender = [
+          "Original Plan",
+          "Lot Title",
+          "Deed of Sale",
+          "Tax Declaration",
+          "Building Permit",
+          "Authorization Letter",
+          "Others"
+        ];
+      }
+
+      // Render documents into table
+      docsToRender.forEach(docName => {
         const lookupName = docName.toLowerCase();
         const doc = docsMap[lookupName];
 

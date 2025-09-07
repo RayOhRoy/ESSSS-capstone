@@ -66,7 +66,6 @@ function generateProjectHTML(project) {
       <p><strong>Address:</strong> ${project.FullAddress || ''}</p>
       <p><strong>Survey Type:</strong> ${project.SurveyType || ''}</p>
       <p><strong>Client:</strong> ${project.ClientFName || ''} ${project.ClientLName || ''}</p>
-      <p><strong>Physical Location:</strong> ${project.Physicallocation || ''}</p>
       <p><strong>Agent:</strong> ${project.Agent || ''}</p>
       <p><strong>Survey Period:</strong> ${project.SurveyStartDate || ''} - ${project.SurveyEndDate || ''}</p>
     </div>

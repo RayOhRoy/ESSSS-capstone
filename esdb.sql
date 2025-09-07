@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 27, 2025 at 12:16 AM
+-- Generation Time: Sep 07, 2025 at 06:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,9 +31,9 @@ CREATE TABLE `activity_log` (
   `ActivityLogID` varchar(10) NOT NULL,
   `ProjectID` varchar(10) NOT NULL,
   `DocumentID` varchar(10) NOT NULL,
-  `Status` enum('CREATED','VIEWED','MODIFIED','DELETED','RETRIEVED','RETURNED') NOT NULL,
+  `Status` enum('CREATED','VIEWED','MODIFIED','DELETED','RETRIEVED','RETURNED','UPLOADED') NOT NULL,
   `EmployeeID` varchar(10) NOT NULL,
-  `Time` date NOT NULL
+  `Time` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -50,13 +50,6 @@ CREATE TABLE `address` (
   `Province` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `address`
---
-
-INSERT INTO `address` (`AddressID`, `Address`, `Barangay`, `Municipality`, `Province`) VALUES
-('HAG-001', '', 'Iba', 'Hagonoy', 'Bulacan');
-
 -- --------------------------------------------------------
 
 --
@@ -66,21 +59,12 @@ INSERT INTO `address` (`AddressID`, `Address`, `Barangay`, `Municipality`, `Prov
 CREATE TABLE `document` (
   `DocumentID` varchar(10) NOT NULL,
   `DocumentName` varchar(50) NOT NULL,
-  `DocumentType` enum('Original Plan','Lot Title','Deed of Sale','Tax Declaration','Building Permit','Authorization Letter','Others') NOT NULL,
+  `DocumentType` varchar(255) NOT NULL,
   `ProjectID` varchar(10) NOT NULL,
   `DigitalLocation` varchar(255) DEFAULT NULL,
   `DocumentStatus` enum('STORED','RELEASED') DEFAULT NULL,
   `DocumentQR` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `document`
---
-
-INSERT INTO `document` (`DocumentID`, `DocumentName`, `DocumentType`, `ProjectID`, `DigitalLocation`, `DocumentStatus`, `DocumentQR`) VALUES
-('DOC-00001', 'HAG-001-Original-Plan', 'Original Plan', 'HAG-001', NULL, 'STORED', 'uploads/HAG-001/Original-Plan/doc_qr.png'),
-('DOC-00002', 'HAG-001-Deed-Of-Sale', 'Deed of Sale', 'HAG-001', NULL, 'STORED', 'uploads/HAG-001/Deed-Of-Sale/doc_qr.png'),
-('DOC-00003', 'HAG-001-Tax-Declaration', 'Tax Declaration', 'HAG-001', NULL, 'RELEASED', 'uploads/HAG-001/Tax-Declaration/doc_qr.png');
 
 -- --------------------------------------------------------
 
@@ -96,16 +80,17 @@ CREATE TABLE `employee` (
   `Password` varchar(255) NOT NULL,
   `JobPosition` enum('Chief Operating Officer','Secretary','Compliance Officer','CAD Operator') NOT NULL,
   `AccountType` enum('Admin','User') NOT NULL,
-  `AccountStatus` enum('Active','Inactive') NOT NULL
+  `AccountStatus` enum('Active','Inactive') NOT NULL,
+  `PasswordCode` varchar(6) DEFAULT NULL,
+  `CodeExpiry` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee`
 --
 
-INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password`, `JobPosition`, `AccountType`, `AccountStatus`) VALUES
-('ADMN001', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$zp2zCPH9JOBb4kht332IRuFd.dhfgIdHpFI7FogFNhjweo/G2.Md6', 'Chief Operating Officer', 'Admin', 'Active'),
-('USR0001', 'Lopez', 'Aleck Joseph', 'benchudgugu@gmail.com', '$2y$10$jMTGzdzG564C2Vl5zzPjSurmzqsJA8cy.LlObxdfi9bdZLSO6tyx2', 'Compliance Officer', 'User', 'Active');
+INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password`, `JobPosition`, `AccountType`, `AccountStatus`, `PasswordCode`, `CodeExpiry`) VALUES
+('ESSSS0000', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$N4crIaDWNknpnL90zVq6keHnTbof4ag.0LjcPaaTNWQosqj6Hdj8O', 'Chief Operating Officer', 'Admin', 'Active', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -120,22 +105,17 @@ CREATE TABLE `project` (
   `ClientLName` varchar(50) NOT NULL,
   `ClientFName` varchar(50) NOT NULL,
   `SurveyType` enum('Relocation Survey','Verification Survey','Subdivision Survey','Consolidation Survey','Topographic Survey','AS-Built Survey','Sketch Plan / Vicinity Map','Land Titling / Transfer','Real Estate') NOT NULL,
-  `PhysicalLocation` varchar(255) NOT NULL,
   `DigitalLocation` varchar(255) NOT NULL,
   `SurveyStartDate` date NOT NULL,
   `SurveyEndDate` date NOT NULL,
   `Agent` varchar(255) NOT NULL,
-  `RequestType` enum('For Approval','Sketch Plan') NOT NULL,
-  `Approval` enum('LRA','BUREAU','CENRO') DEFAULT NULL,
+  `RequestType` enum('For Approval','Sketch Plan','Title') NOT NULL,
+  `Approval` enum('LRA','PSD','CSD') DEFAULT NULL,
+  `ApprovalStatus` enum('PRINT','APPROVAL','ENTRY') NOT NULL,
+  `ApprovalStartDate` date NOT NULL,
+  `ApprovalEndDate` date NOT NULL,
   `ProjectQR` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `project`
---
-
-INSERT INTO `project` (`ProjectID`, `AddressID`, `LotNo`, `ClientLName`, `ClientFName`, `SurveyType`, `PhysicalLocation`, `DigitalLocation`, `SurveyStartDate`, `SurveyEndDate`, `Agent`, `RequestType`, `Approval`, `ProjectQR`) VALUES
-('HAG-001', 'HAG-001', 'LOT-19982', 'Verano', 'John Sandrex', 'Subdivision Survey', 'HAG-01-001', 'C:\\xampp\\htdocs\\capstone\\model/../uploads/HAG-001', '2025-08-07', '2025-08-28', '', 'Sketch Plan', NULL, 'uploads/HAG-001/project_qr.png');
 
 --
 -- Indexes for dumped tables
