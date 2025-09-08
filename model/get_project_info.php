@@ -18,7 +18,7 @@ if (!$projectId) {
 
 $projectId = $conn->real_escape_string($projectId);
 
-// Fetch project info with AddressID
+// Fetch project info with AddressID and requestType, approvalType
 $sql = "SELECT 
             p.ProjectID,
             p.LotNo,
@@ -34,11 +34,13 @@ $sql = "SELECT
             a.Address,
             a.Barangay,
             a.Municipality,
-            a.Province
+            a.Province,
+            p.RequestType,
+            p.Approval
         FROM project p
         LEFT JOIN address a ON p.AddressID = a.AddressID
         WHERE p.ProjectID = ?";
-        
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $projectId);
 $stmt->execute();
@@ -50,6 +52,9 @@ if ($result->num_rows === 0) {
 }
 
 $project = $result->fetch_assoc();
+
+$requestType = $project['RequestType'] ?? '';
+$approvalType = $project['Approval'] ?? '';
 
 // Format client full name
 $project['ClientName'] = trim($project['ClientFName'] . ' ' . $project['ClientLName']);
@@ -67,35 +72,82 @@ $addressParts = array_filter([
 ]);
 $project['FullAddress'] = implode(', ', $addressParts);
 
-// Predefined document types (display names)
-$predefinedDocs = [
-    "Original Plan",
-    "Lot Title",
-    "Deed of Sale",
-    "Tax Declaration",
-    "Building Permit",
-    "Authorization Letter",
-    "Others"
-];
+// Determine docsToRender based on RequestType and ApprovalType from project table
+if ($requestType === "For Approval" && $approvalType === "PSD") {
+    $docsToRender = [
+        "Original Plan",
+        "Certified Title",
+        "Ref Plan",
+        "Lot Data",
+        "TD",
+        "Transmital",
+        "Fieldnotes",
+        "Tax Declaration",
+        "Blueprint",
+        "Others"
+    ];
+} else if ($requestType === "For Approval" && $approvalType === "CSD") {
+    $docsToRender = [
+        "Original Plan",
+        "3 BP",
+        "Ref Plan",
+        "Lot Data",
+        "CM",
+        "TD",
+        "Transmital",
+        "Fieldnotes",
+        "Tax Declaration",
+        "Survey Authority",
+        "Blueprint",
+        "Others"
+    ];
+} else if ($requestType === "For Approval" && $approvalType === "LRA") {
+    $docsToRender = [
+        "Original Plan",
+        "Certified Title",
+        "Ref Plan",
+        "Lot Data",
+        "TD",
+        "Fieldnotes",
+        "Blueprint",
+        "Others"
+    ];
+} else if ($requestType === "Sketch Plan") {
+    $docsToRender = [
+        "Original Plan",
+        "Others"
+    ];
+} else {
+    $docsToRender = [
+        "Original Plan",
+        "Lot Title",
+        "Deed of Sale",
+        "Tax Declaration",
+        "Building Permit",
+        "Authorization Letter",
+        "Others"
+    ];
+}
 
-// Normalize mapping: ["original-plan" => "Original Plan", ...]
+// Normalize mapping for lookup
 $normalizedMap = [];
-foreach ($predefinedDocs as $docName) {
+foreach ($docsToRender as $docName) {
     $normalizedKey = strtolower(str_replace(' ', '-', $docName));
     $normalizedMap[$normalizedKey] = $docName;
 }
 
-// Initialize all predefined documents with empty statuses
+// Initialize documents array with empty statuses
 $documents = [];
-foreach ($predefinedDocs as $docName) {
-    $documents[strtolower(str_replace(' ', '-', $docName))] = [
+foreach ($docsToRender as $docName) {
+    $key = strtolower(str_replace(' ', '-', $docName));
+    $documents[$key] = [
         'name' => $docName,
         'physical_status' => '',
         'digital_status' => ''
     ];
 }
 
-// Fetch documents from database
+// Fetch documents from DB for this project
 $doc_sql = "SELECT DocumentName, DocumentStatus, DigitalLocation FROM document WHERE ProjectID = ?";
 $doc_stmt = $conn->prepare($doc_sql);
 $doc_stmt->bind_param("s", $projectId);
@@ -107,7 +159,6 @@ while ($doc = $doc_result->fetch_assoc()) {
     $matchedKey = null;
 
     foreach ($normalizedMap as $key => $label) {
-        // Match based on whether DocumentName ends with or contains the normalized keyword
         if (stripos(str_replace(' ', '-', $docNameRaw), $key) !== false) {
             $matchedKey = $key;
             break;
@@ -120,10 +171,10 @@ while ($doc = $doc_result->fetch_assoc()) {
     }
 }
 
-// Re-index as array
+// Re-index array for frontend
 $project['documents'] = array_values($documents);
 
-// Output lowercase key for frontend
+// Output lowercase key for frontend (if needed)
 $project['Physicallocation'] = $project['PhysicalLocation'] ?? '';
 
 echo json_encode(['success' => true, 'project' => $project]);

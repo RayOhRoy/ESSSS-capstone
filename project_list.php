@@ -321,6 +321,8 @@ $sql = "SELECT
             p.Agent,
             p.SurveyStartDate,
             p.SurveyEndDate,
+                 p.Approval,         -- Add this
+            p.RequestType,      -- And this 
             a.Address AS StreetAddress,
             a.Barangay,
             a.Municipality,
@@ -412,7 +414,10 @@ function maskName($fname, $lname) {
       $project['Municipality'] ?? '',
       $project['Province'] ?? ''
   ), ENT_QUOTES) ?>"
+  data-approval="<?= htmlspecialchars($project['Approval'] ?? '', ENT_QUOTES) ?>"     
+  data-requesttype="<?= htmlspecialchars($project['RequestType'] ?? '', ENT_QUOTES) ?>"  
 >
+
   <td><?= htmlspecialchars($project['ProjectID']) ?></td>
   <td><?= htmlspecialchars(maskName($project['ClientFName'], $project['ClientLName'])) ?></td>
   <td><?= htmlspecialchars($project['Municipality']) ?></td>

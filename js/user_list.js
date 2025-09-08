@@ -31,68 +31,105 @@ function initPreviewModal() {
   const previewButtons = document.querySelectorAll('.preview-btn');
   const modal = document.getElementById('previewModal');
   const closeModalBtn = document.getElementById('closeModal');
-  const documentsData = document.getElementById('documentsData');
 
-  if (!modal || !closeModalBtn || !documentsData) return;
-
-  const documentsByProject = JSON.parse(documentsData.getAttribute('data-documents') || '{}');
+  if (!modal || !closeModalBtn) return;
 
   previewButtons.forEach(button => {
     button.addEventListener('click', () => {
       const tr = button.closest('tr');
       if (!tr) return;
 
-      // Extract data attributes from row
-      const lotNo = tr.getAttribute('data-lotno') || '';
-      const clientName = tr.getAttribute('data-clientfullname') || '';
-      const agent = tr.getAttribute('data-agent') || 'not available';
-      const surveyPeriod = tr.getAttribute('data-surveyperiod') || '';
-      const address = tr.getAttribute('data-address') || '';
-      const surveyType = tr.querySelector('td:nth-child(4)').textContent || '';
-      const projectID = tr.querySelector('td:nth-child(1)').textContent || '';
+      const projectID = tr.querySelector('td:nth-child(1)').textContent.trim();
 
-      // Update modal content dynamically
+      if (!projectID) return;
+
+      // Show loading or clear modal content while fetching
       modal.querySelector('.preview-projectname').textContent = projectID;
       const details = modal.querySelector('.project-details');
-      if (details) {
-        details.innerHTML = `
-          <p><strong>Lot No.:</strong> ${lotNo}</p>
-          <p><strong>Address:</strong> ${address}</p>
-          <p><strong>Survey Type:</strong> ${surveyType}</p>
-          <p><strong>Client:</strong> ${clientName}</p>
-          <p><strong>Physical Location:</strong> ${projectID}</p>
-          <p><strong>Agent:</strong> ${agent}</p>
-          <p><strong>Survey Period:</strong> ${surveyPeriod}</p>
-        `;
-      }
-
-      // Build document rows dynamically based on documentsByProject data
       const docTableBody = modal.querySelector('.document-table tbody');
-      if (docTableBody) {
-        docTableBody.innerHTML = ''; // Clear previous rows
+      if (details) details.innerHTML = '<p>Loading project details...</p>';
+      if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Loading documents...</td></tr>';
 
-        const docs = documentsByProject[projectID] || [];
-
-        if (docs.length === 0) {
-          docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
-        } else {
-          docs.forEach(doc => {
-            // Sample logic for physical/digital status classes (adjust as needed)
-            const physicalStatusClass = doc.DocumentStatus === 'Stored' ? 'stored' : (doc.DocumentStatus === 'Released' ? 'released' : 'available');
-            const digitalStatusClass = doc.DigitalLocation ? 'available' : 'released';
-
-            docTableBody.innerHTML += `
-              <tr>
-                <td>${doc.DocumentName}</td>
-                <td class="status ${physicalStatusClass.toLowerCase()}">${doc.DocumentStatus.toUpperCase()}</td>
-                <td class="status ${digitalStatusClass}">${digitalStatusClass.toUpperCase()}</td>
-              </tr>
-            `;
-          });
+      // Fetch project info from server (adjust URL accordingly)
+      fetch('model/get_project_info.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ projectId: projectID })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          if (details) details.innerHTML = `<p>Error: ${data.message}</p>`;
+          if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
+          return;
         }
-      }
 
-      modal.style.display = 'block';
+        const project = data.project;
+
+        if (details) {
+          details.innerHTML = `
+            <p><strong>Lot No.:</strong> ${project.LotNo || ''}</p>
+            <p><strong>Address:</strong> ${project.FullAddress || ''}</p>
+            <p><strong>Survey Type:</strong> ${project.SurveyType || ''}</p>
+            <p><strong>Client:</strong> ${project.ClientName || ''}</p>
+            <p><strong>Agent:</strong> ${project.Agent || 'not available'}</p>
+            <p><strong>Survey Period:</strong> ${project.SurveyStartDate || ''} - ${project.SurveyEndDate || ''}</p>
+          `;
+        }
+
+        // Set QR image dynamically if exists
+        const qrImage = modal.querySelector('.qr-img');
+        if (qrImage && project.ProjectID) {
+          qrImage.src = `uploads/${project.ProjectID}/${project.ProjectID}-QR.png`;
+          qrImage.alt = `QR Code for ${project.ProjectID}`;
+        }
+
+        if (docTableBody) {
+          docTableBody.innerHTML = ''; // Clear table body
+
+          if (!project.documents || project.documents.length === 0) {
+            docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
+          } else {
+            project.documents.forEach(doc => {
+              let physicalStatusClass = '';
+              if (doc.physical_status === 'STORED') {
+                physicalStatusClass = 'stored';
+              } else if (doc.physical_status === 'RELEASED') {
+                physicalStatusClass = 'released';
+              }
+
+              let digitalStatusClass = '';
+              let digitalStatusText = '';
+              if (doc.digital_status === 'available') {
+                digitalStatusClass = 'available';
+                digitalStatusText = 'AVAILABLE';
+                if (doc.physical_status === 'RELEASED') {
+                  digitalStatusClass += ' released';
+                }
+              }
+
+              docTableBody.innerHTML += `
+                <tr>
+                  <td>${doc.name}</td>
+                  <td class="status ${physicalStatusClass}">${doc.physical_status || ''}</td>
+                  <td class="status ${digitalStatusClass}">${digitalStatusText}</td>
+                </tr>
+              `;
+            });
+          }
+        }
+
+        // Show modal
+        modal.style.display = 'block';
+
+      })
+      .catch(error => {
+        if (details) details.innerHTML = `<p>Error fetching data</p>`;
+        if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Error loading documents.</td></tr>';
+        console.error('Error:', error);
+      });
     });
   });
 
@@ -100,13 +137,14 @@ function initPreviewModal() {
     modal.style.display = 'none';
   });
 
-  // Optional: Close modal if clicking outside content
+  // Close modal if clicking outside content
   window.addEventListener('click', (event) => {
     if (event.target === modal) {
       modal.style.display = 'none';
     }
   });
 }
+
 
 function initUploadHandlers() {
   updateDocumentTableBasedOnSelection();
