@@ -350,12 +350,11 @@ input[type="checkbox"]:checked::after {
 }
 
 #update-back-btn {
-  font-size: 3cqw;
-  border: none;
-  color: #7B0302;
-  margin-right: 50cqw;
-  cursor: pointer;
-  transition: color 0.3s;
+    font-size: 2vw;
+    border: none;
+    color: #7B0302;
+    cursor: pointer;
+    transition: color 0.3s;
 }
 
 #update-back-btn:hover {
@@ -374,6 +373,10 @@ input[type="checkbox"]:checked::after {
   border-radius: 0.26vw;
   cursor: pointer;
   margin-top: 2vh;
+}
+
+.content {
+    padding-bottom: 2.5%;
 }
 
 </style>
@@ -403,7 +406,8 @@ $sql = "SELECT
             a.Province,
             a.Municipality,
             a.Barangay,
-            a.Address
+            a.Address,
+            p.ProjectStatus
         FROM project p
         JOIN Address a ON p.AddressID = a.AddressID
         WHERE p.ProjectID = ?";
@@ -413,6 +417,69 @@ $stmt->bind_param("s", $projectId);
 $stmt->execute();
 $result = $stmt->get_result();
 $project = $result->fetch_assoc();
+
+$requestType = $project['RequestType'];
+$approvalType = $project['Approval'];
+
+// Determine docsToRender based on requestType and approvalType
+if ($requestType === "For Approval" && $approvalType === "PSD") {
+    $docsToRender = [
+        "Original Plan",
+        "Certified Title",
+        "Reference Plan",
+        "Lot Data",
+        "TD",
+        "Transmital",
+        "Fieldnotes",
+        "Tax Declaration",
+        "Blueprint",
+        "CAD File",
+        "Others"
+    ];
+} else if ($requestType === "For Approval" && $approvalType === "CSD") {
+    $docsToRender = [
+        "Original Plan",
+        "3 BP",
+        "Reference Plan",
+        "Lot Data",
+        "CM",
+        "TD",
+        "Transmital",
+        "Fieldnotes",
+        "Tax Declaration",
+        "Survey Authority",
+        "Blueprint",
+        "CAD File",
+        "Others"
+    ];
+} else if ($requestType === "For Approval" && $approvalType === "LRA") {
+    $docsToRender = [
+        "Original Plan",
+        "Certified Title",
+        "Reference Plan",
+        "Lot Data",
+        "TD",
+        "Fieldnotes",
+        "Blueprint",
+        "CAD File",
+        "Others"
+    ];
+} else if ($requestType === "Sketch Plan") {
+    $docsToRender = [
+        "Original Plan",
+        "Xerox Title",
+        "Reference Plan",
+        "Lot Data",
+        "Tax Declaration",
+        "Blueprint",
+        "CAD File",
+        "Others"
+    ];
+} else {
+    $docsToRender = [
+        "Failed to load, refresh page.",
+    ];
+}
 
 // --- Fetch Related Documents ---
 $documents = [];
@@ -432,11 +499,9 @@ while ($docRow = $docResult->fetch_assoc()) {
 
 <!-- Top Bar and Page Heading -->
 <div class="topbar">
+  <button type="button" id="update-back-btn" class="fa fa-arrow-left" data-page="project_list.php"></button>
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Update <?= htmlspecialchars($projectId) ?></span>
   <div class="topbar-content">
-    <div class="search-bar">
-      <input class="search-input" type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
@@ -512,6 +577,29 @@ while ($docRow = $docResult->fetch_assoc()) {
           </div>
 
           <div class="form-row">
+            <label>Agent:</label>
+            <input type="text" value="<?= htmlspecialchars($project['Agent']) ?>" readonly />
+          </div>
+
+          <div class="form-row">
+            <label for="approvalStatusThing">Status:</label>
+            <select id="projectStatus" name="projectStatus" disabled>
+              <?php
+              $statusOptions = [
+                "FOR PRINT", "FOR DELIVER", "FOR SIGN",
+                "FOR ENTRY (PSD)", "FOR ENTRY (CSD)", "FOR ENTRY (LRA)",
+                "FOR RESEARCH", "FOR FINAL", "CANCELED",
+                "APPROVED", "COMPLETED"
+              ];
+              foreach ($statusOptions as $status):
+                $selected = ($project['ProjectStatus'] === $status) ? 'selected' : '';
+                echo "<option value=\"$status\" $selected>$status</option>";
+              endforeach;
+              ?>
+            </select>
+          </div>
+
+          <div class="form-row">
             <label>Survey Start Date:</label>
             <input type="date" value="<?= htmlspecialchars($project['SurveyStartDate']) ?>" readonly />
           </div>
@@ -520,17 +608,12 @@ while ($docRow = $docResult->fetch_assoc()) {
             <label>Survey End Date:</label>
             <input type="date" value="<?= htmlspecialchars($project['SurveyEndDate']) ?>" readonly />
           </div>
-
-          <div class="form-row">
-            <label>Agent:</label>
-            <input type="text" value="<?= htmlspecialchars($project['Agent']) ?>" readonly />
-          </div>
-
+      
           <div class="form-row">
             <label>Request Type:</label>
             <select disabled>
-              <option <?= ($project['RequestType'] === 'For Approval') ? 'selected' : '' ?>>For Approval</option>
-              <option <?= ($project['RequestType'] === 'Sketch Plan') ? 'selected' : '' ?>>Sketch Plan</option>
+              <option <?= ($requestType === 'For Approval') ? 'selected' : '' ?>>For Approval</option>
+              <option <?= ($requestType === 'Sketch Plan') ? 'selected' : '' ?>>Sketch Plan</option>
             </select>
           </div>
 
@@ -541,7 +624,7 @@ while ($docRow = $docResult->fetch_assoc()) {
               $approvals = ["LRA", "BUREAU", "CENRO"];
               foreach ($approvals as $a): ?>
                 <label>
-                  <input type="radio" disabled <?= ($project['Approval'] === $a) ? 'checked' : '' ?> />
+                  <input type="radio" disabled <?= ($approvalType === $a) ? 'checked' : '' ?> />
                   <?= $a ?>
                 </label>
               <?php endforeach; ?>
@@ -577,31 +660,24 @@ while ($docRow = $docResult->fetch_assoc()) {
         </thead>
         <tbody>
           <?php
-          $docTypes = [
-            "original_plan" => "Original Plan",
-            "lot_title" => "Lot Title",
-            "deed_of_sale" => "Deed of Sale",
-            "tax_declaration" => "Tax Declaration",
-            "building_permit" => "Building Permit",
-            "authorization_letter" => "Authorization Letter",
-            "others" => "Others"
-          ];
-
-          foreach ($docTypes as $key => $label):
+          // Normalize docsToRender keys for matching documents array keys
+          foreach ($docsToRender as $docLabel):
+            $key = strtolower(str_replace([' ', '/'], ['_', ''], $docLabel));
             $doc = $documents[$key] ?? null;
+
             $isChecked = $doc ? 'checked' : '';
             $status = $doc['DocumentStatus'] ?? '';
             $qr = $doc['DocumentQR'] ?? '';
-           $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
+            $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
           ?>
           <tr>
-            <td><?= $label ?></td>
+            <td><?= htmlspecialchars($docLabel) ?></td>
 
             <td>
               <input type="checkbox" disabled <?= $isChecked ?> />
               <select class="storage-status" disabled style="<?= $doc ? '' : 'display:none;' ?>">
-                <option value="Stored" <?= $status === 'STORED' ? 'selected' : '' ?>>Stored</option>
-                <option value="Released" <?= $status === 'RELEASED' ? 'selected' : '' ?>>Released</option>
+                <option value="Stored" <?= strtoupper($status) === 'STORED' ? 'selected' : '' ?>>Stored</option>
+                <option value="Released" <?= strtoupper($status) === 'RELEASED' ? 'selected' : '' ?>>Released</option>
               </select>
             </td>
 
@@ -613,27 +689,24 @@ while ($docRow = $docResult->fetch_assoc()) {
               </div>
             </td>
 
-<td class="qr-code">
-  <?php if (!empty($doc['DocumentQR'])): ?>
-    <span class="view-qr-text" 
-          style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
-          onclick="showQRPopup('<?= htmlspecialchars($doc['DocumentQR']) ?>')">
-      View
-    </span>
-  <?php else: ?>
-    <span style="color:gray; font-style: italic;"></span>
-  <?php endif; ?>
-</td>
-
+            <td class="qr-code">
+              <?php if (!empty($qr)): ?>
+                <span class="view-qr-text" 
+                      style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
+                      onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
+                  View
+                </span>
+              <?php else: ?>
+                <span style="color:gray; font-style: italic;"></span>
+              <?php endif; ?>
+            </td>
           </tr>
           <?php endforeach; ?>
         </tbody>
       </table>
     </div>
 
-
     <div class="footer-buttons">
-      <button type="button" id="update-back-btn" class="fa fa-arrow-circle-left" data-page="project_list.php"></button>
       <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
     </div>
   </form>

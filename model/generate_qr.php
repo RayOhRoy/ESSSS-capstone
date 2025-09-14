@@ -28,7 +28,10 @@ if ($resLastProj && $resLastProj->num_rows > 0) {
 $block = intval(($nextNum - 1) / 50) + 1;
 $slot = $nextNum;
 
-$projectID = sprintf("%s-%02d-%03d", $prefix, $block, $slot);  // e.g., HAG-01-001
+$surveyType = $_POST['surveyType'] ?? 'GEN';
+$surveyCode = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $surveyType), 0, 3)); // Clean and get first 3 letters
+
+$projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $slot, $surveyCode);  // e.g., HAG-01-001-REL
 
 // ----------------------
 // Prepare folders

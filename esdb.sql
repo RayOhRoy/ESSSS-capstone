@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 07, 2025 at 06:48 PM
+-- Generation Time: Sep 14, 2025 at 07:57 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,11 +29,11 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `activity_log` (
   `ActivityLogID` varchar(10) NOT NULL,
-  `ProjectID` varchar(10) NOT NULL,
+  `ProjectID` varchar(20) NOT NULL,
   `DocumentID` varchar(10) NOT NULL,
   `Status` enum('CREATED','VIEWED','MODIFIED','DELETED','RETRIEVED','RETURNED','UPLOADED') NOT NULL,
   `EmployeeID` varchar(10) NOT NULL,
-  `Time` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `Time` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -43,7 +43,7 @@ CREATE TABLE `activity_log` (
 --
 
 CREATE TABLE `address` (
-  `AddressID` varchar(10) NOT NULL,
+  `AddressID` varchar(20) NOT NULL,
   `Address` varchar(255) NOT NULL,
   `Barangay` varchar(50) NOT NULL,
   `Municipality` varchar(50) NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE `document` (
   `DocumentID` varchar(10) NOT NULL,
   `DocumentName` varchar(50) NOT NULL,
   `DocumentType` varchar(255) NOT NULL,
-  `ProjectID` varchar(10) NOT NULL,
+  `ProjectID` varchar(20) NOT NULL,
   `DigitalLocation` varchar(255) DEFAULT NULL,
   `DocumentStatus` enum('STORED','RELEASED') DEFAULT NULL,
   `DocumentQR` varchar(255) DEFAULT NULL
@@ -90,7 +90,8 @@ CREATE TABLE `employee` (
 --
 
 INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password`, `JobPosition`, `AccountType`, `AccountStatus`, `PasswordCode`, `CodeExpiry`) VALUES
-('ESSSS0000', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$N4crIaDWNknpnL90zVq6keHnTbof4ag.0LjcPaaTNWQosqj6Hdj8O', 'Chief Operating Officer', 'Admin', 'Active', NULL, NULL);
+('ES0000', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$N4crIaDWNknpnL90zVq6keHnTbof4ag.0LjcPaaTNWQosqj6Hdj8O', 'Chief Operating Officer', 'Admin', 'Active', NULL, NULL),
+('ES0001', 'Balatayo', 'Leila Anne', 'benchudgugu@gmail.com', '$2y$10$s0Wbv.eqREyAynaQrfssue.CnpvhhPzDH8z00NcBG4XB5pOV0Mjl6', 'Compliance Officer', 'User', 'Active', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -99,21 +100,19 @@ INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password
 --
 
 CREATE TABLE `project` (
-  `ProjectID` varchar(10) NOT NULL,
-  `AddressID` varchar(10) NOT NULL,
-  `LotNo` varchar(10) NOT NULL,
+  `ProjectID` varchar(20) NOT NULL,
+  `AddressID` varchar(20) NOT NULL,
+  `LotNo` varchar(50) NOT NULL,
   `ClientLName` varchar(50) NOT NULL,
   `ClientFName` varchar(50) NOT NULL,
   `SurveyType` enum('Relocation Survey','Verification Survey','Subdivision Survey','Consolidation Survey','Topographic Survey','AS-Built Survey','Sketch Plan / Vicinity Map','Land Titling / Transfer','Real Estate') NOT NULL,
   `DigitalLocation` varchar(255) NOT NULL,
   `SurveyStartDate` date NOT NULL,
-  `SurveyEndDate` date NOT NULL,
+  `SurveyEndDate` date DEFAULT NULL,
   `Agent` varchar(255) NOT NULL,
-  `RequestType` enum('For Approval','Sketch Plan','Title') NOT NULL,
+  `RequestType` enum('For Approval','Sketch Plan') NOT NULL,
   `Approval` enum('LRA','PSD','CSD') DEFAULT NULL,
-  `ApprovalStatus` enum('PRINT','APPROVAL','ENTRY') NOT NULL,
-  `ApprovalStartDate` date NOT NULL,
-  `ApprovalEndDate` date NOT NULL,
+  `ProjectStatus` varchar(20) NOT NULL,
   `ProjectQR` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -161,13 +160,13 @@ ALTER TABLE `project`
 -- Constraints for table `document`
 --
 ALTER TABLE `document`
-  ADD CONSTRAINT `fk_document_project` FOREIGN KEY (`ProjectID`) REFERENCES `project` (`ProjectID`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_document_project` FOREIGN KEY (`ProjectID`) REFERENCES `project` (`ProjectID`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `project`
 --
 ALTER TABLE `project`
-  ADD CONSTRAINT `fk_project_address` FOREIGN KEY (`AddressID`) REFERENCES `address` (`AddressID`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_project_address` FOREIGN KEY (`AddressID`) REFERENCES `address` (`AddressID`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

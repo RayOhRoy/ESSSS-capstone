@@ -265,23 +265,20 @@
 <?php
 include 'server/server.php';
 
-$nextEmployeeId = 'ESSSS0001';
-$sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'ESSSS%' ORDER BY employeeid DESC LIMIT 1";
+$nextEmployeeId = 'ES0001';
+$sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'ES%' ORDER BY employeeid DESC LIMIT 1";
 $result = $conn->query($sql);
 
 if ($result && $row = $result->fetch_assoc()) {
     $lastId = intval(substr($row['employeeid'], 5));
     $nextId = $lastId + 1;
-    $nextEmployeeId = 'ESSSS' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+    $nextEmployeeId = 'ES' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 }
 ?>
 
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">User List</span>
   <div class="topbar-content">
-    <div class="search-bar">
-      <input type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>

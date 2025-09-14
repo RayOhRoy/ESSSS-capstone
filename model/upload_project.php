@@ -5,6 +5,8 @@ include 'phpqrcode/qrlib.php';
 header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') die(json_encode(['status' => 'error', 'message' => 'POST required']));
 
+date_default_timezone_set("Asia/Manila");
+
 $employeeID = $_SESSION['employeeid'] ?? null;
 
 // — Address Handling —
@@ -39,27 +41,33 @@ $startDate = mysqli_real_escape_string($conn, $_POST['survey_start']);
 $endDate = mysqli_real_escape_string($conn, $_POST['survey_end']);
 $agent = mysqli_real_escape_string($conn, $_POST['agent']);
 $requestType = mysqli_real_escape_string($conn, $_POST['requestType']);
+$projectStatus = mysqli_real_escape_string($conn, $_POST['projectStatus']);
 $approval = isset($_POST['approval']) ? mysqli_real_escape_string($conn, $_POST['approval']) : null;
 
+// Generate Survey Code
+$surveyCode = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $surveyType), 0, 3)); // e.g., 'REL'
+
+// Generate Project ID
 $sqlLastProject = "SELECT ProjectID FROM project WHERE ProjectID LIKE '$prefix-%' ORDER BY ProjectID DESC LIMIT 1";
 $resLastProject = $conn->query($sqlLastProject);
 $lastNumber = ($resLastProject && $resLastProject->num_rows > 0)
-    ? intval(substr($resLastProject->fetch_assoc()['ProjectID'], -3)) + 1
+    ? intval(substr($resLastProject->fetch_assoc()['ProjectID'], -7, 3)) + 1
     : 1;
 
 $block = intval(($lastNumber - 1) / 50) + 1;
 $slot = $lastNumber;
-$projectID = sprintf("%s-%02d-%03d", $prefix, $block, $slot);
+
+$projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $slot, $surveyCode);
 
 $uploadBase = __DIR__ . '/../uploads/';
 $projectFolder = $uploadBase . $projectID;
 if (!is_dir($projectFolder)) mkdir($projectFolder, 0777, true);
 
 $sqlProject = "INSERT INTO project 
-    (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation) 
+    (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation, ProjectStatus) 
     VALUES ('$projectID','$lotNo','$fname','$lname','$surveyType','$startDate','$endDate','$agent','$requestType',"
     . ($approval !== null ? "'$approval'" : "NULL") .
-      ",'$addressID','uploads/$projectID')";
+      ",'$addressID','uploads/$projectID','$projectStatus')";
 if ($conn->query($sqlProject) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error inserting project', 'error' => $conn->error]));
 }
@@ -72,7 +80,10 @@ $newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0)
                   : "001";
 $activityLogID = "ACT-" . $newActivityNum;
 
-$sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID) VALUES ('$activityLogID','$projectID','CREATED','$employeeID')";
+$timeNow = date('Y-m-d H:i:s');
+
+$sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time) 
+                   VALUES ('$activityLogID','$projectID','CREATED','$employeeID', '$timeNow')";
 $conn->query($sqlActivityLog);
 
 // Generate project-level QR
@@ -83,6 +94,7 @@ QRcode::png($projQRContent, $projQRFile, QR_ECLEVEL_L, 4);
 $projQRPath = "uploads/$projectID/$projQRFileName";
 $conn->query("UPDATE project SET projectqr='$projQRPath' WHERE ProjectID='$projectID'");
 
+// — Document Handling —
 $documentKeys = [];
 foreach ($_FILES as $inputName => $fileGroup) {
     if (preg_match('/^digital_(.+)$/', $inputName, $matches)) {
@@ -94,8 +106,12 @@ foreach ($documentKeys as $docKey) {
     $docName = ucwords(str_replace("_", " ", $docKey));
     $safeDocName = str_replace(" ", "-", $docName);
 
-    $status = isset($_POST["status_$docKey"]) ? mysqli_real_escape_string($conn, $_POST["status_$docKey"]) : null;
     $physicalChecked = isset($_POST["physical_$docKey"]);
+    $status = null;
+
+    if ($physicalChecked && isset($_POST["status_$docKey"])) {
+        $status = mysqli_real_escape_string($conn, $_POST["status_$docKey"]);
+    }
 
     $uploadedFiles = [];
     if (!empty($_FILES["digital_$docKey"]['name'][0])) {
@@ -157,7 +173,9 @@ foreach ($documentKeys as $docKey) {
                       : "001";
         $activityLogIDDoc = "ACT-" . $newActNum;
         $statusDoc = 'UPLOADED';
-        $sqlActDoc = "INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID) VALUES ('$activityLogIDDoc','$projectID','$documentID','$statusDoc','$employeeID')";
+        $timeNow = date('Y-m-d H:i:s');
+        $sqlActDoc = "INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time) 
+                      VALUES ('$activityLogIDDoc','$projectID','$documentID','$statusDoc','$employeeID', '$timeNow')";
         $conn->query($sqlActDoc);
     }
 }

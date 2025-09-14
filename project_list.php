@@ -292,9 +292,6 @@
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Project List</span>
   <div class="topbar-content">
-     <div class="search-bar">
-      <input type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span  id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
@@ -321,8 +318,8 @@ $sql = "SELECT
             p.Agent,
             p.SurveyStartDate,
             p.SurveyEndDate,
-                 p.Approval,         -- Add this
-            p.RequestType,      -- And this 
+            p.Approval,       
+            p.RequestType,      
             a.Address AS StreetAddress,
             a.Barangay,
             a.Municipality,
@@ -393,7 +390,7 @@ function maskName($fname, $lname) {
       <th><button class="sort-btn active-sort" onclick="sortTable(0, this)">Project Name <i class="fa fa-long-arrow-down" style="margin-left:5px;"></i></button></th>
       <th><button class="sort-btn" onclick="sortTable(1, this)">Client Name</button></th>
       <th><button class="sort-btn" onclick="sortTable(2, this)">Municipality</button></th>
-      <th><button class="sort-btn" onclick="sortTable(4, this)">Survey Type</button></th>
+      <th><button class="sort-btn" onclick="sortTable(3, this)">Survey Type</button></th>
       <th><button class="sort-btn">Preview</button></th>
       <th><button class="sort-btn">Update</button></th>
     </tr>

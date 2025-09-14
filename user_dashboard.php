@@ -116,17 +116,9 @@
   }
 </style>
 
-<?php
-session_start();
-?>
-
-
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
   <div class="topbar-content">
-     <div class="search-bar">
-      <input type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
@@ -140,8 +132,38 @@ session_start();
 </div>
 
 <hr class="top-line" />
-<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Employee!</div>
 
+<?php
+date_default_timezone_set("Asia/Manila");
+session_start();
+include 'server/server.php';
+
+$welcomeName = "Employee"; // Default fallback
+
+$userID = $_SESSION['employeeid'] ?? null;
+
+if ($userID) {
+    // Use prepared statement to safely get employee's name
+    $stmt = $conn->prepare("SELECT EmpFName, EmpLName FROM employee WHERE EmployeeID = ?");
+    $stmt->bind_param("s", $userID);
+
+    $stmt->execute();
+    $stmt->bind_result($fname, $lname);
+
+    if ($stmt->fetch()) {
+        $welcomeName = $fname . ' ' . $lname;
+    }
+
+    $stmt->close();
+}
+
+$conn->close();
+?>
+
+<!-- HTML Output -->
+<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">
+  Welcome, <?= htmlspecialchars($welcomeName) ?>!
+</div>
 
 <?php
 include 'server/server.php';

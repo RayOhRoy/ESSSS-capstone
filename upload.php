@@ -107,7 +107,10 @@
     gap: 10px;
   }
 
-  /* --- Digital Document column --- */
+  .content {
+    padding-bottom: 2.5%;
+  }
+
   .digital-cell {
     display: flex;
     align-items: center;
@@ -115,6 +118,7 @@
     gap: 8px;
     width: 100%;
   }
+  
   .upload-form {
     display: flex;
     align-items: center;
@@ -366,9 +370,6 @@ button {
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Upload Project</span>
   <div class="topbar-content">
-    <div class="search-bar">
-      <input class="search-input" type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
@@ -422,6 +423,7 @@ button {
           </div>
 
           <div class="form-row"><label>Street/Subdivision:</label><input name="street" type="text" /></div>
+
         </div>
 
         <div class="column">
@@ -444,24 +446,33 @@ button {
           <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text"/></div>
 
           <div class="form-row">
-            <label for="surveyType">Request Type:</label>
-            <select id="requestType" name="requestType">
-              <option value="For Approval">For Approval</option>
-              <option value="Sketch Plan">Sketch Plan</option>
-            </select>
-          </div>
-
-          <div class="form-row">
-            <label for="approvalStatusThing">Approval Status:</label>
-            <select id="approvalStatus" name="approvalStatus">
-              <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
+            <label for="approvalStatusThing">Status:</label>
+            <select id="projectStatus" name="projectStatus">
+              <option value="FOR PRINT">FOR PRINT</option>
+              <option value="FOR DELIVER">FOR DELIVER</option>
+              <option value="FOR SIGN">FOR SIGN</option>
+              <option value="FOR ENTRY (PSD)">FOR ENTRY (PSD)</option>
+              <option value="FOR ENTRY (CSD)">FOR ENTRY (CSD)</option>
+              <option value="FOR ENTRY (LRA)">FOR ENTRY (LRA)</option>
+              <option value="FOR RESEARCH">FOR RESEARCH</option>
+              <option value="FOR FINAL">FOR FINAL</option>
+              <option value="CANCELED">CANCELED</option>
+              <option value="APPROVED">APPROVED</option>
+              <option value="COMPLETED">COMPLETED</option>
             </select>
           </div>
 
           <div class="form-row"><label>Survey Start Date:</label><input id="startDate" name="survey_start"
               type="date" /></div>
           <div class="form-row"><label>Survey End Date:</label><input id="endDate" name="survey_end" type="date" />
+          </div>
+
+          <div class="form-row">
+            <label for="surveyType">Request Type:</label>
+            <select id="requestType" name="requestType">
+              <option value="For Approval">For Approval</option>
+              <option value="Sketch Plan">Sketch Plan</option>
+            </select>
           </div>
 
           <div id="toBeApprovedBy">

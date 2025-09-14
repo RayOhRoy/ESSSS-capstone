@@ -67,6 +67,10 @@
         <span  class="fa fa-list" alt="Project List"></span>
         <span>Project List</span>
       </a>
+      <a href="#" class="menu-item" data-page="search.php">
+        <span  class="fa fa-qrcode" alt="Search"></span>
+        <span>Search</span>
+      </a>
       <a href="#" class="menu-item" data-page="user_list.php">
         <span  class="fa fa-users" alt="User List"></span>
         <span>User List</span>
@@ -74,10 +78,6 @@
       <a href="#" class="menu-item" data-page="activity_log.php">
         <span  class="fa fa-clock-o" alt="Activity Log"></span>
         <span>Activity Log</span>
-      </a>
-      <a href="#" class="menu-item" data-page="qr_search.php">
-        <span  class="fa fa-qrcode" alt="QR Toggle"></span>
-        <span>QR Search</span>
       </a>
     </div>
     

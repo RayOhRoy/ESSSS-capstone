@@ -59,9 +59,15 @@ $approvalType = $project['Approval'] ?? '';
 // Format client full name
 $project['ClientName'] = trim($project['ClientFName'] . ' ' . $project['ClientLName']);
 
-// Format Survey Period
-$project['SurveyStartDate'] = $project['SurveyStartDate'] ? date('F j, Y', strtotime($project['SurveyStartDate'])) : '';
-$project['SurveyEndDate'] = $project['SurveyEndDate'] ? date('F j, Y', strtotime($project['SurveyEndDate'])) : '';
+$project['SurveyStartDate'] = $project['SurveyStartDate'] && $project['SurveyStartDate'] !== '0000-00-00' 
+    ? date('F j, Y', strtotime($project['SurveyStartDate'])) 
+    : '';
+
+if ($project['SurveyEndDate'] && $project['SurveyEndDate'] !== '0000-00-00') {
+    $project['SurveyEndDate'] = date('F j, Y', strtotime($project['SurveyEndDate']));
+} else {
+    $project['SurveyEndDate'] = 'Ongoing';
+}
 
 // Build full address
 $addressParts = array_filter([
@@ -77,20 +83,21 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
     $docsToRender = [
         "Original Plan",
         "Certified Title",
-        "Ref Plan",
+        "Reference Plan",
         "Lot Data",
         "TD",
         "Transmital",
         "Fieldnotes",
         "Tax Declaration",
         "Blueprint",
+        "CAD File",
         "Others"
     ];
 } else if ($requestType === "For Approval" && $approvalType === "CSD") {
     $docsToRender = [
         "Original Plan",
         "3 BP",
-        "Ref Plan",
+        "Reference Plan",
         "Lot Data",
         "CM",
         "TD",
@@ -99,22 +106,30 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Tax Declaration",
         "Survey Authority",
         "Blueprint",
+        "CAD File",
         "Others"
     ];
 } else if ($requestType === "For Approval" && $approvalType === "LRA") {
     $docsToRender = [
         "Original Plan",
         "Certified Title",
-        "Ref Plan",
+        "Reference Plan",
         "Lot Data",
         "TD",
         "Fieldnotes",
         "Blueprint",
+        "CAD File",
         "Others"
     ];
 } else if ($requestType === "Sketch Plan") {
     $docsToRender = [
         "Original Plan",
+        "Xerox Title",
+        "Reference Plan",
+        "Lot Data",
+        "Tax Declaration",
+        "Blueprint",
+        "CAD File",
         "Others"
     ];
 } else {
@@ -165,10 +180,25 @@ while ($doc = $doc_result->fetch_assoc()) {
         }
     }
 
-    if ($matchedKey !== null) {
-        $documents[$matchedKey]['physical_status'] = strtoupper($doc['DocumentStatus'] ?? '');
-        $documents[$matchedKey]['digital_status'] = !empty(trim($doc['DigitalLocation'])) ? 'available' : '';
+if ($matchedKey !== null && isset($documents[$matchedKey])) {
+    $documentStatus = strtoupper(trim($doc['DocumentStatus'] ?? ''));
+    $digitalLocation = trim($doc['DigitalLocation'] ?? '');
+
+    // Set digital status if digital location exists
+    if (!empty($digitalLocation)) {
+        $documents[$matchedKey]['digital_status'] = 'available';
     }
+
+    // Set physical status ONLY if DocumentStatus is NOT empty/null
+    if (!empty($documentStatus)) {
+        $documents[$matchedKey]['physical_status'] = $documentStatus;
+    } else {
+        // If DocumentStatus is empty or null, ensure physical_status is not set or cleared
+        unset($documents[$matchedKey]['physical_status']);
+    }
+}
+
+
 }
 
 // Re-index array for frontend

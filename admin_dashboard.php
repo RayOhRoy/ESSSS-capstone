@@ -96,23 +96,23 @@
   }
 
   .status {
+    margin-left: 2%;
     flex: 1;
     text-align: left;
-    font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .display-info {
-  min-width: 100px;
-  font-size: 0.9rem;
-  text-align: right;
-}
+  min-width: 25%;
+  font-size: 0.7rem;
+  text-align: left;
+  }
 
   .datetime {
     font-size: 0.8rem;
-    min-width: 150px;
     text-align: right;
-    margin-right: 20px;
+    margin-right: 2%;
+     font-size: 0.9rem;
   }
 </style>
 
@@ -124,9 +124,6 @@ session_start();
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
   <div class="topbar-content">
-     <div class="search-bar">
-      <input type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
@@ -257,7 +254,7 @@ if ($userRole === 'admin') {
     JOIN employee e ON al.EmployeeID = e.EmployeeID
     LEFT JOIN document d ON al.DocumentID = d.DocumentID
     ORDER BY al.Time DESC
-    LIMIT 10
+    LIMIT 5
     ";
 } else if ($userRole === 'user' && $userID) {
     // Regular user sees only their own activities (limit 5)
@@ -277,7 +274,7 @@ if ($userRole === 'admin') {
     LEFT JOIN document d ON al.DocumentID = d.DocumentID
     WHERE al.EmployeeID = ?
     ORDER BY al.Time DESC
-    LIMIT 10
+    LIMIT 5
     ";
 } else {
     // No valid role or user id, no activities
@@ -323,10 +320,6 @@ $conn->close();
   <?php else: ?>
     <?php foreach ($recent_activities as $activity): ?>
       <div class="recent-item">
-        <div class="employee-info">
-          <strong><?= htmlspecialchars($activity['masked_employee_name']) ?></strong>
-          <span class="employee-role"><?= htmlspecialchars($activity['JobPosition']) ?></span>
-        </div>
         <div class="status">
           <?= htmlspecialchars(strtoupper($activity['status'])) ?>
         </div>

@@ -1,5 +1,4 @@
-
-  <style>
+<style>
   input {
       width: 100%;
       padding: 1.2vh 1vw;
@@ -42,30 +41,21 @@
     color: #7B0302;
     text-decoration: none;
     font-size: 0.8cqw;
-
   }
 
- .dropdown-menu a:first-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .dropdown-menu a:last-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 0 0 8px 8px;
-  }
-
+  .dropdown-menu a:first-child:hover,
+  .dropdown-menu a:last-child:hover,
   .dropdown-menu a:not(:first-child):not(:last-child):hover {
     background-color: #7B0302;
     color: white;
+    border-radius: 8px;
   }
-.activitylist-table {
+
+  .activitylist-table {
     width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 10px; /* Adds vertical space between rows */
-  font-size: 0.8vw;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    font-size: 0.8vw;
   }
 
   .activitylist-table th, .activitylist-table td {
@@ -75,34 +65,54 @@
   }
 
   .activitylist-table td {
-    text-align: center; /* center table body text */
+    text-align: center;
     padding: 8px;
   }
 
-.sort-btn {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #7B0302;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 6px;
-  transition: background 0.3s, color 0.3s;
-}
+  .sort-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #7B0302;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px;
+    transition: background 0.3s, color 0.3s;
+  }
 
-.sort-btn.active-sort {
-  background-color: #7B0302;
-  color: white;
-  border-radius: 4cqw;
-}
-  </style>
+  .sort-btn.active-sort {
+    background-color: #7B0302;
+    color: white;
+    border-radius: 4cqw;
+  }
+
+  #employeeFilter {
+    width: 100%;
+    padding: 6px;
+    font-weight: bold;
+    color: #7B0302;
+    border-radius: 4px;
+  }
+
+  .filter-clear {
+    margin: 10px 0;
+    padding: 6px 10px;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    color: #7B0302;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .filter-clear:hover {
+    background-color: #7B0302;
+    color: white;
+  }
+</style>
 
 <div class="topbar">
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Activity Log</span>
   <div class="topbar-content">
-     <div class="search-bar">
-      <input type="text" placeholder="Search Project" />
-    </div>
     <div class="icons">
       <span  id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
@@ -113,15 +123,21 @@
     </div>
   </div>
 </div>
-</div>
-
 <hr class="top-line" />
 
 <?php
 include 'server/server.php';
 
-$activity_logs = [];
+$employeeOptions = [];
+$employeeResult = $conn->query("SELECT EmployeeID, EmpFName, EmpLName FROM employee ORDER BY EmpFName, EmpLName");
+if ($employeeResult && $employeeResult->num_rows > 0) {
+    while ($emp = $employeeResult->fetch_assoc()) {
+        $fullName = $emp['EmpFName'] . ' ' . $emp['EmpLName'];
+        $employeeOptions[$emp['EmployeeID']] = $fullName;
+    }
+}
 
+$activity_logs = [];
 $sql = "
     SELECT 
         al.ActivityLogID,
@@ -132,7 +148,7 @@ $sql = "
         e.EmpFName,
         e.EmpLName,
         e.JobPosition,
-        d.DocumentType
+        d.DocumentName
     FROM activity_log al
     JOIN employee e ON al.EmployeeID = e.EmployeeID
     LEFT JOIN document d ON al.DocumentID = d.DocumentID
@@ -140,29 +156,33 @@ $sql = "
 ";
 
 $result = $conn->query($sql);
-
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $maskedName = substr($row['EmpFName'], 0, 1) . '*** ' . substr($row['EmpLName'], 0, 1) . '***';
-        $documentInfo = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentType'];
-      $activity_logs[] = [
-          'employee_name' => $maskedName,
-          'job_position' => $row['JobPosition'],
-          'document_info' => $documentInfo,
-          'status' => strtoupper($row['Status']),
-          'time' => date('d M Y H:i', strtotime($row['Time']))
-      ];
+        $fullName = $row['EmpFName'] . ' ' . $row['EmpLName'];
+        $documentInfo = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentName'];
+        $activity_logs[] = [
+            'employee_name' => $fullName,
+            'job_position' => $row['JobPosition'],
+            'document_info' => $documentInfo,
+            'status' => strtoupper($row['Status']),
+            'time' => date('d M Y H:i', strtotime($row['Time']))
+        ];
     }
 }
-
 $conn->close();
 ?>
 
-<!-- Activity Log Table -->
 <table class="activitylist-table" id="projectTable">
   <thead>
     <tr>
-      <th><button class="sort-btn active-sort" onclick="sortTable(0, this)">Employee<i class="fa fa-long-arrow-down" style="margin-left:5px;"></i></button></th>
+      <th>
+        <select id="employeeFilter" onchange="filterByEmployee()" style="min-width: 100%; font-weight: bold; color: #7B0302; border-radius: 4px;">
+          <option value="">All Employees</option>
+          <?php foreach ($employeeOptions as $id => $name): ?>
+            <option value="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </th>
       <th><button class="sort-btn" onclick="sortTable(1, this)">Document</button></th>
       <th><button class="sort-btn" onclick="sortTable(2, this)">Action</button></th>
       <th><button class="sort-btn" onclick="sortTable(3, this)">Timestamp</button></th>
@@ -173,7 +193,7 @@ $conn->close();
       <tr><td colspan="4">No activity logs available.</td></tr>
     <?php else: ?>
       <?php foreach ($activity_logs as $log): ?>
-        <tr>
+        <tr data-employee="<?= htmlspecialchars($log['employee_name']) ?>">
           <td>
             <div style="color: #7B0302; font-weight: bold; text-transform: uppercase;">
               <?= htmlspecialchars($log['employee_name']) ?>

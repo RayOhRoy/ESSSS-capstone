@@ -8,7 +8,7 @@ function loadAdminPage(page) {
       contentArea.innerHTML = html;
 
       // Initialize user list handlers if on user list page
-      if (page === 'qr_search.php') {
+      if (page === 'search.php') {
         initQRSearch();
       }
       // You can add other page-specific init calls here
@@ -159,12 +159,12 @@ function initQRSearch() {
     qrInput.focus();
   }
 
-    // Focus the qrInput every second, regardless of modal state
-  setInterval(() => {
-    if (qrInput) {
-      qrInput.focus();
-    }
-  }, 1000);
+  //   // Focus the qrInput every second, regardless of modal state
+  // setInterval(() => {
+  //   if (qrInput) {
+  //     qrInput.focus();
+  //   }
+  // }, 1000);
   
   // Close modal on clicking close button or outside modal content
   body.addEventListener('click', function (e) {

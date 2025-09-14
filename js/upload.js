@@ -289,7 +289,6 @@ function generateQR() {
     { id: "barangay", name: "Barangay" },
     { id: "surveyType", name: "Survey Type" },
     { id: "startDate", name: "Survey Start Date" },
-    { id: "endDate", name: "Survey End Date" }
   ];
 
   const missingFields = [];
@@ -298,10 +297,22 @@ function generateQR() {
     if (!el || el.value.trim() === "") missingFields.push(f.name);
   });
 
-  const requestType = document.getElementById("requestType")?.value;
-  if (requestType === "Sketch Plan") {
+  // Conditionally require requestType
+  const surveyType = document.getElementById("surveyType")?.value;
+  const requestTypeEl = document.getElementById("requestType");
+
+  if (surveyType !== "Sketch Plan") {
+    if (!requestTypeEl || requestTypeEl.value.trim() === "") {
+      missingFields.push("Request Type");
+    }
+  }
+
+  // If it's Sketch Plan, require approval radio
+  if (surveyType === "Sketch Plan") {
     const approvalRadios = document.querySelectorAll("input[name='approval']");
-    if (![...approvalRadios].some(r => r.checked)) missingFields.push("Approval (select one)");
+    if (![...approvalRadios].some(r => r.checked)) {
+      missingFields.push("Approval (select one)");
+    }
   }
 
   const rows = document.querySelectorAll("#documentTable tbody tr");
@@ -320,13 +331,17 @@ function generateQR() {
     return false;
   }
 
-  // ✅ Check date validity before proceeding
-  const startDate = new Date(document.getElementById("startDate").value);
-  const endDate = new Date(document.getElementById("endDate").value);
+  const startDateValue = document.getElementById("startDate").value;
+  const endDateValue = document.getElementById("endDate").value;
 
-  if (startDate > endDate) {
-    alert("Start date cannot be later than end date.");
-    return false;
+  if (endDateValue) { // only check if endDate is not empty
+    const startDate = new Date(startDateValue);
+    const endDate = new Date(endDateValue);
+
+    if (startDate > endDate) {
+      alert("Start date cannot be later than end date.");
+      return false;
+    }
   }
 
   // ✅ Continue with QR generation
@@ -417,8 +432,6 @@ function generateQR() {
       return false;
     });
 }
-
-
 
 function showQRPopup(path) {
   const modal = document.getElementById("qrModal");
@@ -678,32 +691,26 @@ function toggleStorageStatus(checkbox) {
   const fileListDiv = row.querySelector(".file-list");
 
   if (checkbox.checked) {
+    // Show and require select dropdown
     select.style.display = "inline-block";
     select.required = true;
-
-    // Enable file input
-    fileInput.disabled = false;
-    fileInput.closest(".attach-icon").style.opacity = "1"; // Optional visual indicator
-
-    // Show paperclip icon
-    if (paperclipIcon) {
-      paperclipIcon.style.display = "inline-block";
-    }
   } else {
+    // Hide and un-require select dropdown, reset value
     select.style.display = "none";
     select.required = false;
     select.value = "Stored";
+  }
 
-    // Disable file input
-    fileInput.disabled = true;
-    fileInput.closest(".attach-icon").style.opacity = "0.4"; // Optional dim
+  // File input and paperclip icon always enabled and visible:
+  fileInput.disabled = false;
+  fileInput.closest(".attach-icon").style.opacity = "1";
+  if (paperclipIcon) {
+    paperclipIcon.style.display = "inline-block";
+  }
 
-    // Hide paperclip icon
-    if (paperclipIcon) {
-      paperclipIcon.style.display = "none";
-    }
-
-    // Clear file array and UI
+  // Optional: If checkbox unchecked, you might want to clear files and file list? If not, comment this block out:
+  /*
+  if (!checkbox.checked) {
     if (row.filesArray) {
       row.filesArray = [];
     }
@@ -711,7 +718,9 @@ function toggleStorageStatus(checkbox) {
       fileListDiv.innerHTML = "";
     }
   }
+  */
 }
+
 
 function updateDocumentTableBasedOnSelection() {
   const requestType = document.getElementById("requestType")?.value;
@@ -726,20 +735,21 @@ function updateDocumentTableBasedOnSelection() {
     docsToRender = [
       "Original Plan",
       "Certified Title",
-      "Ref Plan",
+      "Reference Plan",
       "Lot Data",
       "TD",
       "Transmital",
       "Fieldnotes",
       "Tax Declaration",
       "Blueprint",
+      "CAD File",
       "Others"
     ];
   } else if (requestType === "For Approval" && approvalType === "CSD") {
     docsToRender = [
       "Original Plan",
       "3 BP",
-      "Ref Plan",
+      "Reference Plan",
       "Lot Data",
       "CM",
       "TD",
@@ -748,33 +758,35 @@ function updateDocumentTableBasedOnSelection() {
       "Tax Declaration",
       "Survey Authority",
       "Blueprint",
+      "CAD File",
       "Others"
     ];
   } else if (requestType === "For Approval" && approvalType === "LRA") {
     docsToRender = [
       "Original Plan",
       "Certified Title",
-      "Ref Plan",
+      "Reference Plan",
       "Lot Data",
       "TD",
       "Fieldnotes",
       "Blueprint",
+      "CAD File",
       "Others"
     ];
   } else if (requestType === "Sketch Plan") {
     docsToRender = [
       "Original Plan",
+      "Xerox Title",
+      "Reference Plan",
+      "Lot Data",
+      "Tax Declaration",
+      "Blueprint",
+      "CAD File",
       "Others"
     ];
   } else {
     docsToRender = [
-      "Original Plan",
-      "Lot Title",
-      "Deed of Sale",
-      "Tax Declaration",
-      "Building Permit",
-      "Authorization Letter",
-      "Others"
+      "Failed to load, refresh page.",
     ];
   }
 
@@ -795,7 +807,7 @@ function updateDocumentTableBasedOnSelection() {
           <div class="file-list"></div>
           <label class="attach-icon">📎
             <input type="file" name="digital_${id}" class="hidden-file" multiple
-                   accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                   accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
                    onchange="uploadFile(this, '${doc}')" disabled>
           </label>
         </div>

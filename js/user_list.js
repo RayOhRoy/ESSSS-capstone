@@ -16,8 +16,10 @@ function loadAdminPage(page) {
         initPreviewModal();
       } else if (page === 'upload.php') {
         initUploadHandlers();
-      } else if (page === 'qr_search.php') {
+      } else if (page === 'search.php') {
         initQRSearch();
+      } else if (page === 'activity_log.php') {
+        filterByEmployee();
       } else {
         initUserMenuDropdown();
       }
@@ -25,6 +27,25 @@ function loadAdminPage(page) {
     .catch(err => {
       console.error('Failed to load admin page:', err);
     });
+}
+
+function filterByEmployee() {
+    const selected = document.getElementById("employeeFilter").value.toLowerCase();
+    const rows = document.querySelectorAll("#projectTable tbody tr");
+
+    rows.forEach(row => {
+        const employee = row.getAttribute("data-employee").toLowerCase();
+        if (!selected || employee === selected) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+function clearFilter() {
+    document.getElementById("employeeFilter").value = "";
+    filterByEmployee();
 }
 
 function initPreviewModal() {

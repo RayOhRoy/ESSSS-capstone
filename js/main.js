@@ -1,4 +1,7 @@
 window.onload = () => {
+  // ✅ Clear only localStorage (keep PHP sessions untouched)
+  localStorage.clear();
+
   console.log("SESSION_ROLE:", SESSION_ROLE);
   console.log("SESSION_ID:", SESSION_ID);
   const lastPage = localStorage.getItem('lastLoadedPage');
@@ -19,7 +22,8 @@ window.onload = () => {
 };
 
 function loadForm(path) {
-  fetch(path)
+  // ✅ Add cache-busting query parameter to fetch
+  fetch(`${path}?_=${Date.now()}`)
     .then(res => {
       if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
       return res.text();
@@ -102,7 +106,6 @@ function attachSubmitHandler() {
       .then(result => {
         const errorBox = document.getElementById('invalid-error');
         if (result.success) {
-
           loadForm(result.redirect);
         } else {
           if (errorBox) {
@@ -131,7 +134,6 @@ function attachForgotPasswordHandler() {
 
   if (!forgotForm) return;
 
-  // Step 1: Send OTP to email
   forgotForm.addEventListener('submit', function (e) {
     e.preventDefault();
     const data = new FormData(forgotForm);
@@ -148,11 +150,9 @@ function attachForgotPasswordHandler() {
           errorBox.style.color = 'green';
           errorBox.textContent = result.message;
 
-          // Disable the email input and button
           emailInput.disabled = true;
           forgotForm.querySelector('button').disabled = true;
 
-          // Show OTP modal
           if (otpModal) otpModal.style.display = 'block';
         } else {
           errorBox.style.color = 'red';
@@ -164,13 +164,12 @@ function attachForgotPasswordHandler() {
       });
   });
 
-  // Step 2: Verify OTP and Reset Password
   if (otpForm) {
     otpForm.addEventListener('submit', function (e) {
       e.preventDefault();
 
       const formData = new FormData(otpForm);
-      formData.append('email', emailInput.value); // Reuse original email
+      formData.append('email', emailInput.value);
 
       fetch('model/verify_otp.php', {
         method: 'POST',
@@ -185,12 +184,10 @@ function attachForgotPasswordHandler() {
             errorBox.textContent = result.message;
 
             alert('Password reset successful! You can now log in.');
-
-            // ✅ Auto-hide modal after success
             setTimeout(() => {
               otpModal.style.display = 'none';
               window.location.href = 'index.php';
-            }, 2000); // 2-second delay
+            }, 2000);
           }
           else {
             errorBox.style.color = 'red';
@@ -203,14 +200,12 @@ function attachForgotPasswordHandler() {
     });
   }
 
-  // Close modal when clicking the close button (×)
   if (closeOtpModal) {
     closeOtpModal.addEventListener('click', function () {
       otpModal.style.display = 'none';
     });
   }
 
-  // Helper function to create reusable error box
   function createErrorBox(form, id) {
     let div = document.createElement('div');
     div.id = id;
@@ -250,10 +245,11 @@ function attachRegisterHandler() {
 }
 
 function loadScript(src) {
-  if (document.querySelector(`script[src="${src}"]`)) return;
+  // ✅ Prevent duplicate script + bust cache
+  if (document.querySelector(`script[src^="${src}"]`)) return;
 
   const script = document.createElement('script');
-  script.src = src;
+  script.src = `${src}?_=${Date.now()}`;
   script.onload = () => {
     if (typeof initAdminPage === 'function') {
       initAdminPage();
@@ -263,10 +259,11 @@ function loadScript(src) {
 }
 
 function loadCSS(href) {
-  if (document.querySelector(`link[href="${href}"]`)) return;
+  // ✅ Prevent duplicate stylesheet + bust cache
+  if (document.querySelector(`link[href^="${href}"]`)) return;
 
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = href;
+  link.href = `${href}?_=${Date.now()}`;
   document.head.appendChild(link);
 }
