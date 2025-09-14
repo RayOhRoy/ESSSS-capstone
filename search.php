@@ -448,6 +448,13 @@ select,
   z-index: 10;
 
 }
+
+#qrToggleBtn {
+  color: gray;
+  font-size: 11vw;
+  border: none;
+}
+
 </style>
 
 <div class="topbar">
@@ -466,7 +473,6 @@ select,
 </div>
 
 <hr class="top-line" />
- <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
 
   <div class="search-dropdown">
     <select>
@@ -502,7 +508,8 @@ select,
       <div class="column">
         <div class="form-row"><label>Project Name:</label><input id="projectName" name="project_name" type="text" /></div>
         <div class="form-row"><label>Lot Number:</label><input id="lotNumber" name="lot_no" type="text" /></div>
-        <div class="form-row"><label>Client Name:</label><input id="clientName" name="client_name" type="text" /></div>
+        <div class="form-row"><label>Client First Name:</label><input id="clientFName" name="client_Fname" type="text" /></div>
+        <div class="form-row"><label>Client Last Name:</label><input id="clientLName" name="client_Lname" type="text" /></div>
 
         <div class="form-row">
           <label>Province:</label>
@@ -550,17 +557,26 @@ select,
           <label>Processing Type:</label>
           <select name="processing_type" id="processingType">
             <option value="LRA">For LRA Approval</option>
-            <option value="Sketch">Sketch Plan Only</option>
             <option value="PSD">For PSD Approval</option>
             <option value="CSD">For CSD Approval</option>
+            <option value="Sketch Plan">Sketch Plan Only  </option>
           </select>
         </div>
 
         <div class="form-row">
-          <label>Approval Status:</label>
-          <select id="ApprovalStatus" name="ApprovalStatus">
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
+          <label>Status:</label>
+          <select id="projectStatus" name="projectStatus">
+              <option value="FOR PRINT">FOR PRINT</option>
+              <option value="FOR DELIVER">FOR DELIVER</option>
+              <option value="FOR SIGN">FOR SIGN</option>
+              <option value="FOR ENTRY (PSD)">FOR ENTRY (PSD)</option>
+              <option value="FOR ENTRY (CSD)">FOR ENTRY (CSD)</option>
+              <option value="FOR ENTRY (LRA)">FOR ENTRY (LRA)</option>
+              <option value="FOR RESEARCH">FOR RESEARCH</option>
+              <option value="FOR FINAL">FOR FINAL</option>
+              <option value="CANCELED">CANCELED</option>
+              <option value="APPROVED">APPROVED</option>
+              <option value="COMPLETED">COMPLETED</option>
           </select>
         </div>
 
@@ -568,11 +584,12 @@ select,
         <div class="form-row"><label>Survey End Date:</label><input id="endDate" name="survey_end" type="date" /></div>
       </div>
 
-      <!-- QR Column -->
       <div class="qr-preview">
-        <div class="qr-box"></div>
-            <h4>QR Code Search Enabled</h4>
+        <button id="qrToggleBtn" type="button" class="fa fa-qrcode"></button>
+        <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
+        <h4 id="qrStatusText" style="color: black;">QR Code Search Disabled</h4>
       </div>
+
     </div>
   </div>
 </form>
@@ -584,5 +601,4 @@ select,
   <div class="new-modal-content">
     <span id="closeqrsearchModal">&times;</span>
     <div id="modalBody">
-
 <div>

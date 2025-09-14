@@ -364,7 +364,7 @@ input[type="checkbox"]:checked::after {
     background-color: transparent;
 }
 
-#update-edit-btn {
+#update-edit-btn, #update-save-btn {
   width: 50%;
   padding: 1.11vh 0.83vw;
   background-color: #7B0302;
@@ -375,6 +375,9 @@ input[type="checkbox"]:checked::after {
   margin-top: 2vh;
 }
 
+ #update-save-btn {
+  display: none;
+}
 .content {
     padding-bottom: 2.5%;
 }
@@ -409,7 +412,7 @@ $sql = "SELECT
             a.Address,
             p.ProjectStatus
         FROM project p
-        JOIN Address a ON p.AddressID = a.AddressID
+        JOIN address a ON p.AddressID = a.AddressID
         WHERE p.ProjectID = ?";
 
 $stmt = $conn->prepare($sql);
@@ -523,51 +526,53 @@ while ($docRow = $docResult->fetch_assoc()) {
         <div class="column">
 
           <div class="form-row">
-            <label>Lot Number:</label>
-            <input type="text" value="<?= htmlspecialchars($project['LotNo']) ?>" readonly />
+            <label for="lotNumber">Lot Number:</label>
+            <input type="text" id="lotNumber" name="lotNumber" value="<?= htmlspecialchars($project['LotNo']) ?>" readonly />
           </div>
 
           <div class="form-row">
-            <label>Client First Name:</label>
-            <input type="text" value="<?= htmlspecialchars($project['ClientFName']) ?>" readonly />
+            <label for="clientFirstName">Client First Name:</label>
+            <input type="text" id="clientFirstName" name="clientFirstName" value="<?= htmlspecialchars($project['ClientFName']) ?>" readonly />
           </div>
 
           <div class="form-row">
-            <label>Client Last Name:</label>
-            <input type="text" value="<?= htmlspecialchars($project['ClientLName']) ?>" readonly />
+            <label for="clientLastName">Client Last Name:</label>
+            <input type="text" id="clientLastName" name="clientLastName" value="<?= htmlspecialchars($project['ClientLName']) ?>" readonly />
           </div>
 
           <div class="form-row">
-            <label>Province:</label>
-            <select disabled>
+            <label for="province">Province:</label>
+            <select id="province" name="province" disabled onchange="handleProvinceChange()">
               <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>Bulacan</option>
+              <!-- Add more provinces here if needed -->
             </select>
           </div>
 
           <div class="form-row">
-            <label>Municipality:</label>
-            <select disabled>
+            <label for="municipality">Municipality:</label>
+            <select id="municipality" name="municipality" disabled onchange="handleMunicipalityChange()">
               <option selected><?= htmlspecialchars($project['Municipality']) ?></option>
             </select>
           </div>
 
           <div class="form-row">
-            <label>Barangay:</label>
-            <select disabled>
+            <label for="barangay">Barangay:</label>
+            <select id="barangay" name="barangay" disabled>
               <option selected><?= htmlspecialchars($project['Barangay']) ?></option>
             </select>
           </div>
 
           <div class="form-row">
-            <label>Street/Subdivision:</label>
-            <input type="text" value="<?= htmlspecialchars($project['Address']) ?>" readonly />
+            <label for="address">Street/Subdivision:</label>
+            <input type="text" id="address" name="address" value="<?= htmlspecialchars($project['Address']) ?>" readonly />
           </div>
+
         </div>
 
         <div class="column">
           <div class="form-row">
-            <label>Survey Type:</label>
-            <select disabled>
+            <label for="surveyType">Survey Type:</label>
+            <select id="surveyType" name="surveyType" disabled>
               <?php
               $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling/ Transfer", "Real Estate"];
               foreach ($types as $type): ?>
@@ -577,12 +582,12 @@ while ($docRow = $docResult->fetch_assoc()) {
           </div>
 
           <div class="form-row">
-            <label>Agent:</label>
-            <input type="text" value="<?= htmlspecialchars($project['Agent']) ?>" readonly />
+            <label for="agent">Agent:</label>
+            <input type="text" id="agent" name="agent" value="<?= htmlspecialchars($project['Agent']) ?>" readonly />
           </div>
 
           <div class="form-row">
-            <label for="approvalStatusThing">Status:</label>
+            <label for="projectStatus">Status:</label>
             <select id="projectStatus" name="projectStatus" disabled>
               <?php
               $statusOptions = [
@@ -600,31 +605,31 @@ while ($docRow = $docResult->fetch_assoc()) {
           </div>
 
           <div class="form-row">
-            <label>Survey Start Date:</label>
-            <input type="date" value="<?= htmlspecialchars($project['SurveyStartDate']) ?>" readonly />
+            <label for="surveyStartDate">Survey Start Date:</label>
+            <input type="date" id="surveyStartDate" name="surveyStartDate" value="<?= htmlspecialchars($project['SurveyStartDate']) ?>" readonly />
           </div>
 
           <div class="form-row">
-            <label>Survey End Date:</label>
-            <input type="date" value="<?= htmlspecialchars($project['SurveyEndDate']) ?>" readonly />
+            <label for="surveyEndDate">Survey End Date:</label>
+            <input type="date" id="surveyEndDate" name="surveyEndDate" value="<?= htmlspecialchars($project['SurveyEndDate']) ?>" readonly />
           </div>
       
           <div class="form-row">
-            <label>Request Type:</label>
-            <select disabled>
+            <label for="requestType">Request Type:</label>
+            <select id="requestType" name="requestType" disabled>
               <option <?= ($requestType === 'For Approval') ? 'selected' : '' ?>>For Approval</option>
               <option <?= ($requestType === 'Sketch Plan') ? 'selected' : '' ?>>Sketch Plan</option>
             </select>
           </div>
 
-          <div id="toBeApprovedBy">
+          <div id="toBeApprovedBy" style="<?= ($requestType === 'Sketch Plan') ? 'display:none;' : '' ?>">
             <label>To be approved by:</label>
             <div class="approval-group">
               <?php
               $approvals = ["LRA", "BUREAU", "CENRO"];
               foreach ($approvals as $a): ?>
-                <label>
-                  <input type="radio" disabled <?= ($approvalType === $a) ? 'checked' : '' ?> />
+                <label for="approval_<?= strtolower($a) ?>">
+                  <input type="radio" id="approval_<?= strtolower($a) ?>" name="approvalType" value="<?= $a ?>" disabled <?= ($approvalType === $a) ? 'checked' : '' ?> />
                   <?= $a ?>
                 </label>
               <?php endforeach; ?>
@@ -707,6 +712,7 @@ while ($docRow = $docResult->fetch_assoc()) {
     </div>
 
     <div class="footer-buttons">
+      <button type="button" id="update-save-btn" class="btn-red">Save Changes</button>
       <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
     </div>
   </form>

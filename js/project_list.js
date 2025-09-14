@@ -63,3 +63,28 @@ function redirectToUpdate(button) {
   const projectId = button.getAttribute('data-projectid');
   loadAdminPage('edit_project.php?projectId=' + encodeURIComponent(projectId));
 }
+
+let lastClickedRow = null;
+
+function highlightRow(row) {
+  // Unhighlight previously selected
+  if (lastClickedRow && lastClickedRow !== row) {
+    lastClickedRow.classList.remove('highlighted-row');
+  }
+
+  // Toggle highlight
+  if (row.classList.contains('highlighted-row')) {
+    row.classList.remove('highlighted-row');
+    lastClickedRow = null;
+  } else {
+    row.classList.add('highlighted-row');
+    lastClickedRow = row;
+  }
+}
+
+function handleRowDoubleClick(row) {
+  const projectId = row.getAttribute('data-projectid');
+  if (projectId) {
+    loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
+  }
+}

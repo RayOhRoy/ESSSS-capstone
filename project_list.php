@@ -120,6 +120,7 @@
   font-size: 1.25cqw;
   transition: color 0.3s;
   border: none; 
+  background-color: transparent;
 }
 
 .preview-btn:hover {
@@ -135,6 +136,7 @@
   font-size: 1.25cqw;
   transition: color 0.3s;
   border: none; 
+  background-color: transparent;
 }
 
 .update-btn:hover {
@@ -287,6 +289,27 @@
   font-size: 1cqw;
   font-weight: 700;
 }
+
+#projectTable tbody tr {
+  cursor: pointer;
+  border-radius: 10cqw; 
+}
+
+#projectTable tbody tr:hover {
+  background-color: #ecdedeff;
+  transition: background-color 0.2s;
+  border-radius: 10cqw;
+}
+
+.row-first {
+  border-top-left-radius: 5cqw;
+  border-bottom-left-radius: 5cqw;
+}
+
+.row-last {
+  border-top-right-radius: 5cqw;
+  border-bottom-right-radius: 5cqw;
+}
 </style>
 
 <div class="topbar">
@@ -397,7 +420,10 @@ function maskName($fname, $lname) {
   </thead>
 <tbody>
   <?php foreach ($projects as $project): ?>
-<tr
+<tr 
+  ondblclick="handleRowDoubleClick(this)" 
+  onclick="highlightRow(this)"
+  data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
   data-lotno="<?= htmlspecialchars($project['LotNo'], ENT_QUOTES) ?>"
   data-clientfullname="<?= htmlspecialchars($project['ClientFName'] . ' ' . $project['ClientLName'], ENT_QUOTES) ?>"
   data-agent="<?= htmlspecialchars($project['Agent'] ?? 'not available', ENT_QUOTES) ?>"
@@ -412,15 +438,14 @@ function maskName($fname, $lname) {
       $project['Province'] ?? ''
   ), ENT_QUOTES) ?>"
   data-approval="<?= htmlspecialchars($project['Approval'] ?? '', ENT_QUOTES) ?>"     
-  data-requesttype="<?= htmlspecialchars($project['RequestType'] ?? '', ENT_QUOTES) ?>"  
+  data-requesttype="<?= htmlspecialchars($project['RequestType'] ?? '', ENT_QUOTES) ?>"
 >
-
-  <td><?= htmlspecialchars($project['ProjectID']) ?></td>
+  <td class="row-first"><?= htmlspecialchars($project['ProjectID']) ?></td>
   <td><?= htmlspecialchars(maskName($project['ClientFName'], $project['ClientLName'])) ?></td>
   <td><?= htmlspecialchars($project['Municipality']) ?></td>
   <td><?= htmlspecialchars($project['SurveyType']) ?></td>
   <td><button class="preview-btn fa fa-eye"></button></td>
-  <td>
+  <td class="row-last">
     <button class="update-btn fa fa-edit"
       data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
       onclick="redirectToUpdate(this)">

@@ -1,5 +1,6 @@
 function loadAdminPage(page) {
   const contentArea = document.getElementById('content-area');
+  const cleanPage = page.split('?')[0];
   if (!contentArea) return;
 
   fetch(page)
@@ -20,6 +21,8 @@ function loadAdminPage(page) {
         initQRSearch();
       } else if (page === 'activity_log.php') {
         filterByEmployee();
+      } else if (cleanPage  === 'edit_project.php') {
+        initToggleEditSave();
       } else {
         initUserMenuDropdown();
       }
@@ -27,6 +30,28 @@ function loadAdminPage(page) {
     .catch(err => {
       console.error('Failed to load admin page:', err);
     });
+}
+
+function initToggleEditSave() {
+  const contentArea = document.getElementById('content-area');
+  if (!contentArea) return;
+
+  contentArea.removeEventListener('click', toggleClickHandler); // remove if exists
+
+  contentArea.addEventListener('click', toggleClickHandler);
+}
+
+function toggleClickHandler(e) {
+  const editBtn = e.target.closest('#update-edit-btn');
+  const saveBtn = e.target.closest('#update-save-btn');
+
+  if (editBtn) {
+    handleEditButton();
+  }
+
+  if (saveBtn) {
+    submitForm();
+  }
 }
 
 function filterByEmployee() {

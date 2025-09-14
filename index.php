@@ -34,23 +34,8 @@ $userID = $_SESSION['employeeid'] ?? null;
 <script>
   const SESSION_ROLE = <?= json_encode($userRole) ?>;
   const SESSION_ID = <?= json_encode($userID) ?>;
-
-  // Example AJAX call with cache busting
-  function fetchData() {
-    fetch('your_data_endpoint.php?_=' + new Date().getTime())
-      .then(response => response.json())
-      .then(data => {
-        console.log('Fresh data:', data);
-        // Update your UI accordingly
-      });
-  }
-
-  // Example: call fetchData every 30 seconds to always get fresh data
-  setInterval(fetchData, 30000);
-  fetchData(); // initial call
 </script>
 
-<!-- Cache-busted JS -->
 <script src="js/main.js?v=<?= filemtime('js/main.js') ?>"></script>
 
 </body>

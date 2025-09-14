@@ -113,37 +113,53 @@ let qrSearchInitialized = false;
 
 function initQRSearch() {
   qrSearchInitialized = true;
-  const qrInput = document.getElementById('qrInput');
-  if (qrInput) {
-    qrInput.focus();
-  }
-  console.log("QR Search modal handlers initialized with event delegation");
 
-  const body = document.body;
+  const qrInput = document.getElementById('qrInput');
+  const qrToggleBtn = document.getElementById('qrToggleBtn');
+  const qrStatusText = document.getElementById('qrStatusText');
   const modal = document.getElementById('qrsearchModal');
   const closeBtn = document.getElementById('closeqrsearchModal');
+  const body = document.body;
 
-  if (!modal || !closeBtn || !qrInput) {
-    console.warn("Required modal elements not found");
+  if (!qrInput || !qrToggleBtn || !qrStatusText || !modal || !closeBtn) {
+    console.warn("Required QR search elements not found.");
     return;
   }
 
-  // Disable/enable all inputs except modal-related when modal open/close
-  function disableAllInputs() {
-    document.querySelectorAll("input, select, textarea, button").forEach(el => {
-      if (!modal.contains(el)) el.disabled = true;
-    });
-  }
+  let qrActive = false;
 
-  function enableAllInputs() {
-    document.querySelectorAll("input, select, textarea, button").forEach(el => {
-      el.disabled = false;
-    });
-  }
+  // QR toggle button logic
+  qrToggleBtn.addEventListener('click', () => {
+    qrActive = !qrActive;
 
+    if (qrActive) {
+      qrInput.focus();
+      qrToggleBtn.style.color = '#7B0302';
+      qrStatusText.textContent = 'QR Code Search Enabled';
+    } else {
+      qrInput.blur();
+      qrToggleBtn.style.color = 'gray';
+      qrStatusText.textContent = 'QR Code Search Disabled';
+    }
+  });
+
+  document.addEventListener('focusin', (e) => {
+  const isQRInput = qrInput.contains(e.target);
+  const isQRButton = qrToggleBtn.contains(e.target);
+
+  if (qrActive && !isQRInput && !isQRButton) {
+    qrActive = false;
+    qrToggleBtn.style.color = 'gray';
+    qrStatusText.textContent = 'QR Code Search Disabled';
+    qrInput.blur();
+  }
+});
+
+  // Open modal and focus input
   function openModal() {
-    qrInput.focus();
     modal.style.display = 'flex';
+    qrInput.focus();
+
     if (modal.classList.contains('newmodal')) {
       modal.style.background = 'rgba(0,0,0,0.5)';
       const content = modal.querySelector('.new-modal-content');
@@ -152,33 +168,45 @@ function initQRSearch() {
         content.style.border = 'none';
       }
     }
+
+    disableAllInputs();
   }
 
+  // Close modal and restore inputs
   function closeModal() {
     modal.style.display = 'none';
+    enableAllInputs();
     qrInput.focus();
   }
 
-  //   // Focus the qrInput every second, regardless of modal state
-  // setInterval(() => {
-  //   if (qrInput) {
-  //     qrInput.focus();
-  //   }
-  // }, 1000);
-  
-  // Close modal on clicking close button or outside modal content
+  // Disable all inputs outside the modal
+  function disableAllInputs() {
+    document.querySelectorAll("input, select, textarea, button").forEach(el => {
+      if (!modal.contains(el)) el.disabled = true;
+    });
+  }
+
+  // Enable all inputs
+  function enableAllInputs() {
+    document.querySelectorAll("input, select, textarea, button").forEach(el => {
+      el.disabled = false;
+    });
+  }
+
+  // Click outside or on close button to close modal
   body.addEventListener('click', function (e) {
     if (e.target === closeBtn || e.target === modal) {
       closeModal();
     }
   });
 
+  // Handle Enter key to scan QR
   qrInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       const scannedCode = qrInput.value.trim();
       if (scannedCode !== '') {
         console.log("🔍 Scanned QR Code:", scannedCode);
-        openModal();  // Open modal immediately on scan
+        openModal();
         searchProjectByQR(scannedCode);
         qrInput.value = '';
       }
