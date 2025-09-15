@@ -186,7 +186,7 @@ while ($docRow = $docResult->fetch_assoc()) {
 ?>
 
 <div class="topbar">
-  <button type="button" id="project-back-btn" class="fa fa-arrow-left" data-page="project_list.php"></button>
+  <button type="button" id="project-back-btn" class="fa fa-arrow-left"></button>
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;"><?= htmlspecialchars($projectId) ?></span>
   <div class="topbar-content">
     <div class="icons">

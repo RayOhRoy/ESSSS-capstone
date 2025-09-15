@@ -222,3 +222,76 @@ function initQRSearch() {
     }
   }, 100);
 }
+
+function initLiveProjectSearch() {
+  const inputIds = [
+    'projectName',
+    'lotNumber',
+    'clientFName',
+    'clientLName',
+    'province',
+    'municipality',
+    'barangay',
+    'surveyType',
+    'agent',
+    'processingType',
+    'projectStatus',
+    'startDate',
+    'endDate'
+  ];
+  const resultContainerId = 'liveResults';
+  const endpoint = 'model/search_processing.php';
+
+  function fetchResults() {
+    // Collect all current input/select values
+    const data = {
+      projectName: document.getElementById('projectName')?.value || '',
+      lotNumber: document.getElementById('lotNumber')?.value || '',
+      clientFName: document.getElementById('clientFName')?.value || '',
+      clientLName: document.getElementById('clientLName')?.value || '',
+      province: document.getElementById('province')?.value || '',
+      municipality: document.getElementById('municipality')?.value || '',
+      barangay: document.getElementById('barangay')?.value || '',
+      surveyType: document.getElementById('surveyType')?.value || '',
+      agent: document.getElementById('agent')?.value || '',
+      processingType: document.getElementById('processingType')?.value || '',
+      projectStatus: document.getElementById('projectStatus')?.value || '',
+      startDate: document.getElementById('startDate')?.value || '',
+      endDate: document.getElementById('endDate')?.value || ''
+    };
+
+    const params = new URLSearchParams(data);
+
+    fetch(`${endpoint}?${params.toString()}`)
+      .then(response => response.text())
+      .then(html => {
+        const container = document.getElementById(resultContainerId);
+        if (container) {
+          container.innerHTML = html;
+        }
+      })
+      .catch(err => console.error('Search fetch error:', err));
+  }
+
+  // Attach input/select listeners for real-time search
+  inputIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', fetchResults);
+    }
+  });
+
+  // Click event delegation on liveResults for selecting a project
+  const resultContainer = document.getElementById(resultContainerId);
+  if (resultContainer) {
+    resultContainer.addEventListener('click', (e) => {
+      const row = e.target.closest('.result-item');
+      if (row && row.dataset.projectid) {
+        handleRowDoubleClick(row);
+      }
+    });
+  }
+
+  // Initial fetch on load (optional)
+  fetchResults();
+}

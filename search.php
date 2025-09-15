@@ -455,6 +455,17 @@ select,
   border: none;
 }
 
+.result-list {
+  list-style: none;
+  padding-left: 0;
+}
+.result-list li {
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+}
+.result-list li:hover {
+  background-color: #f9f9f9;
+}
 </style>
 
 <div class="topbar">
@@ -556,6 +567,7 @@ select,
         <div class="form-row">
           <label>Processing Type:</label>
           <select name="processing_type" id="processingType">
+            <option value="">Select Processing Type</option>
             <option value="LRA">For LRA Approval</option>
             <option value="PSD">For PSD Approval</option>
             <option value="CSD">For CSD Approval</option>
@@ -566,6 +578,7 @@ select,
         <div class="form-row">
           <label>Status:</label>
           <select id="projectStatus" name="projectStatus">
+              <option value="">Select Project Status</option>
               <option value="FOR PRINT">FOR PRINT</option>
               <option value="FOR DELIVER">FOR DELIVER</option>
               <option value="FOR SIGN">FOR SIGN</option>
@@ -596,6 +609,9 @@ select,
 <span style="font-size: 1.5cqw; color: #7B0302; font-weight: 700; margin-top: 50px; display: inline-block;">
   Results
 </span>
+<div id="liveResults" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
+  <p>Start typing to see matching projects...</p>
+</div>
 
 <div id="qrsearchModal" class="newmodal">
   <div class="new-modal-content">
