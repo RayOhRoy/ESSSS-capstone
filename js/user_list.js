@@ -21,9 +21,11 @@ function loadAdminPage(page) {
         initQRSearch();
       } else if (page === 'activity_log.php') {
         filterByEmployee();
+      } else if (cleanPage  === 'project.php') {
+        initImageModal();
       } else if (cleanPage  === 'edit_project.php') {
         initToggleEditSave();
-      } else {
+      }else {
         initUserMenuDropdown();
       }
     })

@@ -7,6 +7,7 @@ function initAdminPage() {
     loadScript('js/profile.js');
     loadScript('js/qr_search.js');
     loadScript('js/edit_project.js');
+    loadScript('js/project.js');
     loadScript('js/user_list.js');
   }
 

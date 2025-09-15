@@ -64,6 +64,73 @@
     transition: filter 0.2s ease;
     background-color: transparent;
 }
+
+  .document-section {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+  }
+
+  .document-section h3 {
+    margin-bottom: 10px;
+    color: #7B0302;
+  }
+
+  .document-section ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .document-section li {
+    margin-bottom: 8px;
+  }
+
+  .document-section a {
+    color: #007BFF;
+    text-decoration: none;
+  }
+
+  .document-section a:hover {
+    text-decoration: underline;
+  }
+
+  .image-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  padding-top: 60px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.8);
+}
+
+.image-modal-content {
+  margin: auto;
+  display: block;
+  max-width: 90%;
+  max-height: 80vh;
+  box-shadow: 0 0 20px #000;
+  border-radius: 8px;
+}
+
+.close-image-modal {
+  position: absolute;
+  top: 30px;
+  right: 35px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.folderName {
+    font-size: 1.5vw;
+    font-weight: 700;
+}
 </style>
 
 <?php
@@ -103,72 +170,9 @@ $stmt->execute();
 $result = $stmt->get_result();
 $project = $result->fetch_assoc();
 
-$requestType = $project['RequestType'];
-$approvalType = $project['Approval'];
-
-// Determine docsToRender based on requestType and approvalType
-if ($requestType === "For Approval" && $approvalType === "PSD") {
-    $docsToRender = [
-        "Original Plan",
-        "Certified Title",
-        "Reference Plan",
-        "Lot Data",
-        "TD",
-        "Transmital",
-        "Fieldnotes",
-        "Tax Declaration",
-        "Blueprint",
-        "CAD File",
-        "Others"
-    ];
-} else if ($requestType === "For Approval" && $approvalType === "CSD") {
-    $docsToRender = [
-        "Original Plan",
-        "3 BP",
-        "Reference Plan",
-        "Lot Data",
-        "CM",
-        "TD",
-        "Transmital",
-        "Fieldnotes",
-        "Tax Declaration",
-        "Survey Authority",
-        "Blueprint",
-        "CAD File",
-        "Others"
-    ];
-} else if ($requestType === "For Approval" && $approvalType === "LRA") {
-    $docsToRender = [
-        "Original Plan",
-        "Certified Title",
-        "Reference Plan",
-        "Lot Data",
-        "TD",
-        "Fieldnotes",
-        "Blueprint",
-        "CAD File",
-        "Others"
-    ];
-} else if ($requestType === "Sketch Plan") {
-    $docsToRender = [
-        "Original Plan",
-        "Xerox Title",
-        "Reference Plan",
-        "Lot Data",
-        "Tax Declaration",
-        "Blueprint",
-        "CAD File",
-        "Others"
-    ];
-} else {
-    $docsToRender = [
-        "Failed to load, refresh page.",
-    ];
-}
-
-// --- Fetch Related Documents ---
 $documents = [];
-$docSql = "SELECT DocumentType, DocumentStatus, DocumentQR, DigitalLocation 
+
+$docSql = "SELECT DocumentType, DocumentStatus, DocumentQR, DocumentName, DigitalLocation 
            FROM document 
            WHERE ProjectID = ?";
 $docStmt = $conn->prepare($docSql);
@@ -177,14 +181,13 @@ $docStmt->execute();
 $docResult = $docStmt->get_result();
 
 while ($docRow = $docResult->fetch_assoc()) {
-    $typeKey = strtolower(str_replace(' ', '_', $docRow['DocumentType']));
-    $documents[$typeKey] = $docRow;
+    $documents[] = $docRow;
 }
 ?>
 
 <div class="topbar">
   <button type="button" id="project-back-btn" class="fa fa-arrow-left" data-page="project_list.php"></button>
-  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;"> <?= htmlspecialchars($projectId) ?></span>
+  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;"><?= htmlspecialchars($projectId) ?></span>
   <div class="topbar-content">
     <div class="icons">
       <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
@@ -198,3 +201,100 @@ while ($docRow = $docResult->fetch_assoc()) {
 </div>
 
 <hr class="top-line" />
+
+<?php
+$groupedDocuments = [];
+
+// Group documents by folder name
+foreach ($documents as $doc) {
+    if (!empty($doc['DigitalLocation']) && !empty($doc['DocumentName'])) {
+        $parts = explode('-', $doc['DocumentName']);
+        $folderName = str_replace('-', ' ', implode('-', array_slice($parts, 4)));
+        $folderName = $folderName ?: 'Uncategorized';
+
+        $groupedDocuments[$folderName][] = $doc;
+    }
+}
+?>
+
+<?php if (!empty($groupedDocuments)): ?>
+  <div class="document-section">
+    <?php
+    $baseDir = __DIR__ . '/uploads';
+    ?>
+
+    <?php foreach ($groupedDocuments as $folder => $docs): ?>
+      <div class="document-folder" style="margin-bottom: 20px;">
+        <div class="folderName" style="color: #7B0302; font-weight: bold;">
+          <?= htmlspecialchars($folder) ?>
+        </div>
+        <ul>
+          <?php
+          $firstDoc = reset($docs);
+          $folderPathRaw = $firstDoc['DigitalLocation'];
+          $folderPath = explode(';', $folderPathRaw)[0];
+
+          $folderPathParts = explode('/', $folderPath);
+          array_pop($folderPathParts);
+          $cleanFolderPath = implode('/', $folderPathParts);
+
+          $fullFolderPath = $baseDir . '/' . $cleanFolderPath;
+
+          // Debug output (optional, remove in production)
+          // echo "<div style='color: red; font-weight: bold;'>Folder for group '$folder' resolves to: " . htmlspecialchars($fullFolderPath) . "</div>";
+
+          $fileList = [];
+
+          if (is_dir($fullFolderPath)) {
+              $files = scandir($fullFolderPath);
+              foreach ($files as $file) {
+                  if ($file === '.' || $file === '..') continue;
+                  if (strpos($file, '-QR') !== false) continue;
+
+                  $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                  if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'pdf'])) {
+                      $fileList[] = $file;
+                  }
+              }
+          }
+          ?>
+
+   <?php foreach ($fileList as $file): ?>
+  <?php
+    $relativeWebPath = str_replace(['../', './'], '', $cleanFolderPath . '/' . $file);
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    $downloadUrl = '/uploads/' . $relativeWebPath; // only for download
+  ?>
+  <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+    <div><?= htmlspecialchars($file) ?></div>
+    <div style="display: flex; gap: 10px;">
+      <?php if (!in_array($ext, ['pdf'])): ?>
+        <div 
+          class="fa fa-eye preview-doc" 
+          data-file="<?= htmlspecialchars($relativeWebPath) ?>" 
+          title="Preview"
+          style="cursor: pointer; color: #007BFF;"
+        ></div>
+      <?php endif; ?>
+      <a 
+        href="<?= htmlspecialchars($downloadUrl) ?>" 
+        class="fa fa-download" 
+        title="Download"
+        download="<?= htmlspecialchars($file) ?>"
+        style="color: #007BFF;"
+      ></a>
+    </div>
+  </li>
+<?php endforeach; ?>
+
+        </ul>
+      </div>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal">
+  <span class="close-image-modal">&times;</span>
+  <img class="image-modal-content" id="modalImage">
+</div>

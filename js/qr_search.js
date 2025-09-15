@@ -108,10 +108,10 @@ function generateDocumentRows(documents) {
   `).join('');
 }
 
-
 let qrSearchInitialized = false;
 
 function initQRSearch() {
+  
   qrSearchInitialized = true;
 
   const qrInput = document.getElementById('qrInput');
@@ -126,6 +126,8 @@ function initQRSearch() {
     return;
   }
 
+  qrInput.focus();
+  
   let qrActive = false;
 
   // QR toggle button logic
@@ -144,16 +146,16 @@ function initQRSearch() {
   });
 
   document.addEventListener('focusin', (e) => {
-  const isQRInput = qrInput.contains(e.target);
-  const isQRButton = qrToggleBtn.contains(e.target);
+    const isQRInput = qrInput.contains(e.target);
+    const isQRButton = qrToggleBtn.contains(e.target);
 
-  if (qrActive && !isQRInput && !isQRButton) {
-    qrActive = false;
-    qrToggleBtn.style.color = 'gray';
-    qrStatusText.textContent = 'QR Code Search Disabled';
-    qrInput.blur();
-  }
-});
+    if (qrActive && !isQRInput && !isQRButton) {
+      qrActive = false;
+      qrToggleBtn.style.color = 'gray';
+      qrStatusText.textContent = 'QR Code Search Disabled';
+      qrInput.blur();
+    }
+  });
 
   // Open modal and focus input
   function openModal() {
@@ -212,4 +214,11 @@ function initQRSearch() {
       }
     }
   });
+
+  // Re-focus qrInput every 100ms if active
+  setInterval(() => {
+    if (qrActive && document.activeElement !== qrInput) {
+      qrInput.focus();
+    }
+  }, 100);
 }
