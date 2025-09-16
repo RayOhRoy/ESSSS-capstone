@@ -6,6 +6,29 @@
     transition: filter 0.2s ease;
 }
 
+/* Add this style for the toggle buttons */
+.doc-tab-button {
+  background-color: #f1f1f1;
+  color: #7B0302;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  font-size: 1.2vw;
+  margin: 0 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.doc-tab-button:hover {
+  background-color: #ddd;
+}
+
+.active-tab {
+  background-color: #7B0302;
+  color: white;
+  border-color: #7B0302;
+}
+
 .dropdown {
     position: relative;
     display: inline-block;
@@ -87,7 +110,6 @@
   }
 
   .document-section a {
-    color: #007BFF;
     text-decoration: none;
   }
 
@@ -140,10 +162,54 @@
     font-size: 1.5vw;
     font-weight: 700;
 }
+
+.file-name {
+  cursor: pointer;
+  color: inherit;
+  transition: color 0.2s;
+}
+
+.file-name:hover {
+  color: #007BFF;
+  text-decoration: underline;
+}
+
+.physical-toggle-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.physical-toggle-btn.store {
+  background-color: #7B0302;
+}
+
+.physical-toggle-btn.retrieve {
+  background-color: #7B0302;
+}
+
+.update-btn {
+  color: #7B0302;
+  cursor: pointer;
+  font-size: 1.25cqw;
+  transition: color 0.3s;
+  border: none; 
+  background-color: transparent;
+}
+
+.update-btn:hover {
+  color: #7B0302;
+  transform: scale(1.05);
+  transition: scale 0.2s ease;
+  background-color: transparent;
+}
 </style>
 
 <?php
-include 'server/server.php'; // DB connection
+include 'server/server.php';
 
 if (!isset($_GET['projectId'])) {
     die("Project ID not provided.");
@@ -153,22 +219,10 @@ $projectId = $_GET['projectId'];
 
 // --- Fetch Project Data ---
 $sql = "SELECT 
-            p.ProjectID,
-            p.LotNo,
-            p.ClientFName,
-            p.ClientLName,
-            p.SurveyType,
-            p.SurveyStartDate,
-            p.SurveyEndDate,
-            p.Agent,
-            p.RequestType,
-            p.Approval,
-            p.ProjectQR,
-            a.Province,
-            a.Municipality,
-            a.Barangay,
-            a.Address,
-            p.ProjectStatus
+            p.ProjectID, p.LotNo, p.ClientFName, p.ClientLName, p.SurveyType,
+            p.SurveyStartDate, p.SurveyEndDate, p.Agent, p.RequestType,
+            p.Approval, p.ProjectQR, a.Province, a.Municipality,
+            a.Barangay, a.Address, p.ProjectStatus
         FROM project p
         JOIN address a ON p.AddressID = a.AddressID
         WHERE p.ProjectID = ?";
@@ -179,8 +233,8 @@ $stmt->execute();
 $result = $stmt->get_result();
 $project = $result->fetch_assoc();
 
+// --- Fetch Documents ---
 $documents = [];
-
 $docSql = "SELECT DocumentType, DocumentStatus, DocumentQR, DocumentName, DigitalLocation 
            FROM document 
            WHERE ProjectID = ?";
@@ -192,8 +246,19 @@ $docResult = $docStmt->get_result();
 while ($docRow = $docResult->fetch_assoc()) {
     $documents[] = $docRow;
 }
+
+// --- Group documents by folder ---
+$groupedDocuments = [];
+foreach ($documents as $doc) {
+    if (!empty($doc['DigitalLocation']) && !empty($doc['DocumentName'])) {
+        $parts = explode('-', $doc['DocumentName']);
+        $folderName = str_replace('-', ' ', implode('-', array_slice($parts, 4))) ?: 'Uncategorized';
+        $groupedDocuments[$folderName][] = $doc;
+    }
+}
 ?>
 
+<!-- Top Bar -->
 <div class="topbar">
   <button type="button" id="project-back-btn" class="fa fa-arrow-left"></button>
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;"><?= htmlspecialchars($projectId) ?></span>
@@ -211,105 +276,160 @@ while ($docRow = $docResult->fetch_assoc()) {
 
 <hr class="top-line" />
 
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; width: 100%;">
+  <div style="display: flex; gap: 10px; justify-content: center; flex: 1;">
+    <button id="btn-digital" class="doc-tab-button active-tab">Digital Documents</button>
+    <button id="btn-physical" class="doc-tab-button">Physical Documents</button>
+  </div>
+  <button 
+    class="update-btn fa fa-edit" 
+    data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
+    onclick="redirectToUpdate(this)">
+  </button>
+</div>
+
+
 <?php
-$groupedDocuments = [];
-
-// Group documents by folder name
-foreach ($documents as $doc) {
-    if (!empty($doc['DigitalLocation']) && !empty($doc['DocumentName'])) {
-        $parts = explode('-', $doc['DocumentName']);
-        $folderName = str_replace('-', ' ', implode('-', array_slice($parts, 4)));
-        $folderName = $folderName ?: 'Uncategorized';
-
-        $groupedDocuments[$folderName][] = $doc;
-    }
-}
+// Define previewable extensions
+$previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
 ?>
 
-<?php if (!empty($groupedDocuments)): ?>
-  <div class="document-section">
+<!-- Digital Documents Section -->
+<div id="digital-section" class="document-section">
+  <?php if (!empty($groupedDocuments)): ?>
     <?php
     $baseDir = __DIR__ . '/uploads';
-    ?>
+    foreach ($groupedDocuments as $folder => $docs):
+      $firstDoc = reset($docs);
+      $folderPathRaw = $firstDoc['DigitalLocation'];
+      $folderPath = explode(';', $folderPathRaw)[0];
 
-    <?php foreach ($groupedDocuments as $folder => $docs): ?>
-      <div class="document-folder" style="margin-bottom: 20px;">
-        <div class="folderName" style="color: #7B0302; font-weight: bold;">
-          <?= htmlspecialchars($folder) ?>
-        </div>
-        <ul>
-          <?php
-          $firstDoc = reset($docs);
-          $folderPathRaw = $firstDoc['DigitalLocation'];
-          $folderPath = explode(';', $folderPathRaw)[0];
+      $folderPathParts = explode('/', $folderPath);
+      array_pop($folderPathParts);
+      $cleanFolderPath = implode('/', $folderPathParts);
 
-          $folderPathParts = explode('/', $folderPath);
-          array_pop($folderPathParts);
-          $cleanFolderPath = implode('/', $folderPathParts);
+      $fullFolderPath = $baseDir . '/' . $cleanFolderPath;
+      $fileList = [];
 
-          $fullFolderPath = $baseDir . '/' . $cleanFolderPath;
+      if (is_dir($fullFolderPath)) {
+          $files = scandir($fullFolderPath);
+          foreach ($files as $file) {
+              if ($file === '.' || $file === '..') continue;
+              if (strpos($file, '-QR') !== false) continue;
 
-          // Debug output (optional, remove in production)
-          // echo "<div style='color: red; font-weight: bold;'>Folder for group '$folder' resolves to: " . htmlspecialchars($fullFolderPath) . "</div>";
-
-          $fileList = [];
-
-          if (is_dir($fullFolderPath)) {
-              $files = scandir($fullFolderPath);
-              foreach ($files as $file) {
-                  if ($file === '.' || $file === '..') continue;
-                  if (strpos($file, '-QR') !== false) continue;
-
-                  $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                  if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'pdf'])) {
-                      $fileList[] = $file;
-                  }
+              $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+              if (in_array($ext, array_merge($previewableExts, ['other_extensions_if_any']))) {
+                  $fileList[] = $file;
               }
           }
-          ?>
+      }
+    ?>
 
-   <?php foreach ($fileList as $file): ?>
-  <?php
-    $relativeWebPath = str_replace(['../', './'], '', $cleanFolderPath . '/' . $file);
-    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-    $downloadUrl = '/uploads/' . $relativeWebPath; // only for download
-  ?>
-  <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-    <div><?= htmlspecialchars($file) ?></div>
-    <div style="display: flex; gap: 10px;">
-      <?php if (!in_array($ext, ['pdf'])): ?>
-        <div 
-          class="fa fa-eye preview-doc" 
-          data-file="<?= htmlspecialchars($relativeWebPath) ?>" 
-          title="Preview"
-          style="cursor: pointer; color: #007BFF;"
-        ></div>
-      <?php endif; ?>
-      <a 
-        href="<?= htmlspecialchars($downloadUrl) ?>" 
-        class="fa fa-download" 
-        title="Download"
-        download="<?= htmlspecialchars($file) ?>"
-        style="color: #007BFF;"
-      ></a>
-    </div>
-  </li>
-<?php endforeach; ?>
-
-        </ul>
+    <div class="document-folder" style="margin-bottom: 20px;">
+      <div class="folderName" style="color: #7B0302; font-weight: bold;">
+        <?= htmlspecialchars($folder) ?>
       </div>
-    <?php endforeach; ?>
-  </div>
-<?php endif; ?>
+      <ul>
+      <?php foreach ($fileList as $file): ?>
+        <?php
+          $relativeWebPath = str_replace(['../', './'], '', $cleanFolderPath . '/' . $file);
+          $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+          $downloadUrl = '/uploads/' . $relativeWebPath;
+          $isPreviewable = in_array($ext, $previewableExts);
+        ?>
+        <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <?php if ($isPreviewable): ?>
+            <div 
+              class="file-name preview-doc"
+              data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+              title="Preview"
+            >
+              <?= htmlspecialchars($file) ?>
+            </div>
+          <?php else: ?>
+            <a 
+              href="<?= htmlspecialchars($downloadUrl) ?>"
+              class="file-name"
+              title="Download"
+              download="<?= htmlspecialchars($file) ?>"
+            >
+              <?= htmlspecialchars($file) ?>
+            </a>
+          <?php endif; ?>
 
-<!-- Image Modal -->
+          <div style="display: flex; gap: 10px;">
+            <?php if ($isPreviewable): ?>
+              <div 
+                class="fa fa-eye preview-doc"
+                data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+                title="Preview"
+                style="cursor: pointer; color: #000000ff;"
+                onmouseover="this.style.color='#007BFF';"
+                onmouseout="this.style.color='#000000ff';"
+              ></div>
+            <?php endif; ?>
+            <a 
+              href="<?= htmlspecialchars($downloadUrl) ?>" 
+              class="fa fa-download" 
+              title="Download"
+              download="<?= htmlspecialchars($file) ?>"
+              style="color: #000000ff;"
+              onmouseover="this.style.color='#007BFF';"
+              onmouseout="this.style.color='#000000ff';"
+            ></a>
+          </div>
+        </li>
+      <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
+</div>
+
+<!-- Physical Documents Section -->
+<div id="physical-section" class="document-section" style="display: none;">
+  <h3>Physical Documents</h3>
+
+  <ul>
+    <?php foreach ($documents as $doc): ?>
+      <?php
+        $statusRaw = $doc['DocumentStatus'];
+        $statusUpper = strtoupper(trim($statusRaw));
+
+        // Only show if DocumentStatus is STORED or RELEASE, case-insensitive
+        if (in_array($statusUpper, ['STORED', 'RELEASE'])):
+          $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
+      ?>
+      <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <!-- Display DocumentType instead of DocumentName -->
+        <span><?= htmlspecialchars($doc['DocumentType']) ?></span>
+        <form method="post" action="model/update_document_status.php" style="margin: 0;">
+          <input type="hidden" name="projectId" value="<?= htmlspecialchars($projectId) ?>">
+          <!-- Keep DocumentName hidden for form identification -->
+          <input type="hidden" name="documentName" value="<?= htmlspecialchars($doc['DocumentName']) ?>">
+          <input type="hidden" name="newStatus" value="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>">
+          <button type="submit"
+                  style="padding: 6px 14px; border: none; border-radius: 5px; background-color: #7B0302; color: white; cursor: pointer;">
+            <?= $toggleLabel ?>
+          </button>
+        </form>
+      </li>
+      <?php endif; ?>
+    <?php endforeach; ?>
+  </ul>
+</div>
+
+
+<!-- Image Preview Modal -->
 <div id="imageModal" class="image-modal">
   <span class="close-image-modal">&times;</span>
   <a 
-    href="<?= htmlspecialchars($downloadUrl) ?>" 
+    href="#" 
     class="fa fa-download download-image-modal" 
     title="Download"
-    download="<?= htmlspecialchars($file) ?>"
+    download
   ></a>
-  <img class="image-modal-content" id="modalImage">
+  <div id="modalContent" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+    <!-- Preview content injected here dynamically -->
+  </div>
 </div>

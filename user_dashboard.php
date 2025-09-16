@@ -174,7 +174,7 @@ $total_projects_result = $conn->query($total_projects_query);
 $total_projects = $total_projects_result->fetch_assoc()['total'];
 
 // Fetch total documents
-$total_documents_query = "SELECT COUNT(*) as total FROM document";
+$total_documents_query = "SELECT COUNT(*) as total FROM document WHERE documentstatus IS NOT NULL";
 $total_documents_result = $conn->query($total_documents_query);
 $total_documents = $total_documents_result->fetch_assoc()['total'];
 

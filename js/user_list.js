@@ -31,6 +31,7 @@ function loadAdminPage(page) {
       } else if (cleanPage  === 'project.php') {
         initBackButton();
         initImageModal();
+        initDocumentTabSwitching();
       } else if (cleanPage  === 'edit_project.php') {
         initToggleEditSave();
       }else {
@@ -97,8 +98,11 @@ function initPreviewModal() {
   const previewButtons = document.querySelectorAll('.preview-btn');
   const modal = document.getElementById('previewModal');
   const closeModalBtn = document.getElementById('closeModal');
+  const openBtn = modal.querySelector('.open-btn');
 
-  if (!modal || !closeModalBtn) return;
+  let selectedProjectIdForPreview = null; // <-- used for OPEN button
+
+  if (!modal || !closeModalBtn || !openBtn) return;
 
   previewButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -106,17 +110,19 @@ function initPreviewModal() {
       if (!tr) return;
 
       const projectID = tr.querySelector('td:nth-child(1)').textContent.trim();
-
       if (!projectID) return;
 
-      // Show loading or clear modal content while fetching
+      // Store project ID for use in OPEN button
+      selectedProjectIdForPreview = projectID;
+
+      // Show loading or clear modal content
       modal.querySelector('.preview-projectname').textContent = projectID;
       const details = modal.querySelector('.project-details');
       const docTableBody = modal.querySelector('.document-table tbody');
       if (details) details.innerHTML = '<p>Loading project details...</p>';
       if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Loading documents...</td></tr>';
 
-      // Fetch project info from server (adjust URL accordingly)
+      // Fetch project info from server
       fetch('model/get_project_info.php', {
         method: 'POST',
         headers: {
@@ -145,7 +151,6 @@ function initPreviewModal() {
           `;
         }
 
-        // Set QR image dynamically if exists
         const qrImage = modal.querySelector('.qr-img');
         if (qrImage && project.ProjectID) {
           qrImage.src = `uploads/${project.ProjectID}/${project.ProjectID}-QR.png`;
@@ -187,9 +192,7 @@ function initPreviewModal() {
           }
         }
 
-        // Show modal
-        modal.style.display = 'block';
-
+        modal.style.display = 'block'; // Show modal
       })
       .catch(error => {
         if (details) details.innerHTML = `<p>Error fetching data</p>`;
@@ -199,18 +202,25 @@ function initPreviewModal() {
     });
   });
 
+  // Handle OPEN button click
+  openBtn.addEventListener('click', () => {
+    if (selectedProjectIdForPreview) {
+      loadAdminPage('project.php?projectId=' + encodeURIComponent(selectedProjectIdForPreview));
+    } else {
+      alert("No project selected.");
+    }
+  });
+
   closeModalBtn.addEventListener('click', () => {
     modal.style.display = 'none';
   });
 
-  // Close modal if clicking outside content
   window.addEventListener('click', (event) => {
     if (event.target === modal) {
       modal.style.display = 'none';
     }
   });
 }
-
 
 function initUploadHandlers() {
   updateDocumentTableBasedOnSelection();

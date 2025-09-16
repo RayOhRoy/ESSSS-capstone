@@ -114,13 +114,13 @@
     margin: 0.5cqw 0;
   }
 
-  .iconEllipsis {
-    position: absolute;
-    top: 1.5cqw;
-    left: 12cqw;
-    font-size: 1cqw;
-    cursor: pointer;
-  }
+.iconEllipsis {
+  position: absolute; 
+  top: 1cqw;
+  right: 1cqw;  
+  font-size: 1cqw;
+  cursor: pointer;
+}
 
   #iconUL {
     font-size: 3cqw;
