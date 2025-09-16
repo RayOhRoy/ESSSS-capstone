@@ -557,7 +557,7 @@ select,
             <option value="Consolidation Survey">Consolidation Survey</option>
             <option value="Topographic Survey">Topographic Survey</option>
             <option value="AS-Built Survey">AS-Built Survey</option>
-            <option value="Sketch Plan">Sketch Plan</option>
+            <option value="Sketch Plan / Vicinity Map">Sketch Plan / Vicinity Map</option>
             <option value="Land Titling">Land Titling</option>
           </select>
         </div>
@@ -571,7 +571,7 @@ select,
             <option value="LRA">For LRA Approval</option>
             <option value="PSD">For PSD Approval</option>
             <option value="CSD">For CSD Approval</option>
-            <option value="Sketch Plan">Sketch Plan Only  </option>
+            <option value="Sketch Plan">Sketch Plan Only</option>
           </select>
         </div>
 
