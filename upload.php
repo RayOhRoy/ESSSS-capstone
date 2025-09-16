@@ -393,15 +393,13 @@ button {
         <div class="column">
           <input type="hidden" id="project_name" name="project_name">
 
-          <div class="form-row"><label>Lot Number:</label><input id="lotNumber" name="lot_no" type="text" required />
+          <div class="form-row"><label>* Lot Number:</label><input id="lotNumber" name="lot_no" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required />
           </div>
-          <div class="form-row"><label>Client First Name:</label><input id="clientName" name="client_name" type="text"
-              required /></div>
-          <div class="form-row"><label>Client Last Name:</label><input id="clientLastName" name="last_name" type="text"
-              required /></div>
+          <div class="form-row"><label>* Client First Name:</label><input id="clientName" name="client_name" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required /></div>
+          <div class="form-row"><label>* Client Last Name:</label><input id="clientLastName" name="last_name" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required /></div>
 
           <div class="form-row">
-            <label>Province:</label>
+            <label>* Province:</label>
             <select name="province" id="province" onchange="loadMunicipalities()">
               <option value="">Select Province</option>
               <option value="Bulacan">Bulacan</option>
@@ -409,26 +407,26 @@ button {
           </div>
 
           <div class="form-row">
-            <label>Municipality:</label>
+            <label>* Municipality:</label>
             <select name="municipality" id="municipality" onchange="loadBarangays()" disabled>
               <option value="">Select Municipality</option>
             </select>
           </div>
 
           <div class="form-row">
-            <label>Barangay:</label>
+            <label>* Barangay:</label>
             <select name="barangay" id="barangay" disabled>
               <option value="">Select Barangay</option>
             </select>
           </div>
 
-          <div class="form-row"><label>Street/Subdivision:</label><input name="street" type="text" /></div>
+          <div class="form-row"><label>Street/Subdivision:</label><input name="street" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();"/></div>
 
         </div>
 
         <div class="column">
           <div class="form-row">
-            <label>Survey Type:</label>
+            <label>* Survey Type:</label>
             <select name="survey_type" id="surveyType">
               <option value="">Select Survey Type</option>
               <option value="Relocation Survey ">Relocation Survey </option>
@@ -443,11 +441,12 @@ button {
             </select>
           </div>
 
-          <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text"/></div>
+          <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();"/></div>
 
           <div class="form-row">
-            <label for="approvalStatusThing">Status:</label>
+            <label for="approvalStatusThing">* Project Status:</label>
             <select id="projectStatus" name="projectStatus">
+              <option value="">Select Project Status</option>
               <option value="FOR PRINT">FOR PRINT</option>
               <option value="FOR DELIVER">FOR DELIVER</option>
               <option value="FOR SIGN">FOR SIGN</option>
@@ -462,13 +461,13 @@ button {
             </select>
           </div>
 
-          <div class="form-row"><label>Survey Start Date:</label><input id="startDate" name="survey_start"
+          <div class="form-row"><label>* Survey Start Date:</label><input id="startDate" name="survey_start"
               type="date" /></div>
           <div class="form-row"><label>Survey End Date:</label><input id="endDate" name="survey_end" type="date" />
           </div>
 
           <div class="form-row">
-            <label for="surveyType">Request Type:</label>
+            <label for="surveyType">* Request Type:</label>
             <select id="requestType" name="requestType">
               <option value="For Approval">For Approval</option>
               <option value="Sketch Plan">Sketch Plan</option>

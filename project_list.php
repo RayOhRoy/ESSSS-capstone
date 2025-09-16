@@ -397,12 +397,8 @@ function formatAddress($street, $barangay, $municipality, $province) {
 
 <?php
 function maskName($fname, $lname) {
-    $maskedF = strlen($fname) > 2
-        ? $fname[0] . str_repeat('*', strlen($fname)-2) . $fname[strlen($fname)-1]
-        : $fname;
-    $maskedL = strlen($lname) > 1
-        ? $lname[0] . str_repeat('*', strlen($lname)-1)
-        : $lname;
+    $maskedF = strlen($fname) > 0 ? $fname[0] . '***' : '';
+    $maskedL = strlen($lname) > 0 ? $lname[0] . '***' : '';
     return $maskedF . ' ' . $maskedL;
 }
 ?>

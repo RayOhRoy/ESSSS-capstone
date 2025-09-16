@@ -119,10 +119,19 @@
 
 .close-image-modal {
   position: absolute;
-  top: 30px;
-  right: 35px;
+  right: 2vw;
   color: #fff;
-  font-size: 40px;
+  font-size: 2vw;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.download-image-modal {
+  position: absolute; 
+  margin-top: 4vw !important;
+  right: 2.2vw;
+  color: #fff;
+  font-size: 1vw;
   font-weight: bold;
   cursor: pointer;
 }
@@ -296,5 +305,11 @@ foreach ($documents as $doc) {
 <!-- Image Modal -->
 <div id="imageModal" class="image-modal">
   <span class="close-image-modal">&times;</span>
+  <a 
+    href="<?= htmlspecialchars($downloadUrl) ?>" 
+    class="fa fa-download download-image-modal" 
+    title="Download"
+    download="<?= htmlspecialchars($file) ?>"
+  ></a>
   <img class="image-modal-content" id="modalImage">
 </div>

@@ -451,18 +451,21 @@ select,
 
 #qrToggleBtn {
   color: gray;
-  font-size: 11vw;
+  font-size: 9vw;
   border: none;
+  margin-bottom: -1vw;
 }
 
 .result-list {
   list-style: none;
   padding-left: 0;
 }
+
 .result-list li {
   padding: 5px;
   border-bottom: 1px solid #eee;
 }
+
 .result-list li:hover {
   background-color: #f9f9f9;
 }
@@ -521,6 +524,24 @@ select,
         <div class="form-row"><label>Lot Number:</label><input id="lotNumber" name="lot_no" type="text" /></div>
         <div class="form-row"><label>Client First Name:</label><input id="clientFName" name="client_Fname" type="text" /></div>
         <div class="form-row"><label>Client Last Name:</label><input id="clientLName" name="client_Lname" type="text" /></div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="column">
+        <div class="form-row">
+          <label>Survey Type:</label>
+          <select name="survey_type" id="surveyType">
+            <option value="">Select Survey Type</option>
+            <option value="Relocation Survey">Relocation Survey</option>
+            <option value="Verification Survey">Verification Survey</option>
+            <option value="Subdivision Survey">Subdivision Survey</option>
+            <option value="Consolidation Survey">Consolidation Survey</option>
+            <option value="Topographic Survey">Topographic Survey</option>
+            <option value="AS-Built Survey">AS-Built Survey</option>
+            <option value="Sketch Plan / Vicinity Map">Sketch Plan / Vicinity Map</option>
+            <option value="Land Titling">Land Titling</option>
+          </select>
+        </div>
 
         <div class="form-row">
           <label>Province:</label>
@@ -545,62 +566,10 @@ select,
         </div>
       </div>
 
-      <!-- Right Column -->
-      <div class="column">
-        <div class="form-row">
-          <label>Survey Type:</label>
-          <select name="survey_type" id="surveyType">
-            <option value="">Select Survey Type</option>
-            <option value="Relocation Survey">Relocation Survey</option>
-            <option value="Verification Survey">Verification Survey</option>
-            <option value="Subdivision Survey">Subdivision Survey</option>
-            <option value="Consolidation Survey">Consolidation Survey</option>
-            <option value="Topographic Survey">Topographic Survey</option>
-            <option value="AS-Built Survey">AS-Built Survey</option>
-            <option value="Sketch Plan / Vicinity Map">Sketch Plan / Vicinity Map</option>
-            <option value="Land Titling">Land Titling</option>
-          </select>
-        </div>
-
-        <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text"/></div>
-
-        <div class="form-row">
-          <label>Processing Type:</label>
-          <select name="processing_type" id="processingType">
-            <option value="">Select Processing Type</option>
-            <option value="LRA">For LRA Approval</option>
-            <option value="PSD">For PSD Approval</option>
-            <option value="CSD">For CSD Approval</option>
-            <option value="Sketch Plan">Sketch Plan Only</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <label>Status:</label>
-          <select id="projectStatus" name="projectStatus">
-              <option value="">Select Project Status</option>
-              <option value="FOR PRINT">FOR PRINT</option>
-              <option value="FOR DELIVER">FOR DELIVER</option>
-              <option value="FOR SIGN">FOR SIGN</option>
-              <option value="FOR ENTRY (PSD)">FOR ENTRY (PSD)</option>
-              <option value="FOR ENTRY (CSD)">FOR ENTRY (CSD)</option>
-              <option value="FOR ENTRY (LRA)">FOR ENTRY (LRA)</option>
-              <option value="FOR RESEARCH">FOR RESEARCH</option>
-              <option value="FOR FINAL">FOR FINAL</option>
-              <option value="CANCELED">CANCELED</option>
-              <option value="APPROVED">APPROVED</option>
-              <option value="COMPLETED">COMPLETED</option>
-          </select>
-        </div>
-
-        <div class="form-row"><label>Survey Start Date:</label><input id="startDate" name="survey_start" type="date" /></div>
-        <div class="form-row"><label>Survey End Date:</label><input id="endDate" name="survey_end" type="date" /></div>
-      </div>
-
       <div class="qr-preview">
         <button id="qrToggleBtn" type="button" class="fa fa-qrcode"></button>
         <input id="qrInput" type="text" autocomplete="off" style="position:absolute; left:-9999px;" />
-        <h4 id="qrStatusText" style="color: black;">QR Code Search Disabled</h4>
+        <h4 id="qrStatusText" style="color: black; font-size: 0.75vw;">QR Code Search Disabled</h4>
       </div>
 
     </div>
@@ -610,7 +579,7 @@ select,
   Results
 </span>
 <div id="liveResults" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
-  <p>Start typing to see matching projects...</p>
+  <p>Provide input or select from the list to initiate a search for matching project data...</p>
 </div>
 
 <div id="qrsearchModal" class="newmodal">

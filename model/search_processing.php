@@ -11,11 +11,21 @@ $province     = $_GET['province']       ?? '';
 $municipality = $_GET['municipality']   ?? '';
 $barangay     = $_GET['barangay']       ?? '';
 $surveyType   = $_GET['surveyType']     ?? '';
-$agent        = $_GET['agent']          ?? '';
-$approval     = $_GET['processingType'] ?? '';
-$status       = $_GET['projectStatus']  ?? '';
-$startDate    = $_GET['startDate']      ?? '';
-$endDate      = $_GET['endDate']        ?? '';
+
+// 🛑 Prevent query execution if all fields are empty
+if (
+    empty($project) &&
+    empty($lot) &&
+    empty($fname) &&
+    empty($lname) &&
+    empty($province) &&
+    empty($municipality) &&
+    empty($barangay) &&
+    empty($surveyType)
+) {
+    echo "<p>Provide input or select from the list to initiate a search for matching project data...</p>";
+    exit;
+}
 
 // Start query with JOIN to address table
 $sql = "SELECT project.*, address.Province, address.Municipality, address.Barangay 
@@ -47,26 +57,11 @@ if ($lname) {
     $params[] = "%$lname%";
     $types .= "s";
 }
-if ($agent) {
-    $sql .= " AND project.Agent LIKE ?";
-    $params[] = "%$agent%";
-    $types .= "s";
-}
 
-// Exact match conditions for enums or fixed values
+// Exact match condition for survey type
 if ($surveyType) {
     $sql .= " AND project.SurveyType = ?";
     $params[] = $surveyType;
-    $types .= "s";
-}
-if ($approval) {
-    $sql .= " AND IFNULL(project.Approval, 'Sketch Plan') = ?";
-    $params[] = $approval;
-    $types .= "s";
-}
-if ($status) {
-    $sql .= " AND project.ProjectStatus = ?";
-    $params[] = $status;
     $types .= "s";
 }
 
@@ -84,18 +79,6 @@ if ($municipality) {
 if ($barangay) {
     $sql .= " AND address.Barangay LIKE ?";
     $params[] = "%$barangay%";
-    $types .= "s";
-}
-
-// Date filters
-if ($startDate) {
-    $sql .= " AND project.SurveyStartDate >= ?";
-    $params[] = $startDate;
-    $types .= "s";
-}
-if ($endDate) {
-    $sql .= " AND (project.SurveyEndDate <= ? OR project.SurveyEndDate IS NULL)";
-    $params[] = $endDate;
     $types .= "s";
 }
 
@@ -174,8 +157,6 @@ if ($result->num_rows === 0) {
         $barangay      = htmlspecialchars($row['Barangay']);
         $address       = htmlspecialchars("{$barangay}, {$municipality}, {$province}");
         $surveyType    = htmlspecialchars($row['SurveyType']);
-        $approval      = htmlspecialchars($row['Approval'] ?? 'Sketch Plan');
-        $status        = htmlspecialchars($row['ProjectStatus']);
 
         echo "<li class='result-item' data-projectid='{$projectId}'>
                 <div class='field'><strong>Project ID</strong>{$projectId}</div>
@@ -183,8 +164,6 @@ if ($result->num_rows === 0) {
                 <div class='field'><strong>Client</strong>{$client}</div>
                 <div class='field'><strong>Address</strong>{$address}</div>
                 <div class='field'><strong>Survey Type</strong>{$surveyType}</div>
-                <div class='field'><strong>Processing Type</strong>{$approval}</div>
-                <div class='field'><strong>Status</strong>{$status}</div>
             </li>";
     }
 
