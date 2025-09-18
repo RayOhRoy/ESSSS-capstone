@@ -172,6 +172,12 @@ if ($result && $result->num_rows > 0) {
 $conn->close();
 ?>
 
+<label for="dateFrom">From:</label>
+<input type="date" id="dateFrom" onchange="filterByDate()" />
+
+<label for="dateTo">To:</label>
+<input type="date" id="dateTo" onchange="filterByDate()" />
+
 <table class="activitylist-table" id="projectTable">
   <thead>
     <tr>

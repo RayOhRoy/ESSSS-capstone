@@ -364,6 +364,10 @@ button {
   margin-top: 2vh;
 }
 
+.required-asterisk {
+  color: red;
+  font-weight: bold;
+}
 </style>
 
 
@@ -393,13 +397,13 @@ button {
         <div class="column">
           <input type="hidden" id="project_name" name="project_name">
 
-          <div class="form-row"><label>* Lot Number:</label><input id="lotNumber" name="lot_no" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required />
+          <div class="form-row"><label><span class="required-asterisk">* </span>Lot Number:</label><input id="lotNumber" name="lot_no" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required />
           </div>
-          <div class="form-row"><label>* Client First Name:</label><input id="clientName" name="client_name" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required /></div>
-          <div class="form-row"><label>* Client Last Name:</label><input id="clientLastName" name="last_name" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required /></div>
+          <div class="form-row"><label><span class="required-asterisk">* </span>Client First Name:</label><input id="clientName" name="client_name" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required /></div>
+          <div class="form-row"><label><span class="required-asterisk">* </span>Client Last Name:</label><input id="clientLastName" name="last_name" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required /></div>
 
           <div class="form-row">
-            <label>* Province:</label>
+            <label><span class="required-asterisk">* </span>Province:</label>
             <select name="province" id="province" onchange="loadMunicipalities()">
               <option value="">Select Province</option>
               <option value="Bulacan">Bulacan</option>
@@ -407,14 +411,14 @@ button {
           </div>
 
           <div class="form-row">
-            <label>* Municipality:</label>
+            <label><span class="required-asterisk">* </span>Municipality:</label>
             <select name="municipality" id="municipality" onchange="loadBarangays()" disabled>
               <option value="">Select Municipality</option>
             </select>
           </div>
 
           <div class="form-row">
-            <label>* Barangay:</label>
+            <label><span class="required-asterisk">* </span>Barangay:</label>
             <select name="barangay" id="barangay" disabled>
               <option value="">Select Barangay</option>
             </select>
@@ -426,7 +430,7 @@ button {
 
         <div class="column">
           <div class="form-row">
-            <label>* Survey Type:</label>
+            <label><span class="required-asterisk">* </span>Survey Type:</label>
             <select name="survey_type" id="surveyType">
               <option value="">Select Survey Type</option>
               <option value="Relocation Survey ">Relocation Survey </option>
@@ -444,7 +448,7 @@ button {
           <div class="form-row"><label>Agent:</label><input id="agent" name="agent" type="text" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();"/></div>
 
           <div class="form-row">
-            <label for="approvalStatusThing">* Project Status:</label>
+            <label for="approvalStatusThing"><span class="required-asterisk">* </span>Project Status:</label>
             <select id="projectStatus" name="projectStatus">
               <option value="">Select Project Status</option>
               <option value="FOR PRINT">FOR PRINT</option>
@@ -461,13 +465,13 @@ button {
             </select>
           </div>
 
-          <div class="form-row"><label>* Survey Start Date:</label><input id="startDate" name="survey_start"
+          <div class="form-row"><label><span class="required-asterisk">* </span>Survey Start Date:</label><input id="startDate" name="survey_start"
               type="date" /></div>
           <div class="form-row"><label>Survey End Date:</label><input id="endDate" name="survey_end" type="date" />
           </div>
 
           <div class="form-row">
-            <label for="surveyType">* Request Type:</label>
+            <label for="surveyType"><span class="required-asterisk">* </span>Request Type:</label>
             <select id="requestType" name="requestType">
               <option value="For Approval">For Approval</option>
               <option value="Sketch Plan">Sketch Plan</option>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 14, 2025 at 07:57 AM
+-- Generation Time: Sep 16, 2025 at 03:20 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,7 +62,7 @@ CREATE TABLE `document` (
   `DocumentType` varchar(255) NOT NULL,
   `ProjectID` varchar(20) NOT NULL,
   `DigitalLocation` varchar(255) DEFAULT NULL,
-  `DocumentStatus` enum('STORED','RELEASED') DEFAULT NULL,
+  `DocumentStatus` varchar(20) DEFAULT NULL,
   `DocumentQR` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -109,7 +109,7 @@ CREATE TABLE `project` (
   `DigitalLocation` varchar(255) NOT NULL,
   `SurveyStartDate` date NOT NULL,
   `SurveyEndDate` date DEFAULT NULL,
-  `Agent` varchar(255) NOT NULL,
+  `Agent` varchar(255) DEFAULT NULL,
   `RequestType` enum('For Approval','Sketch Plan') NOT NULL,
   `Approval` enum('LRA','PSD','CSD') DEFAULT NULL,
   `ProjectStatus` varchar(20) NOT NULL,

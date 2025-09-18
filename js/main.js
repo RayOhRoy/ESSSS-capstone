@@ -39,6 +39,7 @@ function loadForm(path) {
       attachSubmitHandler();
       attachForgotPasswordHandler();
       attachRegisterHandler();
+      attachPasswordToggle();
 
       const adminPages = [
         'admin.php',
@@ -87,6 +88,22 @@ function attachClickHandlers() {
       const file = el.getAttribute('data-load');
       loadForm(file);
     });
+  });
+}
+
+function attachPasswordToggle() {
+  const passwordInput = document.getElementById('password');
+  const toggleButton = document.getElementById('togglePassword');
+  const toggleIcon = document.getElementById('toggleIcon');
+
+  if (!passwordInput || !toggleButton || !toggleIcon) return;
+
+  toggleButton.addEventListener('click', function () {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+
+    toggleIcon.classList.toggle('fa-eye');
+    toggleIcon.classList.toggle('fa-eye-slash');
   });
 }
 

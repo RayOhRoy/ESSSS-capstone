@@ -27,11 +27,13 @@ function loadAdminPage(page) {
         initQRSearch();
         initLiveProjectSearch();
       } else if (page === 'activity_log.php') {
-        filterByEmployee();
+        filterByDate();
       } else if (cleanPage  === 'project.php') {
         initBackButton();
         initImageModal();
         initDocumentTabSwitching();
+        initQRFormHandler();
+        initQRFormToggles();
       } else if (cleanPage  === 'edit_project.php') {
         initToggleEditSave();
       }else {
@@ -75,19 +77,72 @@ function toggleClickHandler(e) {
   }
 }
 
-function filterByEmployee() {
-    const selected = document.getElementById("employeeFilter").value.toLowerCase();
-    const rows = document.querySelectorAll("#projectTable tbody tr");
+function filterByDate() {
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    const dateFrom = dateFromInput.value;
+    const dateTo = dateToInput.value;
+    const employeeFilter = document.getElementById('employeeFilter').value.toLowerCase();
 
-    rows.forEach(row => {
-        const employee = row.getAttribute("data-employee").toLowerCase();
-        if (!selected || employee === selected) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
+    // Ensure "To" date cannot be earlier than "From"
+    if (dateFrom) {
+        dateToInput.min = dateFrom;
+    } else {
+        dateToInput.removeAttribute('min');
+    }
+
+    // Optionally ensure "From" date cannot be later than "To"
+    if (dateTo) {
+        dateFromInput.max = dateTo;
+    } else {
+        dateFromInput.removeAttribute('max');
+    }
+
+    const table = document.getElementById('projectTable');
+    const tbody = table.tBodies[0];
+    const rows = tbody.getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const employeeName = row.getAttribute('data-employee').toLowerCase();
+        const timestampCell = row.cells[3].textContent.trim();
+
+        let rowDate = new Date(timestampCell);
+        if (isNaN(rowDate)) {
+            const parts = timestampCell.split(' ');
+            const day = parts[0];
+            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(parts[1]);
+            const year = parts[2];
+            const timeParts = parts[3].split(':');
+            rowDate = new Date(year, month, day, timeParts[0], timeParts[1]);
         }
-    });
+
+        let show = true;
+
+        if (employeeFilter && !employeeName.includes(employeeFilter)) {
+            show = false;
+        }
+
+        if (show) {
+            if (dateFrom) {
+                const fromDate = new Date(dateFrom);
+                if (rowDate < fromDate) show = false;
+            }
+            if (dateTo) {
+                const toDate = new Date(dateTo);
+                toDate.setHours(23, 59, 59, 999);
+                if (rowDate > toDate) show = false;
+            }
+        }
+
+        row.style.display = show ? '' : 'none';
+    }
 }
+
+function filterByEmployee() {
+    // Reuse filterByDate to apply combined filters
+    filterByDate();
+}
+
 
 function clearFilter() {
     document.getElementById("employeeFilter").value = "";
@@ -228,14 +283,43 @@ function initUploadHandlers() {
 
   const requestType = document.getElementById('requestType');
   const approvalRadios = document.querySelectorAll('input[name="approval"]');
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
 
+  // Request type change listener
   if (requestType) {
     requestType.addEventListener('change', updateDocumentTableBasedOnSelection);
   }
 
+  // Approval radio buttons change listener
   approvalRadios.forEach(radio => {
     radio.addEventListener('change', updateDocumentTableBasedOnSelection);
   });
+
+  // Disable end date by default
+  if (endDateInput) {
+    endDateInput.disabled = true;
+  }
+
+  // Enable and constrain end date once start date is selected
+  if (startDateInput && endDateInput) {
+    startDateInput.addEventListener('change', function () {
+      const selectedDate = this.value;
+
+      if (selectedDate) {
+        endDateInput.disabled = false;
+        endDateInput.min = selectedDate;
+
+        // Clear end date if it's before start date
+        if (endDateInput.value && endDateInput.value < selectedDate) {
+          endDateInput.value = '';
+        }
+      } else {
+        endDateInput.disabled = true;
+        endDateInput.value = '';
+      }
+    });
+  }
 }
 
 function showToast(message, type = 'success') {

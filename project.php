@@ -396,24 +396,37 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
         $statusRaw = $doc['DocumentStatus'];
         $statusUpper = strtoupper(trim($statusRaw));
 
-        // Only show if DocumentStatus is STORED or RELEASE, case-insensitive
+        // Only show if DocumentStatus is STORED or RELEASE
         if (in_array($statusUpper, ['STORED', 'RELEASE'])):
           $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
       ?>
-      <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <!-- Display DocumentType instead of DocumentName -->
-        <span><?= htmlspecialchars($doc['DocumentType']) ?></span>
-        <form method="post" action="model/update_document_status.php" style="margin: 0;">
-          <input type="hidden" name="projectId" value="<?= htmlspecialchars($projectId) ?>">
-          <!-- Keep DocumentName hidden for form identification -->
-          <input type="hidden" name="documentName" value="<?= htmlspecialchars($doc['DocumentName']) ?>">
-          <input type="hidden" name="newStatus" value="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>">
-          <button type="submit"
-                  style="padding: 6px 14px; border: none; border-radius: 5px; background-color: #7B0302; color: white; cursor: pointer;">
-            <?= $toggleLabel ?>
-          </button>
-        </form>
-      </li>
+    <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
+  <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
+
+  <form class="qr-validate-form"
+        data-projectid="<?= htmlspecialchars($projectId) ?>"
+        data-docname="<?= htmlspecialchars($doc['DocumentName']) ?>"
+        data-newstatus="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>"
+        style="margin: 0; display: flex; align-items: center; gap: 10px;">
+
+    <!-- The toggle/cancel button -->
+    <button type="button" class="toggle-qr-btn"
+            style="padding: 6px 14px; border: none; border-radius: 5px; background-color: #7B0302; color: white; cursor: pointer;">
+      <?= $toggleLabel ?>
+    </button>
+
+    <!-- Hidden input for QR scanning -->
+    <input type="text" name="scannedQR" required autocomplete="off" autocorrect="off"
+           style="opacity: 0; position: absolute; pointer-events: none; width: 1px; height: 1px;">
+
+    <!-- The Scan QR instruction text, hidden initially -->
+    <span class="scan-qr-text" style="display: none; font-style: italic; color: #555;">
+      Scan QR Code to proceed
+    </span>
+  </form>
+</li>
+
+
       <?php endif; ?>
     <?php endforeach; ?>
   </ul>

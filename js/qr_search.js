@@ -40,14 +40,26 @@ function searchProjectByQR(scannedCode) {
     body: JSON.stringify({ projectId })
   })
     .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        // Populate modal with project info from server
-        modalBody.innerHTML = generateProjectHTML(data.project);
-      } else {
-        modalBody.innerHTML = `<p style="color:red;">${data.message || "Project not found."}</p>`;
-      }
-    })
+.then(data => {
+  if (data.success) {
+    selectedProjectIdFromQR = data.project.ProjectID;
+    modalBody.innerHTML = generateProjectHTML(data.project);
+
+    // ✅ Attach event listener AFTER the button is inserted
+    const openBtn = modalBody.querySelector('.open-btn');
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        if (selectedProjectIdFromQR) {
+          loadAdminPage('project.php?projectId=' + encodeURIComponent(selectedProjectIdFromQR));
+        } else {
+          alert("No project loaded from QR.");
+        }
+      });
+    }
+  } else {
+    modalBody.innerHTML = `<p style="color:red;">${data.message || "Project not found."}</p>`;
+  }
+})
     .catch(err => {
       console.error("Error fetching project info:", err);
       modalBody.innerHTML = `<p style="color:red;">Network error. Please try again.</p>`;
@@ -70,13 +82,19 @@ function generateProjectHTML(project) {
       <p><strong>Survey Period:</strong> ${project.SurveyStartDate || ''} - ${project.SurveyEndDate || ''}</p>
     </div>
 
-    <div class="document-table">
-      <table>
+    <div class="document-table" style="max-height: 10vw; min-width: 100%; overflow-y: auto;">
+      <table style="border-collapse: collapse; width: 100%;">
         <thead>
           <tr>
-            <th>Document Name</th>
-            <th>Physical Documents</th>
-            <th>Digital Documents</th>
+            <th style="position: sticky; top: 0; background: white; z-index: 2; border-bottom: 2px solid #000; padding: 8px; border: 1px solid #ddd;">
+              Document Name
+            </th>
+            <th style="position: sticky; top: 0; background: white; z-index: 2; border-bottom: 2px solid #000; padding: 8px; border: 1px solid #ddd;">
+              Physical Documents
+            </th>
+            <th style="position: sticky; top: 0; background: white; z-index: 2; border-bottom: 2px solid #000; padding: 8px; border: 1px solid #ddd;">
+              Digital Documents
+            </th>
           </tr>
         </thead>
         <tbody>

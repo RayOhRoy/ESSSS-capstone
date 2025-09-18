@@ -16,7 +16,22 @@
         <form id="login-form">
             <div class="inputClass">
                 <input class="EmployeeID" name="employeeid" type="text" placeholder="EmployeeID" required />
-                <input class="Password" name="password" type="password" placeholder="Password" required />
+                <div class="form-row" style="position: relative;">
+                <input class="Password" id="password" name="password" type="password" placeholder="Password" required />               
+                <button type="button" id="togglePassword" style="
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 0;
+                    color: #7b0302;
+                ">
+                    <i class="fa fa-eye" id="toggleIcon"></i>
+                </button>
+                </div>
             </div>
             <div id="invalid-error" style="color:red;"></div>
             <p class="forgot" data-load="forgot_password.php">forgot password?</p>
