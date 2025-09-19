@@ -381,6 +381,16 @@ input[type="checkbox"]:checked::after {
 .content {
     padding-bottom: 2.5%;
 }
+.hidden-file {
+  display: none;
+}
+.remove-icon {
+  color: red;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 5px;
+  user-select: none;
+}
 
 </style>
 
@@ -506,7 +516,6 @@ while ($docRow = $docResult->fetch_assoc()) {
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Update <?= htmlspecialchars($projectId) ?></span>
   <div class="topbar-content">
     <div class="icons">
-      <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
       <div class="dropdown-menu" id="user-menu">
         <a data-page="profile.php">Profile</a>
@@ -518,9 +527,13 @@ while ($docRow = $docResult->fetch_assoc()) {
 
 <hr class="top-line" />
 
-<!-- Project Info Form (Read-only) -->
+
+<!-- HTML -->
 <div class="content">
   <form id="update_projectForm">
+
+   <input type="hidden" id="projectId" name="projectId" value="<?= htmlspecialchars($project['ProjectID']) ?>" />
+
     <div class="form-wrapper">
       <div class="form-grid">
         <div class="column">
@@ -626,11 +639,22 @@ while ($docRow = $docResult->fetch_assoc()) {
             <label>To be approved by:</label>
             <div class="approval-group">
               <?php
-              $approvals = ["LRA", "BUREAU", "CENRO"];
-              foreach ($approvals as $a): ?>
-                <label for="approval_<?= strtolower($a) ?>">
-                  <input type="radio" id="approval_<?= strtolower($a) ?>" name="approvalType" value="<?= $a ?>" disabled <?= ($approvalType === $a) ? 'checked' : '' ?> />
-                  <?= $a ?>
+              $approvals = [
+                'PSD' => 'PSD (BUREAU)',
+                'CSD' => 'CSD (CENRO)',
+                'LRA' => 'LRA'
+              ];
+              foreach ($approvals as $value => $label): ?>
+                <label for="approval_<?= strtolower($value) ?>">
+                  <input
+                    type="radio"
+                    id="approval_<?= strtolower($value) ?>"
+                    name="approvalType"
+                    value="<?= $value ?>"
+                    disabled
+                    <?= ($approvalType === $value) ? 'checked' : '' ?>
+                  />
+                  <?= $label ?>
                 </label>
               <?php endforeach; ?>
             </div>
@@ -665,7 +689,6 @@ while ($docRow = $docResult->fetch_assoc()) {
         </thead>
         <tbody>
           <?php
-          // Normalize docsToRender keys for matching documents array keys
           foreach ($docsToRender as $docLabel):
             $key = strtolower(str_replace([' ', '/'], ['_', ''], $docLabel));
             $doc = $documents[$key] ?? null;
@@ -680,24 +703,35 @@ while ($docRow = $docResult->fetch_assoc()) {
 
             <td>
               <input type="checkbox" disabled <?= $isChecked ?> />
-              <select class="storage-status" disabled style="<?= $doc ? '' : 'display:none;' ?>">
-                <option value="Stored" <?= strtoupper($status) === 'STORED' ? 'selected' : '' ?>>Stored</option>
-                <option value="Released" <?= strtoupper($status) === 'RELEASED' ? 'selected' : '' ?>>Released</option>
-              </select>
             </td>
 
             <td>
               <div class="digital-cell">
                 <div class="file-list">
-                  <?= $fileName ? htmlspecialchars($fileName) : '<i>No file</i>' ?>
+                  <?php if ($fileName): ?>
+                    <span class="existing-file">
+                      <?= htmlspecialchars($fileName) ?>
+                    </span>
+                    <i class="no-file" style="display:none;">No file</i>
+                  <?php else: ?>
+                    <span class="existing-file" style="display:none;"></span>
+                    <i class="no-file">No file</i>
+                  <?php endif; ?>
                 </div>
+                <label class="attach-icon" title="Attach file" style="display:none; cursor:pointer; font-size: 15px;">
+                  📎
+                  <input type="file" name="digital_<?= $key ?>" class="hidden-file" multiple
+                        accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
+                        onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
+                </label>
               </div>
             </td>
 
+
             <td class="qr-code">
               <?php if (!empty($qr)): ?>
-                <span class="view-qr-text" 
-                      style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
+                <span class="view-qr-text"
+                      style="cursor:pointer;color:#7B0302;text-decoration:underline;"
                       onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
                   View
                 </span>
@@ -712,13 +746,13 @@ while ($docRow = $docResult->fetch_assoc()) {
     </div>
 
     <div class="footer-buttons">
-      <button type="button" id="update-save-btn" class="btn-red">Save Changes</button>
+      <button type="button" id="update-save-btn" class="btn-red" style="display:none;">Save Changes</button>
       <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
     </div>
   </form>
 </div>
 
 <div id="qrModal" class="qr-modal">
-  <span class="close">&times;</span>
-  <img id="qrModalImg" class="qr-modal-content">
+  <span class="close" onclick="closeQRPopup()">&times;</span>
+  <img id="qrModalImg" class="qr-modal-content" alt="QR Code Image">
 </div>

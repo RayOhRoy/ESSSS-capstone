@@ -124,7 +124,7 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
 } else if ($requestType === "Sketch Plan") {
     $docsToRender = [
         "Original Plan",
-        "Xerox Title",
+        "Title",
         "Reference Plan",
         "Lot Data",
         "Tax Declaration",

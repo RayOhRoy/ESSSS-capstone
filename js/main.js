@@ -144,15 +144,20 @@ function attachSubmitHandler() {
 
 function attachForgotPasswordHandler() {
   const forgotForm = document.getElementById('forgot-password-form');
-  const otpModal = document.getElementById('otp-modal');
-  const otpForm = document.getElementById('otp-verify-form');
-  const closeOtpModal = document.getElementById('otp-modal-close');
   const emailInput = document.querySelector('.Email');
+  const formFields = document.getElementById('form-fields');
 
-  if (!forgotForm) return;
+  if (!forgotForm || !emailInput || !formFields) return;
 
-  forgotForm.addEventListener('submit', function (e) {
+  const handleSendOTP = function (e) {
     e.preventDefault();
+
+    const sendBtn = forgotForm.querySelector('button[type="submit"]');
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending...";
+    }
+
     const data = new FormData(forgotForm);
 
     fetch('model/forgot_password_processing.php', {
@@ -162,74 +167,139 @@ function attachForgotPasswordHandler() {
       .then(res => res.json())
       .then(result => {
         const errorBox = document.getElementById('forgot-error') || createErrorBox(forgotForm, 'forgot-error');
+        const errorText = errorBox.querySelector('.alert-text');
 
         if (result.success) {
+          errorBox.style.display = 'flex';
+          errorBox.style.borderColor = 'green';
           errorBox.style.color = 'green';
-          errorBox.textContent = result.message;
+          errorBox.querySelector('.alert-icon i').className = 'fa fa-check-circle';
+          errorText.textContent = result.message;
 
-          emailInput.disabled = true;
-          forgotForm.querySelector('button').disabled = true;
+          formFields.innerHTML = `
+          <style>
+            #form-fields .inputClass {
+              margin-bottom: 3%;
+            }
+            #form-fields .inputClass input {
+              padding: 8px;
+            }
+          </style>
 
-          if (otpModal) otpModal.style.display = 'block';
+          <input type="hidden" name="email" value="${emailInput.value}" />
+
+          <div class="inputClass">
+            <input type="text" name="otp" placeholder="6-digit OTP" maxlength="6" required />
+          </div>
+          <div class="inputClass">
+            <input type="password" name="new_password" placeholder="New Password" required />
+          </div>
+          <div class="inputClass">
+            <input type="password" name="confirm_password" placeholder="Confirm New Password" required />
+          </div>
+          <div style="display: flex; justify-content: center;">
+            <button class="Sendemailbtn" type="submit">Reset Password</button>
+            <button type="button" id="cancel-reset" class="back-login">Cancel</button>
+          </div>
+        `;
+
+          forgotForm.removeEventListener('submit', handleSendOTP);
+          forgotForm.addEventListener('submit', handleVerifyOTP);
+
+          const cancelBtn = document.getElementById('cancel-reset');
+          if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+              location.reload(); // reset the form
+            });
+          }
         } else {
+          errorBox.style.display = 'flex';
+          errorBox.style.borderColor = 'red';
           errorBox.style.color = 'red';
-          errorBox.textContent = result.message;
+          errorBox.querySelector('.alert-icon i').className = 'fa fa-exclamation-circle';
+          errorText.textContent = result.message;
+
+          // Re-enable button after 5 seconds
+          if (sendBtn) {
+            setTimeout(() => {
+              sendBtn.disabled = false;
+              sendBtn.textContent = "Send Email";
+            }, 5000);
+          }
         }
       })
       .catch(error => {
         console.error('Forgot password error:', error);
+
+        // Re-enable button after error
+        if (sendBtn) {
+          setTimeout(() => {
+            sendBtn.disabled = false;
+            sendBtn.textContent = "Send Email";
+          }, 5000);
+        }
       });
-  });
+  };
 
-  if (otpForm) {
-    otpForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+  // OTP Verification: Reset Password
+  const handleVerifyOTP = function (e) {
+    e.preventDefault();
 
-      const formData = new FormData(otpForm);
-      formData.append('email', emailInput.value);
+    const data = new FormData(forgotForm);
 
-      fetch('model/verify_otp.php', {
-        method: 'POST',
-        body: formData
+    fetch('model/verify_otp.php', {
+      method: 'POST',
+      body: data
+    })
+      .then(res => res.json())
+      .then(result => {
+        const errorBox = document.getElementById('forgot-error');
+        const errorText = errorBox.querySelector('.alert-text');
+
+        if (result.success) {
+          errorBox.style.display = 'flex';
+          errorBox.style.borderColor = 'green';
+          errorBox.style.color = 'green';
+          errorBox.querySelector('.alert-icon i').className = 'fa fa-check-circle';
+          errorText.textContent = result.message;
+
+          setTimeout(() => {
+            window.location.href = 'index.php'; // Go back to login
+          }, 2000);
+        } else {
+          errorBox.style.display = 'flex';
+          errorBox.style.borderColor = 'red';
+          errorBox.style.color = 'red';
+          errorBox.querySelector('.alert-icon i').className = 'fa fa-exclamation-circle';
+          errorText.textContent = result.message;
+        }
       })
-        .then(res => res.json())
-        .then(result => {
-          const errorBox = document.getElementById('otp-error') || createErrorBox(otpForm, 'otp-error');
+      .catch(error => {
+        console.error('OTP verification error:', error);
+      });
+  };
 
-          if (result.success) {
-            errorBox.style.color = 'green';
-            errorBox.textContent = result.message;
-
-            alert('Password reset successful! You can now log in.');
-            setTimeout(() => {
-              otpModal.style.display = 'none';
-              window.location.href = 'index.php';
-            }, 2000);
-          }
-          else {
-            errorBox.style.color = 'red';
-            errorBox.textContent = result.message;
-          }
-        })
-        .catch(error => {
-          console.error('OTP verification error:', error);
-        });
-    });
-  }
-
-  if (closeOtpModal) {
-    closeOtpModal.addEventListener('click', function () {
-      otpModal.style.display = 'none';
-    });
-  }
+  // Attach only the first listener
+  forgotForm.addEventListener('submit', handleSendOTP);
 
   function createErrorBox(form, id) {
-    let div = document.createElement('div');
-    div.id = id;
-    div.style.color = 'red';
-    div.style.marginTop = '1rem';
-    form.appendChild(div);
-    return div;
+    const alertBox = document.createElement('div');
+    alertBox.className = 'alert-box';
+    alertBox.id = id;
+    alertBox.style.display = 'flex';
+
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'alert-icon';
+    iconDiv.innerHTML = '<i class="fa fa-exclamation-circle" aria-hidden="true"></i>';
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'alert-text';
+
+    alertBox.appendChild(iconDiv);
+    alertBox.appendChild(textDiv);
+
+    form.appendChild(alertBox);
+    return alertBox;
   }
 }
 

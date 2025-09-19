@@ -47,53 +47,48 @@ function uploadFile(input, docName) {
   renderFileList(row);
 }
 
-function setupStorageStatusHandlers() {
-  document.querySelectorAll("#documentTable tbody tr").forEach(row => {
-    const cb = row.querySelector('td:nth-child(2) input[type="checkbox"]');
-    const sel = row.querySelector('.storage-status');
-    if (cb && sel) {
-      toggleStorageStatus(cb);
-      cb.addEventListener("change", () => toggleStorageStatus(cb));
-    }
-  });
-}
-
 function submitForm() {
   const form = document.getElementById("projectForm");
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  // Disable upload button
+  if (uploadBtn) {
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = "Uploading...";
+  }
+
   const formData = new FormData(form);
   const rows = document.querySelectorAll("#documentTable tbody tr");
 
-  // Collect status and files
   rows.forEach(row => {
-    const docName = row.cells[0].innerText.trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
-
-    const statusSelect = row.querySelector(".storage-status");
-    if (statusSelect) {
-      formData.append(`status_${docName}`, statusSelect.value || "");
-    }
+    const docName = row.cells[0].innerText.trim();
+    const docKey = docName.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
     const checkbox = row.querySelector("input[type='checkbox']");
     const hasPhysical = checkbox && checkbox.checked;
     const hasDigitalFiles = row.filesArray && row.filesArray.length > 0;
 
-    // ✅ Append digital files if any
+    // Automatically save status as "stored" if physical is checked
+    if (hasPhysical) {
+      formData.append(`status_${docKey}`, "Stored");
+    }
+
+    // Digital files
     if (hasDigitalFiles) {
       row.filesArray.forEach(file => {
-        formData.append(`digital_${docName}[]`, file);
+        formData.append(`digital_${docKey}[]`, file);
       });
+    } else if (hasPhysical) {
+      // Physical-only — send empty digital field to include the doc in PHP
+      formData.append(`digital_${docKey}[]`, new Blob(), "");
     }
 
-    // ✅ If physical-only (no digital), send placeholder so PHP includes this doc
-    if (hasPhysical && !hasDigitalFiles) {
-      formData.append(`digital_${docName}[]`, new Blob(), "");
-    }
-
-    // ✅ Append physical checkbox if it's disabled and checked
+    // Physical flag if disabled and checked
     if (checkbox && checkbox.disabled && checkbox.checked) {
-      formData.append(`physical_${docName}`, checkbox.value);
+      formData.append(`physical_${docKey}`, checkbox.value);
     }
 
-    // ✅ Append disabled radio inputs
+    // Disabled radio buttons
     const radios = row.querySelectorAll("input[type='radio']");
     radios.forEach(r => {
       if (r.disabled && r.checked) {
@@ -102,7 +97,6 @@ function submitForm() {
     });
   });
 
-  // Submit via fetch
   fetch("model/upload_project.php", {
     method: "POST",
     body: formData
@@ -111,18 +105,14 @@ function submitForm() {
     .then(data => {
       if (data.status === "success") {
         const projectId = data.projectID || "Unknown Project ID";
-        const modal = document.createElement("div");
-        modal.style.position = "fixed";
-        modal.style.top = "0";
-        modal.style.left = "0";
-        modal.style.width = "100%";
-        modal.style.height = "100%";
-        modal.style.background = "rgba(0,0,0,0.5)";
-        modal.style.display = "flex";
-        modal.style.alignItems = "center";
-        modal.style.justifyContent = "center";
-        modal.style.zIndex = "9999";
 
+        // Show modal
+        const modal = document.createElement("div");
+        modal.style = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.5); display: flex; align-items: center;
+          justify-content: center; z-index: 9999;
+        `;
         modal.innerHTML = `
           <div style="background:white; padding:50px; border-radius:10px; text-align:center; max-width:300px;">
             <h3>Project uploaded successfully.</h3>
@@ -132,10 +122,9 @@ function submitForm() {
             </div>
           </div>
         `;
-
         document.body.appendChild(modal);
 
-        // Handle Print QR
+        // Print QR
         document.getElementById("printQRBtn").addEventListener("click", () => {
           const qrImages = [];
 
@@ -154,7 +143,7 @@ function submitForm() {
           }
 
           let qrGridHTML = "";
-          qrImages.forEach((qr) => {
+          qrImages.forEach(qr => {
             qrGridHTML += `
               <div class="qr-block">
                 <img src="${qr.src}" alt="QR Code">
@@ -169,20 +158,12 @@ function submitForm() {
                 <title>Print QR Codes</title>
                 <style>
                   @page { size: A4 portrait; margin: 5mm; }
-                  body {
-                    margin: 0;
-                    padding: 0;
-                    font-family: Arial, sans-serif;
-                  }
+                  body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
                   .print-wrapper {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
+                    display: flex; flex-direction: column; align-items: center;
                   }
                   .project-id-header {
-                    font-size: 14px;
-                    font-weight: bold;
-                    text-align: center;
+                    font-size: 14px; font-weight: bold; text-align: center;
                     margin: 5mm 0 3mm 0;
                   }
                   .qr-grid {
@@ -193,39 +174,28 @@ function submitForm() {
                     padding: 5mm;
                   }
                   .qr-block {
-                    width: 48mm;
-                    height: 55mm;
-                    border: 1px solid #000;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    box-sizing: border-box;
-                    padding: 2mm;
+                    width: 48mm; height: 55mm; border: 1px solid #000;
+                    display: flex; flex-direction: column;
+                    align-items: center; justify-content: center;
+                    box-sizing: border-box; padding: 2mm;
                   }
                   .qr-block img {
-                    width: 44mm;
-                    height: 36mm;
+                    width: 44mm; height: 36mm;
                   }
                   .label {
-                    margin-top: 1.5mm;
-                    font-size: 11px;
+                    margin-top: 1.5mm; font-size: 11px;
                   }
                 </style>
               </head>
               <body>
                 <div class="print-wrapper">
                   <div class="project-id-header">${projectId}</div>
-                  <div class="qr-grid">
-                    ${qrGridHTML}
-                  </div>
+                  <div class="qr-grid">${qrGridHTML}</div>
                 </div>
                 <script>
-                  window.onload = function() {
+                  window.onload = () => {
                     window.print();
-                    window.onafterprint = function() {
-                      window.close();
-                    }
+                    window.onafterprint = () => window.close();
                   }
                 </script>
               </body>
@@ -233,12 +203,7 @@ function submitForm() {
           `;
 
           const iframe = document.createElement("iframe");
-          iframe.style.position = "fixed";
-          iframe.style.right = "0";
-          iframe.style.bottom = "0";
-          iframe.style.width = "0";
-          iframe.style.height = "0";
-          iframe.style.border = "0";
+          iframe.style = "position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0;";
           document.body.appendChild(iframe);
 
           const doc = iframe.contentWindow.document;
@@ -247,15 +212,13 @@ function submitForm() {
           doc.close();
         });
 
-        // Handle OK
+        // OK button
         document.getElementById("okBtn").addEventListener("click", () => {
           document.body.removeChild(modal);
-
-          // Reset form
           form.reset();
           document.querySelector("#documentTable tbody").innerHTML = "";
 
-          // Reset QR button state
+          // Reset QR state
           qrGenerated = false;
           const generateQRBtn = document.getElementById("generateQRBtn");
           if (generateQRBtn) {
@@ -264,22 +227,33 @@ function submitForm() {
             generateQRBtn.classList.add("btn-red");
           }
 
-          // Simulate click on sidebar menu item
+          // Simulate page switch
           const menuItem = document.querySelector('.menu-item[data-page="project_list.php"]');
-          if (menuItem) {
-            menuItem.click();
-          }
+          if (menuItem) menuItem.click();
         });
       }
-    })
-    .catch(err => console.error(err));
-}
 
+      // Re-enable button after 5 seconds
+      setTimeout(() => {
+        if (uploadBtn) {
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = "Upload";
+        }
+      }, 5000);
+    })
+    .catch(err => {
+      console.error(err);
+      if (uploadBtn) {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "Upload";
+      }
+    });
+}
 
 function generateQR() {
   const projectForm = document.getElementById("projectForm");
 
-  // Validate required fields
+  // Step 1: Validate required fields
   const requiredFields = [
     { id: "lotNumber", name: "Lot Number" },
     { id: "clientName", name: "Client First Name" },
@@ -292,22 +266,23 @@ function generateQR() {
   ];
 
   const missingFields = [];
+
   requiredFields.forEach(f => {
     const el = document.getElementById(f.id);
     if (!el || el.value.trim() === "") missingFields.push(f.name);
   });
 
-  // Conditionally require requestType
   const surveyType = document.getElementById("surveyType")?.value;
   const requestTypeEl = document.getElementById("requestType");
 
+  // Conditionally require Request Type
   if (surveyType !== "Sketch Plan") {
     if (!requestTypeEl || requestTypeEl.value.trim() === "") {
       missingFields.push("Request Type");
     }
   }
 
-  // If it's Sketch Plan, require approval radio
+  // If Sketch Plan, require approval radio
   if (surveyType === "Sketch Plan") {
     const approvalRadios = document.querySelectorAll("input[name='approval']");
     if (![...approvalRadios].some(r => r.checked)) {
@@ -315,6 +290,7 @@ function generateQR() {
     }
   }
 
+  // Require at least one document selected
   const rows = document.querySelectorAll("#documentTable tbody tr");
   let anyDocSelected = false;
   rows.forEach(row => {
@@ -323,94 +299,100 @@ function generateQR() {
       anyDocSelected = true;
     }
   });
-  if (!anyDocSelected) missingFields.push("At least one document selected or file uploaded");
 
-  // ✅ If there are missing fields, show error and stop
+  if (!anyDocSelected) {
+    missingFields.push("At least one document selected or file uploaded");
+  }
+
   if (missingFields.length > 0) {
-    alert("Please fill/select the following before generating QR Code:\n- " + missingFields.join("\n- "));
+    alert("Please complete the following before generating QR Code:\n- " + missingFields.join("\n- "));
     return false;
   }
 
-  const startDateValue = document.getElementById("startDate").value;
-  const endDateValue = document.getElementById("endDate").value;
-
-  if (endDateValue) { // only check if endDate is not empty
-    const startDate = new Date(startDateValue);
-    const endDate = new Date(endDateValue);
-
+  // Step 2: Validate date logic
+  const startDate = new Date(document.getElementById("startDate").value);
+  const endDateEl = document.getElementById("endDate");
+  if (endDateEl && endDateEl.value) {
+    const endDate = new Date(endDateEl.value);
     if (startDate > endDate) {
       alert("Start date cannot be later than end date.");
       return false;
     }
   }
 
-  // ✅ Continue with QR generation
+  // Step 3: Prepare FormData
   const formData = new FormData(projectForm);
-
-  // Prepare arrays to hold doc names for physical and digital docs
   const physicalDocs = [];
   const digitalDocs = [];
 
   rows.forEach(row => {
-    // Use the displayed doc name (exact, with spaces and capitalization)
     const docName = row.cells[0].innerText.trim();
+    const docKey = docName.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
     const checkbox = row.querySelector("input[type='checkbox']");
     const hasPhysical = checkbox && checkbox.checked;
     const hasDigital = row.filesArray && row.filesArray.length > 0;
 
-    // If physical checkbox is checked, add to physicalDocs
     if (hasPhysical) {
       physicalDocs.push(docName);
+      formData.append(`status_${docKey}`, "Stored"); // auto-store status
     }
 
-    // If digital files present, add to digitalDocs & append files to FormData
     if (hasDigital) {
       digitalDocs.push(docName);
-      row.filesArray.forEach(file => formData.append(`digital_${docName.toLowerCase().replace(/[^a-z0-9]/g, "_")}[]`, file));
+      row.filesArray.forEach(file => {
+        formData.append(`digital_${docKey}[]`, file);
+      });
     } else if (hasPhysical) {
-      // For physical-only (no digital files), append an empty blob so PHP still sees the field
-      formData.append(`digital_${docName.toLowerCase().replace(/[^a-z0-9]/g, "_")}[]`, new Blob(), "");
+      // If physical-only, send placeholder file
+      formData.append(`digital_${docKey}[]`, new Blob(), "");
     }
   });
 
-  // Append physical_docs[] and digital_docs[] arrays for the PHP script
-  physicalDocs.forEach(doc => formData.append('physical_docs[]', doc));
-  digitalDocs.forEach(doc => formData.append('digital_docs[]', doc));
+  // Add doc name arrays
+  physicalDocs.forEach(doc => formData.append("physical_docs[]", doc));
+  digitalDocs.forEach(doc => formData.append("digital_docs[]", doc));
 
-  return fetch('model/generate_qr.php', { method: 'POST', body: formData })
-    .then(res => res.text()) // Get raw text first
+  // Step 4: Send to server
+  return fetch("model/generate_qr.php", { method: "POST", body: formData })
+    .then(res => res.text())
     .then(text => {
       try {
-        const data = JSON.parse(text); // Try parsing JSON
+        const data = JSON.parse(text);
+
+        // Inject main project QR
         const projectQRBox = document.querySelector(".qr-box");
         if (projectQRBox && data.projectQR) {
           projectQRBox.innerHTML = `<img id="projectQRImg" src="${data.projectQR}" alt="Project QR">`;
         }
 
+        // Inject document QRs
         rows.forEach(row => {
+          const docName = row.cells[0].innerText.trim();
           const qrCell = row.querySelector(".qr-code");
           const checkbox = row.querySelector("input[type='checkbox']");
-          const docName = row.cells[0].innerText.trim();
-          const hasDigitalFile = row.filesArray && row.filesArray.length > 0;
+          const hasDigital = row.filesArray && row.filesArray.length > 0;
           const hasPhysical = checkbox && checkbox.checked;
 
-          if ((hasDigitalFile || hasPhysical) && data.documentQRs && data.documentQRs[docName]) {
+          const qrPath = data.documentQRs?.[docName];
+
+          if ((hasDigital || hasPhysical) && qrPath) {
             qrCell.innerHTML = `
-              <span class="view-qr-text" 
-                style="cursor:pointer;color:#7B0302;text-decoration:underline;" 
-                onclick="showQRPopup('${data.documentQRs[docName]}')">View</span>
-              <img src="${data.documentQRs[docName]}" 
-                   alt="QR for ${docName}" 
-                   style="display:none;" 
-                   class="doc-qr-img" 
+              <span class="view-qr-text"
+                    style="cursor:pointer;color:#7B0302;text-decoration:underline;"
+                    onclick="showQRPopup('${qrPath}')">View</span>
+              <img src="${qrPath}"
+                   alt="QR for ${docName}"
+                   style="display:none;"
+                   class="doc-qr-img"
                    data-docname="${docName}">
             `;
-          } else if (qrCell) {
-            qrCell.innerHTML = '';
+          } else {
+            qrCell.innerHTML = "";
           }
         });
 
+        // Enable Upload button
         const uploadBtn = document.getElementById("uploadBtn");
         if (uploadBtn) {
           uploadBtn.disabled = false;
@@ -421,17 +403,18 @@ function generateQR() {
 
         return true;
       } catch (err) {
-        console.error("❌ Invalid JSON response from server:", text);
-        alert("Error: Server did not return valid JSON. Check console for details.");
+        console.error("❌ Invalid JSON from server:", text);
+        alert("Error: Server did not return valid JSON. Check console.");
         return false;
       }
     })
     .catch(err => {
       console.error("❌ Fetch error:", err);
-      alert("Network error while generating QR. Check console for details.");
+      alert("Network error while generating QR. Check console.");
       return false;
     });
 }
+
 
 function showQRPopup(path) {
   const modal = document.getElementById("qrModal");
@@ -529,13 +512,6 @@ function cancelGenerate() {
       }
     });
 
-    // Reset storage-status dropdown
-    const statusSelect = row.querySelector(".storage-status");
-    if (statusSelect) {
-      statusSelect.style.display = "none";
-      statusSelect.value = "Stored";
-    }
-
     // Clear uploaded files
     const fileListDiv = row.querySelector(".file-list");
     if (fileListDiv) fileListDiv.innerHTML = "";
@@ -568,18 +544,24 @@ function cancelGenerate() {
 
   qrGenerated = false;
 }
-
-
-// Prevent changes to locked selects
+// ✅ Prevent locked selects from being changed
 function preventSelectChange(e) {
-  if (e.target.getAttribute("data-locked") === "true") e.preventDefault();
+  if (e.target.getAttribute("data-locked") === "true") {
+    e.preventDefault();
+  }
 }
 
+// ✅ Make form inputs sequentially enabled
 function sequentialInputs() {
   const form = document.getElementById("projectForm");
-  const inputs = Array.from(form.querySelectorAll("input, select")).filter(
-    el => !el.closest(".radio-group") && !el.closest(".approval-group") && el.id !== "surveyType"
-  );
+
+  const inputs = Array.from(form.querySelectorAll("input, select")).filter(input => {
+    return (
+      !input.closest(".radio-group") &&
+      !input.closest(".approval-group") &&
+      input.id !== "surveyType"
+    );
+  });
 
   inputs.forEach((input, index) => {
     if (index !== 0) input.disabled = true;
@@ -587,9 +569,9 @@ function sequentialInputs() {
     input.addEventListener("input", () => {
       if (input.value.trim() && inputs[index + 1]) {
         inputs[index + 1].disabled = false;
-      } else if (inputs[index + 1]) {
-        inputs[index + 1].disabled = true;
-        for (let i = index + 2; i < inputs.length; i++) {
+      } else {
+        // Disable all next inputs
+        for (let i = index + 1; i < inputs.length; i++) {
           inputs[i].disabled = true;
         }
       }
@@ -597,6 +579,7 @@ function sequentialInputs() {
   });
 }
 
+// ✅ Handle logic for approval section based on requestType
 function clearApproval() {
   const requestType = document.getElementById('requestType');
   const toBeApprovedBy = document.getElementById('toBeApprovedBy');
@@ -604,27 +587,25 @@ function clearApproval() {
 
   requestType.addEventListener('change', () => {
     if (requestType.value !== 'For Approval') {
-      // Clear selected radio buttons
+      // Hide and clear approval radios
       const radios = toBeApprovedBy.querySelectorAll('input[type="radio"]');
-      radios.forEach(radio => radio.checked = false);
-
-      // Hide the div
+      radios.forEach(r => r.checked = false);
       toBeApprovedBy.style.display = 'none';
     } else {
-      // Show the div and check LRA by default
+      // Show and default to PSD
       toBeApprovedBy.style.display = 'block';
+      if (psdRadio) {
+        psdRadio.checked = true;
 
-      // ✅ Re-check LRA radio button
-      if (psdRadio) psdRadio.checked = true;
-
-      // ✅ Optionally trigger the event manually if logic depends on it
-      const event = new Event('change', { bubbles: true });
-      psdRadio.dispatchEvent(event);
+        // Trigger change in case other logic listens to it
+        const event = new Event('change', { bubbles: true });
+        psdRadio.dispatchEvent(event);
+      }
     }
   });
 }
 
-
+// ✅ Load municipalities based on selected province
 function loadMunicipalities() {
   const province = document.getElementById("province").value;
   const municipalitySelect = document.getElementById("municipality");
@@ -649,6 +630,7 @@ function loadMunicipalities() {
   }
 }
 
+// ✅ Load barangays based on selected municipality
 function loadBarangays() {
   const municipality = document.getElementById("municipality").value;
   const barangaySelect = document.getElementById("barangay");
@@ -683,45 +665,7 @@ function loadBarangays() {
   barangaySelect.disabled = false;
 }
 
-function toggleStorageStatus(checkbox) {
-  const row = checkbox.closest("tr");
-  const select = row.querySelector(".storage-status");
-  const fileInput = row.querySelector("input[type='file']");
-  const paperclipIcon = row.querySelector(".attach-icon i.fa-paperclip");
-  const fileListDiv = row.querySelector(".file-list");
-
-  if (checkbox.checked) {
-    // Show and require select dropdown
-    select.style.display = "inline-block";
-    select.required = true;
-  } else {
-    // Hide and un-require select dropdown, reset value
-    select.style.display = "none";
-    select.required = false;
-    select.value = "Stored";
-  }
-
-  // File input and paperclip icon always enabled and visible:
-  fileInput.disabled = false;
-  fileInput.closest(".attach-icon").style.opacity = "1";
-  if (paperclipIcon) {
-    paperclipIcon.style.display = "inline-block";
-  }
-
-  // Optional: If checkbox unchecked, you might want to clear files and file list? If not, comment this block out:
-  /*
-  if (!checkbox.checked) {
-    if (row.filesArray) {
-      row.filesArray = [];
-    }
-    if (fileListDiv) {
-      fileListDiv.innerHTML = "";
-    }
-  }
-  */
-}
-
-
+// ❌ REMOVED toggleStorageStatus – no longer used
 function updateDocumentTableBasedOnSelection() {
   const requestType = document.getElementById("requestType")?.value;
   const approvalType = document.querySelector("input[name='approval']:checked")?.value;
@@ -776,7 +720,7 @@ function updateDocumentTableBasedOnSelection() {
   } else if (requestType === "Sketch Plan") {
     docsToRender = [
       "Original Plan",
-      "Xerox Title",
+      "Title",
       "Reference Plan",
       "Lot Data",
       "Tax Declaration",
@@ -793,22 +737,19 @@ function updateDocumentTableBasedOnSelection() {
   docsToRender.forEach(doc => {
     const id = doc.toLowerCase().replace(/[^a-z0-9]/g, "_");
     const row = document.createElement("tr");
+
     row.innerHTML = `
       <td>${doc}</td>
       <td>
-        <input type="checkbox" name="physical_${id}" onchange="toggleStorageStatus(this)" />
-        <select class="storage-status" name="status_${id}" style="display:none;">
-          <option value="Stored">Stored</option>
-          <option value="Released">Released</option>
-        </select>
+        <input type="checkbox" name="physical_${id}" />
       </td>
       <td>
         <div class="upload-form">
           <div class="file-list"></div>
-          <label class="attach-icon">📎
+          <label class="attach-icon" style="cursor:pointer;">📎
             <input type="file" name="digital_${id}" class="hidden-file" multiple
                    accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
-                   onchange="uploadFile(this, '${doc}')" disabled>
+                   onchange="uploadFile(this, '${doc}')">
           </label>
         </div>
       </td>
@@ -816,6 +757,5 @@ function updateDocumentTableBasedOnSelection() {
     `;
     tbody.appendChild(row);
   });
-
-  setupStorageStatusHandlers(); // rebind handlers for new rows
 }
+

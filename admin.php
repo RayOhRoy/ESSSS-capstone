@@ -64,8 +64,12 @@
         <span>Upload</span>
       </a>
       <a href="#" class="menu-item" data-page="project_list.php">
-        <span  class="fa fa-list" alt="Project List"></span>
-        <span>Project List</span>
+        <span  class="fa fa-list" alt="Documents"></span>
+        <span>Documents</span>
+      </a>
+      <a href="#" class="menu-item" data-page="project_list.php">
+        <span  class="fa fa-list" alt="Physical Storage"></span>
+        <span>Physical Storage</span>
       </a>
       <a href="#" class="menu-item" data-page="search.php">
         <span  class="fa fa-qrcode" alt="Search"></span>

@@ -59,7 +59,7 @@ function initToggleEditSave() {
   const contentArea = document.getElementById('content-area');
   if (!contentArea) return;
 
-  contentArea.removeEventListener('click', toggleClickHandler); // remove if exists
+  contentArea.removeEventListener('click', toggleClickHandler); // remove old listener if any
 
   contentArea.addEventListener('click', toggleClickHandler);
 }
@@ -73,9 +73,49 @@ function toggleClickHandler(e) {
   }
 
   if (saveBtn) {
-    submitForm();
+    submitForm(e);
   }
 }
+
+// AJAX submit handler
+function submitForm(e) {
+  e.preventDefault(); // prevent default form submit
+
+  const form = document.getElementById('update_projectForm');
+  if (!form) {
+    alert('Form not found!');
+    return;
+  }
+
+  const formData = new FormData(form);
+
+ fetch('model/update_project.php', {
+  method: 'POST',
+  body: formData,
+})
+.then(response => {
+  if (!response.ok) {
+    return response.text().then(text => {
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    });
+  }
+  return response.json();
+})
+.then(data => {
+  if (data.status === 'success') {
+    alert('Project updated successfully!');
+    handleEditButton();
+  } else {
+    alert('Update failed: ' + (data.message || 'Unknown error'));
+  }
+})
+.catch(error => {
+  console.error('Fetch error:', error);
+  alert('There was an error updating the project:\n' + error.message);
+});
+
+}
+
 
 function filterByDate() {
     const dateFromInput = document.getElementById('dateFrom');

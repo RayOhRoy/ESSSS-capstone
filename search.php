@@ -475,7 +475,6 @@ select,
   <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Search</span>
   <div class="topbar-content">
     <div class="icons">
-      <span id="notification-circle-icon" class="fa fa-bell-o" style="font-size: 1.75cqw; color: #7B0302;"></span>
       <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
       <div class="dropdown-menu" id="user-menu">
         <a data-page="profile.php">Profile</a>

@@ -119,6 +119,9 @@ hr{
     font-size: 1cqw;
     text-decoration: underline;
     text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    margin-left: 35%;
+    margin-top: -5%;
+    margin-bottom: 4%;
 }
 
 .forgot:hover{

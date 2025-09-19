@@ -88,6 +88,7 @@ hr{
     gap: 1.7cqw; 
     margin-bottom: 3cqw;
 }
+
 .whitePanel input{
     border-radius: 0.5cqw;
     border: none;
@@ -99,6 +100,7 @@ hr{
     padding-left: 15px;
     font-size: 1.3cqw;
 }
+
 .whitePanel input::placeholder {
     color:#7b0302;
     opacity: 1;
@@ -114,7 +116,58 @@ hr{
     cursor: pointer;
     color: white;
     font-size: 1cqw;
+    margin-right: 4%;
+    transition: filter 0.3s ease;
 }
+
+#back-login,
+.back-login {
+    width: 7cqw;
+    height: 2.3cqw;
+    background-color: #A3A3A3;
+    color: #7b0302;
+    border-radius: 0.5cqw;
+    border: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 1cqw;
+    transition: all 0.3s ease;
+}
+
+.Sendemailbtn:hover {
+    filter: brightness(1.2);
+}
+
+#back-login:hover,
+.back-login:hover {
+    background-color: #7b0302;
+    color: white;
+}
+
+.alert-box {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 2px solid red;
+  color: red;
+  padding: 10px 15px;
+  font-family: Arial, sans-serif;
+  border-radius: 4px;
+  max-width: 60%;
+  margin: 5% auto;
+}
+
+.alert-icon {
+  font-size: 24px;
+  margin-right: 15px;
+}
+
+.alert-text {
+  flex: 1;
+  font-size: 16px;
+}
+
 
 .forgot{
     font-size: 1cqw;
@@ -131,79 +184,6 @@ hr{
     background-color: #630303;
 }
 
-#back-login {
-    position: absolute;
-    margin-left: -30%;
-    margin-top: 20%;
-    font-size: 2cqw;
-}
-
-#back-login:hover {
-    color: white;
-}
-
-#otp-modal {
-    display: block; 
-    position: fixed;
-    z-index: 999;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(4px);
-}
-
-#otp-modal {
-    display: none;
-    position: fixed;
-    z-index: 999;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-}
-
-
-.otp-modal-content {
-    position: relative;
-    background-color: white;
-    margin: 10% auto;
-    padding: 2cqw;
-    border: 1px solid #888;
-    width: 30%;
-    border-radius: 1cqw;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
-    font-family: Arial, Helvetica, sans-serif;
-    color: #7b0302;
-    text-align: center;
-}
-
-.otp-modal-content input {
-    width: 80%;
-    height: 2.5cqw;
-    margin-bottom: 1.5cqw;
-    padding: 0.5cqw 1cqw;
-    border-radius: 0.5cqw;
-    border: 1px solid #ccc;
-    font-size: 1.2cqw;
-}
-
-#otp-modal-close {
-    position: absolute;
-    top: 0.5cqw;
-    right: 0.5cqw;
-    font-size: 2cqw;
-    color: #7b0302;
-    cursor: pointer;
-    background: none;
-    border: none;
-}
-
 </style>
 
 <div class="mainContainer">
@@ -217,30 +197,24 @@ hr{
         <hr />
         <p class="LoginDesc">Reset your password here.</p>
     </div>
-    <div class="whitePanel">
-        <p class="SignIn">Forgot password?</p>
-        <form id="forgot-password-form">
+<div class="whitePanel">
+    <p class="SignIn">Forgot password?</p>
+    <form id="forgot-password-form">
+        <div id="form-fields">
+            <!-- Initial email input -->
             <div class="inputClass">
                 <input class="Email" name="email" type="email" placeholder="Email" required />
             </div>
-            
-            <button class="Sendemailbtn">Send Email</button>
-            <div id="invalid-error" style="color:red;"></div>
-        </form>
-        <div id="back-login" class="fa fa-arrow-left" data-load="login.php"></div>
-    </div>
-</div>
+            <button class="Sendemailbtn" type="submit">Send Email</button>
+            <button id="back-login" data-load="login.php" type="button">Cancel</button>
+        </div>
 
-<div id="otp-modal">
-    <div class="otp-modal-content">
-        <button id="otp-modal-close" title="Close OTP Modal">&times;</button>
-        <form id="otp-verify-form">
-            <h3>Enter OTP</h3>
-            <input type="text" name="otp" placeholder="6-digit OTP" maxlength="6" required />
-            <input type="password" name="new_password" placeholder="New Password" required />
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required />
-            <button class="Sendemailbtn" type="submit">Reset Password</button>
-            <div id="otp-error" style="color:red; margin-top: 1cqw;"></div>
-        </form>
-    </div>
+        <!-- Shared error box -->
+        <div id="forgot-error" class="alert-box" style="display:none;">
+            <div class="alert-icon">
+                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+            </div>
+            <div class="alert-text"></div>
+        </div>
+    </form>
 </div>
