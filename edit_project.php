@@ -1,303 +1,400 @@
+<?php
+session_start();
+include 'server/server.php';
+
+$employeeID = $_SESSION['employeeid'] ?? null;
+$empFName = '';
+$empLName = '';
+$jobPosition = '';
+$empEmail = '';
+
+if ($employeeID) {
+    $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
+    $stmt->bind_param("s", $employeeID);
+    $stmt->execute();
+    $stmt->bind_result($empFName, $empLName, $jobPosition, $empEmail);
+    $stmt->fetch();
+    $stmt->close();
+}
+?>
+
 <style>
-  select,
-  input[type="text"],
-  input[type="date"] {
+select,
+input[type="text"],
+input[type="date"] {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     margin-bottom: 1%;
-  }
-  .search-input {
-    width: 100%;
-    padding: 1.2vh 1vw;
-    border-radius: 0.26vw;
-    border: 1px solid #ccc;
-    color: #7B0302;
-    background-color: #f5f5f5;
-    margin-bottom: 1.5vh !important;
-  }
+}
 
-  #user-circle-icon:hover,
-  #notification-circle-icon:hover {
+#user-circle-icon {
+    font-size: 2.25cqw;
+    color: #7B0302;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#user-circle-icon:hover {
     filter: brightness(1.25);
     transform: scale(1.05);
-    transition: filter 0.2s ease;
-  }
+}
 
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
+#user-circle-icon.active {
+    color: white;
+}
 
-  .dropdown-menu {
+.user-menu-panel {
     display: none;
     position: absolute;
+    background: white;
+    top: 0;
     right: 0;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    border-radius: 5px;
-    min-width: 6%;
-    z-index: 1000;
-    margin-top: 7%;
-    margin-right: 1.75%;
+    width: 26%;
+    height: 100%;
+    z-index: 999;
     text-align: center;
-  }
+}
 
-  .dropdown-menu a {
+.user-panel-top {
+    background-color: #7B0302;
+    height: 14rem;
+}
+
+.user-top-info {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    text-align: left;
+    color: white;
+}
+
+.user-bottom-info {
     display: block;
-    padding: 7.5% 12%;
+    position: absolute;
+    top: 40%;
+    left: 10%;
     color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-bottom-info input {
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#changepassword-button {
+    position: absolute;
+    top: 95%;
+    right: -40%;
+    font-size: 1rem;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#changepassword-button:hover {
+    color: #600202;
+}
+
+a.signout-button {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 0.8cqw;
-  }
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
 
-  .dropdown-menu a:first-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 8px 8px 0 0;
-  }
+a.signout-button:hover {
+    background-color: #600202;
+}
 
-  .dropdown-menu a:last-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 0 0 8px 8px;
-  }
-
-  .dropdown-menu a:not(:first-child):not(:last-child):hover {
-    background-color: #7B0302;
-    color: white;
-  }
-
-  .search-upload {
-    width: 100%;
-    padding: 1.2vh 1vw;
-    border-radius: 0.26vw;
-    border: 1px solid #ccc;
+.user-forgot-password {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 10%;
     color: #7B0302;
-    background-color: #f5f5f5;
-    box-shadow: 0 0.18vh 0.56vh rgba(0, 0, 0, 0.55);
-    margin-bottom: 1.5vh;
-  }
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
 
-  .document-table {
+.user-forgot-password input {
+    color: #7B0302;
+    border: 1px solid;
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#confirmchangepassword-button {
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+#cancelchangepassword-button {
+    background-color: #868886ff;
+    color: #7B0302;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: all 0.3s ease;
+}
+
+#confirmchangepassword-button:hover {
+    background-color: #600202;
+}
+
+#cancelchangepassword-button:hover {
+    background-color: #7B0302;
+    color: white; 
+}
+
+.document-table {
     width: 80%;
     border-collapse: collapse;
     margin-top: 15px;
     font-size: 13px;
     background-color: #fafafa;
-  }
+}
 
-  .document-table th,
-  .document-table td {
+.document-table th,
+.document-table td {
     border: 1px solid #ccc;
     padding: 6px 10px;
     text-align: center;
     vertical-align: middle;
-  }
+}
 
-  .note {
+.note {
     margin-top: 20px;
     font-style: italic;
     font-size: 13px;
     color: #666;
     margin-bottom: 10px;
-  }
+}
 
-  .footer-buttons {
+.footer-buttons {
     margin-top: 20px;
     display: flex;
     gap: 10px;
-  }
+}
 
-  /* --- Digital Document column --- */
-  .digital-cell {
+/* --- Digital Document column --- */
+.digital-cell {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     width: 100%;
-  }
-  .upload-form {
+}
+
+.upload-form {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     min-width: 200px;
-  }
+}
 
-  .file-list {
+.file-list {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     flex: 1;
-  }
+}
 
-  .file-preview {
+.file-preview {
     display: flex;
     align-items: center;
     gap: 4px;
     background: #f1f1f1;
     padding: 2px 6px;
     border-radius: 4px;
-  }
+}
 
-  .remove-file {
+.remove-file {
     cursor: pointer;
     color: red;
     font-weight: bold;
-  }
+}
 
-  .attach-icon {
+.attach-icon {
     cursor: pointer;
     font-size: 18px;
     flex-shrink: 0;
-  }
+}
 
-  .hidden-file {
+.hidden-file {
     display: none;
-  }
+}
 
-  .attach-icon input[type="file"] {
+.attach-icon input[type="file"] {
     display: none;
-  }
+}
 
-  .attach-icon i {
+.attach-icon i {
     transition: transform 0.2s ease, color 0.2s ease;
     display: none;
-  }
+}
 
-  .attach-icon:hover i {
+.attach-icon:hover i {
     transform: scale(1.2);
     color: #7B0302;
-  }
+}
 
-  /* --- Scrollable table container --- */
-  .table-container {
+/* --- Scrollable table container --- */
+.table-container {
     max-height: 400px;
     overflow-y: auto;
     overflow-x: auto;
-  }
+}
 
-  /* keep header visible while scrolling */
-  .document-table thead th {
+/* keep header visible while scrolling */
+.document-table thead th {
     position: sticky;
     top: 0;
     background: #fafafa;
     z-index: 2;
-  }
+}
 
-  .document-table {
+.document-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
     font-size: 13px;
     background-color: #fafafa;
     table-layout: fixed;
-  }
+}
 
-  .document-table th,
-  .document-table td {
+.document-table th,
+.document-table td {
     border: 1px solid #ccc;
     padding: 6px 10px;
     text-align: center;
     vertical-align: middle;
     word-wrap: break-word;
-  }
+}
 
-  /* column widths */
-  .document-table th:nth-child(1),
-  .document-table td:nth-child(1) {
+/* column widths */
+.document-table th:nth-child(1),
+.document-table td:nth-child(1) {
     width: 20%;
-  }
+}
 
-  .document-table th:nth-child(2),
-  .document-table td:nth-child(2) {
+.document-table th:nth-child(2),
+.document-table td:nth-child(2) {
     width: 10%;
-  }
+}
 
-  .document-table th:nth-child(3),
-  .document-table td:nth-child(3) {
+.document-table th:nth-child(3),
+.document-table td:nth-child(3) {
     width: 55%;
-  }
+}
 
-  .document-table th:nth-child(4),
-  .document-table td:nth-child(4) {
+.document-table th:nth-child(4),
+.document-table td:nth-child(4) {
     width: 15%;
-  }
+}
 
 /* Custom radio base */
 .approval-group input[type="radio"] {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #7B0302;
-  border-radius: 50%;
-  cursor: pointer;
-  position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #7B0302;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
 }
 
 /* Fully filled when checked */
 .approval-group input[type="radio"]:checked {
-  background-color: #7B0302;
+    background-color: #7B0302;
 }
 
 /* --- Custom checkbox --- */
 input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #7B0302;
-  border-radius: 4px; /* square */
-  cursor: pointer;
-  position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #7B0302;
+    border-radius: 4px;
+    /* square */
+    cursor: pointer;
+    position: relative;
 }
 
 input[type="checkbox"]:checked {
-  background-color: #7B0302;
+    background-color: #7B0302;
 }
 
 /* Optional: white checkmark inside checkbox */
 input[type="checkbox"]:checked::after {
-  content: "✔";
-  color: white;
-  font-size: 0.6cqw;
-  position: absolute;
-  top: 0;
-  left: 2px;
+    content: "✔";
+    color: white;
+    font-size: 0.6cqw;
+    position: absolute;
+    top: 0;
+    left: 2px;
 }
 
 .btn-grey {
-  background-color: gray;
-  pointer-events: none;
+    background-color: gray;
+    pointer-events: none;
 }
 
 .btn-cancel {
-  background-color: #6c757d;
+    background-color: #6c757d;
 }
 
 
 /* Modal background */
 .qr-modal {
-  display: none; 
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.3); /* smaller opacity for less harsh background */
-  justify-content: center;
-  align-items: center;
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    /* smaller opacity for less harsh background */
+    justify-content: center;
+    align-items: center;
 }
 
 /* Modal content (QR image) */
 .qr-modal-content {
-  min-width: 300px;   /* bigger image for document QR */
-  min-height: 300px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    min-width: 300px;
+    /* bigger image for document QR */
+    min-height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .qr-preview {
@@ -311,12 +408,13 @@ input[type="checkbox"]:checked::after {
 }
 
 .qr-box {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  border: 1px solid #ccc; /* optional */
-  background: #800000;
-  overflow: hidden;
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border: 1px solid #ccc;
+    /* optional */
+    background: #800000;
+    overflow: hidden;
     margin: auto;
     display: flex;
     align-items: center;
@@ -331,22 +429,24 @@ input[type="checkbox"]:checked::after {
 }
 
 .qr-box img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 80%;   /* smaller than container */
-  height: 80%;
-  transform: translate(-50%, -50%); /* center */
-  z-index: 10;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    /* smaller than container */
+    height: 80%;
+    transform: translate(-50%, -50%);
+    /* center */
+    z-index: 10;
 }
 
 .storage-status {
-  margin-left: 8px;
-  padding: 2px 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 60%;
-  font-size: 0.6cqw;
+    margin-left: 8px;
+    padding: 2px 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 60%;
+    font-size: 0.6cqw;
 }
 
 #update-back-btn {
@@ -364,34 +464,44 @@ input[type="checkbox"]:checked::after {
     background-color: transparent;
 }
 
-#update-edit-btn, #update-save-btn {
-  width: 50%;
-  padding: 1.11vh 0.83vw;
-  background-color: #7B0302;
-  color: #fff;
-  border: none;
-  border-radius: 0.26vw;
-  cursor: pointer;
-  margin-top: 2vh;
+#update-edit-btn,
+#update-save-btn {
+    width: 50%;
+    padding: 1.11vh 0.83vw;
+    background-color: #7B0302;
+    color: #fff;
+    border: none;
+    border-radius: 0.26vw;
+    cursor: pointer;
+    margin-top: 2vh;
 }
 
- #update-save-btn {
-  display: none;
+#update-save-btn {
+    display: none;
 }
+
 .content {
     padding-bottom: 2.5%;
-}
-.hidden-file {
-  display: none;
-}
-.remove-icon {
-  color: red;
-  cursor: pointer;
-  font-weight: bold;
-  margin-left: 5px;
-  user-select: none;
+
 }
 
+.hidden-file {
+    display: none;
+
+}
+
+.remove-icon {
+    color: red;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 5px;
+    user-select: none;
+}
+
+.required-asterisk {
+    color: red;
+    font-weight: bold;
+}
 </style>
 
 <?php
@@ -510,19 +620,52 @@ while ($docRow = $docResult->fetch_assoc()) {
 }
 ?>
 
-<!-- Top Bar and Page Heading -->
-<div class="topbar">
-  <button type="button" id="update-back-btn" class="fa fa-arrow-left" data-page="project_list.php"></button>
-  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Update <?= htmlspecialchars($projectId) ?></span>
-  <div class="topbar-content">
-    <div class="icons">
-      <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
-      <div class="dropdown-menu" id="user-menu">
-        <a data-page="profile.php">Profile</a>
-        <a href="model/logout.php">Sign Out</a>
-      </div>
+<div class="user-menu-panel" id="userPanel">
+    <div class="user-panel-top">
+        <div class="user-top-info">
+            <p style="font-size: 2rem; font-weight: 700;">
+                <?= htmlspecialchars($empFName . ' ' . $empLName) ?>
+            </p>
+            <p style="font-size: 1rem;">
+                <?= htmlspecialchars($jobPosition) ?>
+            </p>
+        </div>
     </div>
-  </div>
+
+    <div class="user-bottom-info">
+        <p>Employee ID</p>
+        <input placeholder="<?= htmlspecialchars($employeeID) ?>" disabled>
+        <p>Email</p>
+        <input placeholder="<?= htmlspecialchars($empEmail) ?>" disabled>
+        <p>Password</p>
+        <input type="password" placeholder="*******" disabled>
+        <a id="changepassword-button">Change Password</a>
+        <a href="model/logout.php" class="signout-button">Sign out</a>
+    </div>
+
+    <div class="user-forgot-password">
+        <p style="font-size: 2rem; margin-top: -25%; margin-bottom: 10%;">Change Password</p>
+        <p>Current Password</p>
+        <input type="password" required>
+        <p>New Password</p>
+        <input type="password" required>
+        <p>Confirm New Password</p>
+        <input type="password" required>
+        <div style="display: flex; position: absolute; right: -35%; gap: 5%;">
+            <a id="confirmchangepassword-button">Confirm</a>
+            <a id="cancelchangepassword-button">Cancel</a>
+        </div>
+    </div>
+</div>
+
+<div class="topbar">
+    <button type="button" id="update-back-btn" class="fa fa-arrow-left"></button>
+    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Update <?= htmlspecialchars($projectId) ?></span>
+    <div class="topbar-content">
+        <div class="icons">
+            <span id="user-circle-icon" class="fa fa-user-circle"></span>
+        </div>
+    </div>
 </div>
 
 <hr class="top-line" />
@@ -530,79 +673,91 @@ while ($docRow = $docResult->fetch_assoc()) {
 
 <!-- HTML -->
 <div class="content">
-  <form id="update_projectForm">
+    <form id="update_projectForm">
 
-   <input type="hidden" id="projectId" name="projectId" value="<?= htmlspecialchars($project['ProjectID']) ?>" />
+        <input type="hidden" id="projectId" name="projectId" value="<?= htmlspecialchars($project['ProjectID']) ?>" />
 
-    <div class="form-wrapper">
-      <div class="form-grid">
-        <div class="column">
+        <div class="form-wrapper">
+            <div class="form-grid">
+                <div class="column">
 
-          <div class="form-row">
-            <label for="lotNumber">Lot Number:</label>
-            <input type="text" id="lotNumber" name="lotNumber" value="<?= htmlspecialchars($project['LotNo']) ?>" readonly />
-          </div>
+                    <div class="form-row">
+                        <label for="lotNumber"><span class="required-asterisk">* </span>Lot Number:</label>
+                        <input type="text" id="lotNumber" name="lotNumber"
+                            value="<?= htmlspecialchars($project['LotNo']) ?>" style="text-transform: uppercase;"
+                            oninput="this.value = this.value.toUpperCase();" required readonly />
+                    </div>
 
-          <div class="form-row">
-            <label for="clientFirstName">Client First Name:</label>
-            <input type="text" id="clientFirstName" name="clientFirstName" value="<?= htmlspecialchars($project['ClientFName']) ?>" readonly />
-          </div>
+                    <div class="form-row">
+                        <label for="clientFirstName"><span class="required-asterisk">* </span>Client First Name:</label>
+                        <input type="text" id="clientFirstName" name="clientFirstName"
+                            value="<?= htmlspecialchars($project['ClientFName']) ?>" style="text-transform: uppercase;"
+                            oninput="this.value = this.value.toUpperCase();" required readonly />
+                    </div>
 
-          <div class="form-row">
-            <label for="clientLastName">Client Last Name:</label>
-            <input type="text" id="clientLastName" name="clientLastName" value="<?= htmlspecialchars($project['ClientLName']) ?>" readonly />
-          </div>
+                    <div class="form-row">
+                        <label for="clientLastName"><span class="required-asterisk">* </span>Client Last Name:</label>
+                        <input type="text" id="clientLastName" name="clientLastName"
+                            value="<?= htmlspecialchars($project['ClientLName']) ?>" style="text-transform: uppercase;"
+                            oninput="this.value = this.value.toUpperCase();" required readonly />
+                    </div>
 
-          <div class="form-row">
-            <label for="province">Province:</label>
-            <select id="province" name="province" disabled onchange="handleProvinceChange()">
-              <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>Bulacan</option>
-              <!-- Add more provinces here if needed -->
-            </select>
-          </div>
+                    <div class="form-row">
+                        <label for="province"><span class="required-asterisk">* </span>Province:</label>
+                        <select id="province" name="province" disabled onchange="handleProvinceChange()">
+                            <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>
+                                Bulacan</option>
+                            <!-- Add more provinces here if needed -->
+                        </select>
+                    </div>
 
-          <div class="form-row">
-            <label for="municipality">Municipality:</label>
-            <select id="municipality" name="municipality" disabled onchange="handleMunicipalityChange()">
-              <option selected><?= htmlspecialchars($project['Municipality']) ?></option>
-            </select>
-          </div>
+                    <div class="form-row">
+                        <label for="municipality"><span class="required-asterisk">* </span>Municipality:</label>
+                        <select id="municipality" name="municipality" disabled onchange="handleMunicipalityChange()">
+                            <option selected><?= htmlspecialchars($project['Municipality']) ?></option>
+                        </select>
+                    </div>
 
-          <div class="form-row">
-            <label for="barangay">Barangay:</label>
-            <select id="barangay" name="barangay" disabled>
-              <option selected><?= htmlspecialchars($project['Barangay']) ?></option>
-            </select>
-          </div>
+                    <div class="form-row">
+                        <label for="barangay"><span class="required-asterisk">* </span>Barangay:</label>
+                        <select id="barangay" name="barangay" disabled>
+                            <option selected><?= htmlspecialchars($project['Barangay']) ?></option>
+                        </select>
+                    </div>
 
-          <div class="form-row">
-            <label for="address">Street/Subdivision:</label>
-            <input type="text" id="address" name="address" value="<?= htmlspecialchars($project['Address']) ?>" readonly />
-          </div>
+                    <div class="form-row">
+                        <label for="address">Street/Subdivision:</label>
+                        <input type="text" id="address" name="address"
+                            value="<?= htmlspecialchars($project['Address']) ?>" style="text-transform: uppercase;"
+                            oninput="this.value = this.value.toUpperCase();" required readonly />
+                    </div>
 
-        </div>
+                </div>
 
-        <div class="column">
-          <div class="form-row">
-            <label for="surveyType">Survey Type:</label>
-            <select id="surveyType" name="surveyType" disabled>
-              <?php
+                <div class="column">
+                    <div class="form-row">
+                        <label for="surveyType"><span class="required-asterisk">* </span>Survey Type:</label>
+                        <select id="surveyType" name="surveyType" disabled>
+                            <?php
               $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling/ Transfer", "Real Estate"];
               foreach ($types as $type): ?>
-                <option value="<?= $type ?>" <?= ($project['SurveyType'] === $type) ? 'selected' : '' ?>><?= $type ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
+                            <option value="<?= $type ?>" <?= ($project['SurveyType'] === $type) ? 'selected' : '' ?>>
+                                <?= $type ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-          <div class="form-row">
-            <label for="agent">Agent:</label>
-            <input type="text" id="agent" name="agent" value="<?= htmlspecialchars($project['Agent']) ?>" readonly />
-          </div>
+                    <div class="form-row">
+                        <label for="agent">Agent:</label>
+                        <input type="text" id="agent" name="agent" value="<?= htmlspecialchars($project['Agent']) ?>"
+                            style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required
+                            readonly />
+                    </div>
 
-          <div class="form-row">
-            <label for="projectStatus">Status:</label>
-            <select id="projectStatus" name="projectStatus" disabled>
-              <?php
+                    <div class="form-row">
+                        <label for="projectStatus"><span class="required-asterisk">* </span>Status:</label>
+                        <select id="projectStatus" name="projectStatus" disabled>
+                            <?php
               $statusOptions = [
                 "FOR PRINT", "FOR DELIVER", "FOR SIGN",
                 "FOR ENTRY (PSD)", "FOR ENTRY (CSD)", "FOR ENTRY (LRA)",
@@ -614,81 +769,77 @@ while ($docRow = $docResult->fetch_assoc()) {
                 echo "<option value=\"$status\" $selected>$status</option>";
               endforeach;
               ?>
-            </select>
-          </div>
+                        </select>
+                    </div>
 
-          <div class="form-row">
-            <label for="surveyStartDate">Survey Start Date:</label>
-            <input type="date" id="surveyStartDate" name="surveyStartDate" value="<?= htmlspecialchars($project['SurveyStartDate']) ?>" readonly />
-          </div>
+                    <div class="form-row">
+                        <label for="surveyStartDate"><span class="required-asterisk">* </span>Survey Start Date:</label>
+                        <input type="date" id="surveyStartDate" name="surveyStartDate"
+                            value="<?= htmlspecialchars($project['SurveyStartDate']) ?>" readonly />
+                    </div>
 
-          <div class="form-row">
-            <label for="surveyEndDate">Survey End Date:</label>
-            <input type="date" id="surveyEndDate" name="surveyEndDate" value="<?= htmlspecialchars($project['SurveyEndDate']) ?>" readonly />
-          </div>
-      
-          <div class="form-row">
-            <label for="requestType">Request Type:</label>
-            <select id="requestType" name="requestType" disabled>
-              <option <?= ($requestType === 'For Approval') ? 'selected' : '' ?>>For Approval</option>
-              <option <?= ($requestType === 'Sketch Plan') ? 'selected' : '' ?>>Sketch Plan</option>
-            </select>
-          </div>
+                    <div class="form-row">
+                        <label for="surveyEndDate">Survey End Date:</label>
+                        <input type="date" id="surveyEndDate" name="surveyEndDate"
+                            value="<?= htmlspecialchars($project['SurveyEndDate']) ?>" readonly />
+                    </div>
 
-          <div id="toBeApprovedBy" style="<?= ($requestType === 'Sketch Plan') ? 'display:none;' : '' ?>">
-            <label>To be approved by:</label>
-            <div class="approval-group">
-              <?php
+                    <div class="form-row">
+                        <label for="requestType"><span class="required-asterisk">* </span>Request Type:</label>
+                        <select id="requestType" name="requestType" disabled>
+                            <option <?= ($requestType === 'For Approval') ? 'selected' : '' ?>>For Approval</option>
+                            <option <?= ($requestType === 'Sketch Plan') ? 'selected' : '' ?>>Sketch Plan</option>
+                        </select>
+                    </div>
+
+                    <div id="toBeApprovedBy" style="<?= ($requestType === 'Sketch Plan') ? 'display:none;' : '' ?>">
+                        <label>To be approved by:</label>
+                        <div class="approval-group">
+                            <?php
               $approvals = [
                 'PSD' => 'PSD (BUREAU)',
                 'CSD' => 'CSD (CENRO)',
                 'LRA' => 'LRA'
               ];
               foreach ($approvals as $value => $label): ?>
-                <label for="approval_<?= strtolower($value) ?>">
-                  <input
-                    type="radio"
-                    id="approval_<?= strtolower($value) ?>"
-                    name="approvalType"
-                    value="<?= $value ?>"
-                    disabled
-                    <?= ($approvalType === $value) ? 'checked' : '' ?>
-                  />
-                  <?= $label ?>
-                </label>
-              <?php endforeach; ?>
+                            <label for="approval_<?= strtolower($value) ?>">
+                                <input type="radio" id="approval_<?= strtolower($value) ?>" name="approvalType"
+                                    value="<?= $value ?>" disabled <?= ($approvalType === $value) ? 'checked' : '' ?> />
+                                <?= $label ?>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <div class="qr-preview">
+                <h4>PROJECT QR CODE</h4>
+                <div class="qr-box">
+                    <?php if (!empty($project['ProjectQR'])): ?>
+                    <img src="<?= htmlspecialchars($project['ProjectQR']) ?>" alt="QR Code" />
+                    <?php else: ?>
+                    <span style="color:white;">No QR Code</span>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <div class="qr-preview">
-        <h4>PROJECT QR CODE</h4>
-        <div class="qr-box">
-          <?php if (!empty($project['ProjectQR'])): ?>
-            <img src="<?= htmlspecialchars($project['ProjectQR']) ?>" alt="QR Code" />
-          <?php else: ?>
-            <span style="color:white;">No QR Code</span>
-          <?php endif; ?>
-        </div>
-      </div>
-    </div>
+        <div class="note">Attached documents:</div>
 
-    <div class="note">Attached documents:</div>
-
-    <!-- Document Table -->
-    <div class="table-container">
-      <table class="document-table">
-        <thead>
-          <tr>
-            <th>Document Name</th>
-            <th>Physical Documents</th>
-            <th>Digital Documents</th>
-            <th>QR Code</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
+        <!-- Document Table -->
+        <div class="table-container">
+            <table class="document-table">
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Physical Documents</th>
+                        <th>Digital Documents</th>
+                        <th>QR Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
           foreach ($docsToRender as $docLabel):
             $key = strtolower(str_replace([' ', '/'], ['_', ''], $docLabel));
             $doc = $documents[$key] ?? null;
@@ -698,61 +849,61 @@ while ($docRow = $docResult->fetch_assoc()) {
             $qr = $doc['DocumentQR'] ?? '';
             $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
           ?>
-          <tr>
-            <td><?= htmlspecialchars($docLabel) ?></td>
+                    <tr>
+                        <td><?= htmlspecialchars($docLabel) ?></td>
 
-            <td>
-              <input type="checkbox" disabled <?= $isChecked ?> />
-            </td>
+                        <td>
+                            <input type="checkbox" disabled <?= $isChecked ?> />
+                        </td>
 
-            <td>
-              <div class="digital-cell">
-                <div class="file-list">
-                  <?php if ($fileName): ?>
-                    <span class="existing-file">
-                      <?= htmlspecialchars($fileName) ?>
-                    </span>
-                    <i class="no-file" style="display:none;">No file</i>
-                  <?php else: ?>
-                    <span class="existing-file" style="display:none;"></span>
-                    <i class="no-file">No file</i>
-                  <?php endif; ?>
-                </div>
-                <label class="attach-icon" title="Attach file" style="display:none; cursor:pointer; font-size: 15px;">
-                  📎
-                  <input type="file" name="digital_<?= $key ?>" class="hidden-file" multiple
-                        accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
-                        onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
-                </label>
-              </div>
-            </td>
+                        <td>
+                            <div class="digital-cell">
+                                <div class="file-list">
+                                    <?php if ($fileName): ?>
+                                    <span class="existing-file">
+                                        <?= htmlspecialchars($fileName) ?>
+                                    </span>
+                                    <i class="no-file" style="display:none;">No file</i>
+                                    <?php else: ?>
+                                    <span class="existing-file" style="display:none;"></span>
+                                    <i class="no-file">No file</i>
+                                    <?php endif; ?>
+                                </div>
+                                <label class="attach-icon" title="Attach file"
+                                    style="display:none; cursor:pointer; font-size: 15px;">
+                                    📎
+                                    <input type="file" name="digital_<?= $key ?>" class="hidden-file" multiple
+                                        accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
+                                        onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
+                                </label>
+                            </div>
+                        </td>
 
 
-            <td class="qr-code">
-              <?php if (!empty($qr)): ?>
-                <span class="view-qr-text"
-                      style="cursor:pointer;color:#7B0302;text-decoration:underline;"
-                      onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
-                  View
-                </span>
-              <?php else: ?>
-                <span style="color:gray; font-style: italic;"></span>
-              <?php endif; ?>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
+                        <td class="qr-code">
+                            <?php if (!empty($qr)): ?>
+                            <span class="view-qr-text" style="cursor:pointer;color:#7B0302;text-decoration:underline;"
+                                onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
+                                View
+                            </span>
+                            <?php else: ?>
+                            <span style="color:gray; font-style: italic;"></span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
-    <div class="footer-buttons">
-      <button type="button" id="update-save-btn" class="btn-red" style="display:none;">Save Changes</button>
-      <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
-    </div>
-  </form>
+        <div class="footer-buttons">
+            <button type="button" id="update-save-btn" class="btn-red" style="display:none;">Save Changes</button>
+            <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
+        </div>
+    </form>
 </div>
 
 <div id="qrModal" class="qr-modal">
-  <span class="close" onclick="closeQRPopup()">&times;</span>
-  <img id="qrModalImg" class="qr-modal-content" alt="QR Code Image">
+    <span class="close" onclick="closeQRPopup()">&times;</span>
+    <img id="qrModalImg" class="qr-modal-content" alt="QR Code Image">
 </div>

@@ -3,10 +3,11 @@ function initAdminPage() {
   if (contentArea) {
     loadAdminPage('user_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
     loadScript('js/upload.js');
+    loadScript('js/documents.js');
     loadScript('js/project_list.js');
-    loadScript('js/profile.js');
     loadScript('js/qr_search.js');
     loadScript('js/edit_project.js');
+    loadScript('js/project.js');
     loadScript('js/user_list.js');
   }
 
@@ -99,33 +100,143 @@ function initUserMenuDropdown() {
     }
   });
 }
-
-// document.getElementById('sidetoggle').addEventListener('click', function() {
-//   const sidebar = document.querySelector('.sidebar');
-//   sidebar.classList.toggle('collapsed');
-// });
-
-// Fire-and-forget dropdown handler (added once)
-(function setupUserMenuDelegation() {
-  if (window.__userMenuDelegated) return; // prevent duplicates
-  window.__userMenuDelegated = true;
+(function setupUserMenuToggle() {
+  if (window.__userMenuToggled) return;
+  window.__userMenuToggled = true;
 
   document.addEventListener('click', function (e) {
-    const menu = document.getElementById('user-menu');
-    if (!menu) return; // nothing to do if current page has no menu
+    const menu = document.getElementById('userPanel');
+    const userIcon = document.getElementById('user-circle-icon');
+    const userBottomInfo = document.querySelector('.user-bottom-info');
+    const userForgotPassword = document.querySelector('.user-forgot-password');
+
+    if (!menu || !userIcon || !userBottomInfo || !userForgotPassword) return;
 
     const clickedIcon = e.target.closest('#user-circle-icon');
 
     if (clickedIcon) {
       e.preventDefault();
       e.stopPropagation();
-      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+
+      const isVisible = menu.style.display === 'block';
+      menu.style.display = isVisible ? 'none' : 'block';
+
+      // Toggle active class to switch icon color to white
+      userIcon.classList.toggle('active', !isVisible);
+
       return;
     }
 
-    // Clicked outside the menu? close it.
-    if (!e.target.closest('#user-menu')) {
+    // Click outside closes menu and removes active icon state
+    if (!e.target.closest('#userPanel')) {
       menu.style.display = 'none';
+      userIcon.classList.remove('active');
+
+      // Reset panels to default state
+      userBottomInfo.style.display = 'block';
+      userForgotPassword.style.display = 'none';
     }
+  });
+})();
+
+
+(function setupChangePasswordToggle() {
+  if (window.__changePasswordSetup) return;
+  window.__changePasswordSetup = true;
+
+  document.addEventListener('click', function(e) {
+    const changeBtn = e.target.closest('#changepassword-button');
+    const cancelBtn = e.target.closest('#cancelchangepassword-button');
+    const userBottomInfo = document.querySelector('.user-bottom-info');
+    const userForgotPassword = document.querySelector('.user-forgot-password');
+
+    if (!userBottomInfo || !userForgotPassword) return;
+
+    if (changeBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      userBottomInfo.style.display = 'none';
+      userForgotPassword.style.display = 'block';
+      return;
+    }
+
+    if (cancelBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      userBottomInfo.style.display = 'block';
+      userForgotPassword.style.display = 'none';
+      return;
+    }
+  });
+})();
+
+(function setupChangePasswordConfirm() {
+  if (window.__changePasswordConfirmSetup) return;
+  window.__changePasswordConfirmSetup = true;
+
+  document.addEventListener('click', function (e) {
+    const confirmBtn = e.target.closest('#confirmchangepassword-button');
+    if (!confirmBtn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const userForgotPassword = document.querySelector('.user-forgot-password');
+    const userBottomInfo = document.querySelector('.user-bottom-info');
+    const userPanel = document.getElementById('userPanel');
+    const userIcon = document.getElementById('user-circle-icon');
+    if (!userForgotPassword || !userBottomInfo || !userPanel || !userIcon) return;
+
+    // Get inputs (assumes order fixed)
+    const inputs = userForgotPassword.querySelectorAll('input[type="password"]');
+    const currentPassword = inputs[0]?.value.trim();
+    const newPassword = inputs[1]?.value.trim();
+    const confirmPassword = inputs[2]?.value.trim();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert('Please fill out all fields.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('New password and confirmation do not match.');
+      return;
+    }
+
+    // Disable confirm button to prevent double submits
+    confirmBtn.style.pointerEvents = 'none';
+
+    fetch('model/change_password.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        confirmBtn.style.pointerEvents = 'auto';
+        if (data.success) {
+          alert('Password changed successfully.');
+          // Reset inputs & switch back to bottom info panel
+          inputs.forEach(i => i.value = '');
+          userBottomInfo.style.display = 'block';
+          userForgotPassword.style.display = 'none';
+
+          // Close user panel
+          userPanel.style.display = 'none';
+
+          // Reset user icon active state
+          userIcon.classList.remove('active');
+        } else {
+          alert(data.error || 'Failed to change password.');
+        }
+      })
+      .catch(() => {
+        confirmBtn.style.pointerEvents = 'auto';
+        alert('An error occurred while changing password.');
+      });
   });
 })();

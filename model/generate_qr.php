@@ -25,7 +25,7 @@ if ($resLastProj && $resLastProj->num_rows > 0) {
     $nextNum = 1;
 }
 
-$block = intval(($nextNum - 1) / 50) + 1;
+$block = intval(($nextNum - 1) / 100) + 1;
 $slot = $nextNum;
 
 $surveyType = $_POST['surveyType'] ?? 'GEN';

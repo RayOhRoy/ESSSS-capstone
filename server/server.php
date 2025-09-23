@@ -20,3 +20,4 @@ if (php_sapi_name() !== 'cli' && basename($_SERVER['SCRIPT_FILENAME']) === basen
         'message' => '✅ Successfully connected to the database'
     ]);
 }
+?>

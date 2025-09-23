@@ -54,7 +54,7 @@ $lastNumber = ($resLastProject && $resLastProject->num_rows > 0)
     ? intval(substr($resLastProject->fetch_assoc()['ProjectID'], -7, 3)) + 1
     : 1;
 
-$block = intval(($lastNumber - 1) / 50) + 1;
+$block = intval(($lastNumber - 1) / 100) + 1;
 $slot = $lastNumber;
 
 $projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $slot, $surveyCode);

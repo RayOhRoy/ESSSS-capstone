@@ -6,69 +6,59 @@ header('Content-Type: application/json');
 session_start();
 include '../server/server.php'; 
 include 'phpqrcode/qrlib.php';
-header('Content-Type: application/json');
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die(json_encode(['status' => 'error', 'message' => 'POST required']));
 }
 
 date_default_timezone_set("Asia/Manila");
 
-$employeeID = $_SESSION['employeeid'] ?? null;
-
+$employeeId = $_SESSION['employeeid'] ?? null;
 $projectId = $_POST['projectId'] ?? null;
+
 if (!$projectId) {
-    // Throw error: missing projectId
     echo json_encode(['status' => 'error', 'message' => 'Missing projectId']);
     exit;
 }
-// Proceed with update using $projectId
 
-
-// Get existing project info to check if project exists
-$sqlCheckProject = "SELECT * FROM project WHERE ProjectID = '$projectID'";
+// Check if project exists
+$sqlCheckProject = "SELECT * FROM project WHERE ProjectID = '".mysqli_real_escape_string($conn, $projectId)."'";
 $resCheck = $conn->query($sqlCheckProject);
+
 if (!$resCheck || $resCheck->num_rows === 0) {
-    die(json_encode([
-        'status' => 'error', 
-        'message' => 'Project not found: ' . htmlspecialchars($projectID)
-    ]));
+    die(json_encode(['status' => 'error', 'message' => 'Project not found: ' . htmlspecialchars($projectId)]));
 }
 
+// Address update
+$province = mysqli_real_escape_string($conn, $_POST['province'] ?? '');
+$municipality = mysqli_real_escape_string($conn, $_POST['municipality'] ?? '');
+$barangay = mysqli_real_escape_string($conn, $_POST['barangay'] ?? '');
+$street = mysqli_real_escape_string($conn, $_POST['street'] ?? '');
 
-// — Address Handling —
-// We assume AddressID won't change, but address fields may be updated
-$province = mysqli_real_escape_string($conn, $_POST['province']);
-$municipality = mysqli_real_escape_string($conn, $_POST['municipality']);
-$barangay = mysqli_real_escape_string($conn, $_POST['barangay']);
-$street = mysqli_real_escape_string($conn, $_POST['street']);
-
-// Get current AddressID from project
 $currentProject = $resCheck->fetch_assoc();
-$currentAddressID = $currentProject['AddressID'] ?? null;
+$currentAddressId = $currentProject['AddressID'] ?? null;
 
-if (!$currentAddressID) {
+if (!$currentAddressId) {
     die(json_encode(['status' => 'error', 'message' => 'Associated address not found']));
 }
 
-// Update address fields
-$sqlUpdateAddress = "UPDATE address SET Province='$province', Municipality='$municipality', Barangay='$barangay', Address='$street' WHERE AddressID='$currentAddressID'";
+$sqlUpdateAddress = "UPDATE address SET Province='$province', Municipality='$municipality', Barangay='$barangay', Address='$street' WHERE AddressID='$currentAddressId'";
 if ($conn->query($sqlUpdateAddress) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error updating address', 'error' => $conn->error]));
 }
 
-// — Project Handling —
-$lotNo = mysqli_real_escape_string($conn, $_POST['lot_no']);
-$fname = mysqli_real_escape_string($conn, $_POST['client_name']);
-$lname = mysqli_real_escape_string($conn, $_POST['last_name']);
-$surveyType = mysqli_real_escape_string($conn, $_POST['survey_type']);
-$startDate = mysqli_real_escape_string($conn, $_POST['survey_start']);
-$endDate = mysqli_real_escape_string($conn, $_POST['survey_end']);
-$agent = mysqli_real_escape_string($conn, $_POST['agent']);
-$requestType = mysqli_real_escape_string($conn, $_POST['requestType']);
-$projectStatus = mysqli_real_escape_string($conn, $_POST['projectStatus']);
+// Project update
+$lotNo = mysqli_real_escape_string($conn, $_POST['lot_no'] ?? '');
+$fname = mysqli_real_escape_string($conn, $_POST['client_name'] ?? '');
+$lname = mysqli_real_escape_string($conn, $_POST['last_name'] ?? '');
+$surveyType = mysqli_real_escape_string($conn, $_POST['survey_type'] ?? '');
+$startDate = mysqli_real_escape_string($conn, $_POST['survey_start'] ?? '');
+$endDate = mysqli_real_escape_string($conn, $_POST['survey_end'] ?? '');
+$agent = mysqli_real_escape_string($conn, $_POST['agent'] ?? '');
+$requestType = mysqli_real_escape_string($conn, $_POST['requestType'] ?? '');
+$projectStatus = mysqli_real_escape_string($conn, $_POST['projectStatus'] ?? '');
 $approval = isset($_POST['approval']) ? mysqli_real_escape_string($conn, $_POST['approval']) : null;
 
-// Update project fields
 $sqlUpdateProject = "UPDATE project SET 
     LotNo = '$lotNo',
     ClientFName = '$fname',
@@ -80,66 +70,53 @@ $sqlUpdateProject = "UPDATE project SET
     RequestType = '$requestType',
     Approval = " . ($approval !== null ? "'$approval'" : "NULL") . ",
     ProjectStatus = '$projectStatus'
-    WHERE ProjectID = '$projectID'";
+    WHERE ProjectID = '$projectId'";
 
 if ($conn->query($sqlUpdateProject) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error updating project', 'error' => $conn->error]));
 }
 
-// Log project update activity
+// Log activity for project modification
 $sqlLastActivity = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
 $resLastActivity = $conn->query($sqlLastActivity);
 $newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0) 
                   ? str_pad(intval(substr($resLastActivity->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
                   : "001";
-$activityLogID = "ACT-" . $newActivityNum;
-
+$activityLogId = "ACT-" . $newActivityNum;
 $timeNow = date('Y-m-d H:i:s');
 
 $sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time) 
-                   VALUES ('$activityLogID','$projectID','UPDATED','$employeeID', '$timeNow')";
+                   VALUES ('$activityLogId','$projectId','MODIFIED','$employeeId', '$timeNow')";
 $conn->query($sqlActivityLog);
 
-// — Document Handling —
-// Handle removal of documents flagged for removal
+// Handle document removal
 foreach ($_POST as $key => $value) {
     if (strpos($key, 'remove_file_') === 0 && $value == '1') {
-        // Determine which document to remove
-        // Assuming the key contains enough info to identify the document; if not, you might need to pass docID in hidden input on client
-        // Here, assume the key format is "remove_file_{DocumentID}"
-        $docID = substr($key, strlen('remove_file_'));
-        if ($docID) {
-            // Get document info
-            $sqlDoc = "SELECT * FROM document WHERE DocumentID = '$docID' AND ProjectID = '$projectID'";
+        $docId = substr($key, strlen('remove_file_'));
+        if ($docId) {
+            $sqlDoc = "SELECT * FROM document WHERE DocumentID = '".mysqli_real_escape_string($conn, $docId)."' AND ProjectID = '".mysqli_real_escape_string($conn, $projectId)."'";
             $resDoc = $conn->query($sqlDoc);
             if ($resDoc && $resDoc->num_rows > 0) {
                 $doc = $resDoc->fetch_assoc();
                 $digitalLoc = $doc['DigitalLocation'];
-
-                // Delete files on server if exist
                 if ($digitalLoc) {
                     $files = explode(";", $digitalLoc);
                     foreach ($files as $filePath) {
                         $fullPath = __DIR__ . '/../' . $filePath;
-                        if (file_exists($fullPath)) {
-                            unlink($fullPath);
-                        }
+                        if (file_exists($fullPath)) unlink($fullPath);
                     }
                 }
 
-                // Delete document record
-                $conn->query("DELETE FROM document WHERE DocumentID = '$docID'");
+                $conn->query("DELETE FROM document WHERE DocumentID = '".mysqli_real_escape_string($conn, $docId)."'");
 
-                // Log document removal
-                $sqlLastActDoc = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
-                $resLastActDoc = $conn->query($sqlLastActDoc);
+                // Log document deletion
+                $resLastActDoc = $conn->query("SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1");
                 $newActNumDoc = ($resLastActDoc && $resLastActDoc->num_rows > 0)
-                              ? str_pad(intval(substr($resLastActDoc->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-                              : "001";
-                $activityLogIDDoc = "ACT-" . $newActNumDoc;
-                $sqlActDoc = "INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time) 
-                              VALUES ('$activityLogIDDoc','$projectID','$docID','DELETED','$employeeID', '$timeNow')";
-                $conn->query($sqlActDoc);
+                    ? str_pad(intval(substr($resLastActDoc->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+                    : "001";
+                $activityLogIdDoc = "ACT-" . $newActNumDoc;
+                $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time) 
+                              VALUES ('$activityLogIdDoc','".mysqli_real_escape_string($conn, $projectId)."','".mysqli_real_escape_string($conn, $docId)."','DELETED','".mysqli_real_escape_string($conn, $employeeId)."', '$timeNow')");
             }
         }
     }
@@ -154,7 +131,7 @@ foreach ($_FILES as $inputName => $fileGroup) {
 }
 
 $uploadBase = __DIR__ . '/../uploads/';
-$projectFolder = $uploadBase . $projectID;
+$projectFolder = $uploadBase . $projectId;
 if (!is_dir($projectFolder)) mkdir($projectFolder, 0777, true);
 
 foreach ($documentKeys as $docKey) {
@@ -162,11 +139,7 @@ foreach ($documentKeys as $docKey) {
     $safeDocName = str_replace(" ", "-", $docName);
 
     $physicalChecked = isset($_POST["physical_$docKey"]);
-    $status = null;
-
-    if ($physicalChecked && isset($_POST["status_$docKey"])) {
-        $status = mysqli_real_escape_string($conn, $_POST["status_$docKey"]);
-    }
+    $status = isset($_POST["status_$docKey"]) ? mysqli_real_escape_string($conn, $_POST["status_$docKey"]) : null;
 
     $uploadedFiles = [];
     if (!empty($_FILES["digital_$docKey"]['name'][0])) {
@@ -182,9 +155,7 @@ foreach ($documentKeys as $docKey) {
         }
     }
 
-    if (!$physicalChecked && count($uploadedFiles) === 0) {
-        continue;
-    }
+    if (!$physicalChecked && count($uploadedFiles) === 0) continue;
 
     $docFolder = "$projectFolder/$safeDocName";
     if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
@@ -193,65 +164,97 @@ foreach ($documentKeys as $docKey) {
     foreach ($uploadedFiles as $f) {
         $dest = "$docFolder/" . $f['newFileName'];
         if (move_uploaded_file($f['tmp_name'], $dest)) {
-            $uploadedPaths[] = "uploads/$projectID/$safeDocName/" . $f['newFileName'];
+            $uploadedPaths[] = "uploads/$projectId/$safeDocName/" . $f['newFileName'];
         }
     }
 
-    // Check if document already exists for this project and document type
-    $sqlCheckDoc = "SELECT DocumentID, DigitalLocation FROM document WHERE ProjectID='$projectID' AND DocumentType='$docName'";
+    // Generate QR code for this document folder
+    $qrFileName = "$projectId-$safeDocName-QR.png";
+    $qrFilePath = "$docFolder/$qrFileName";
+    $qrContent = "uploads/$projectId/$safeDocName";
+    QRcode::png($qrContent, $qrFilePath, QR_ECLEVEL_L, 4);
+    $qrPath = "uploads/$projectId/$safeDocName/$qrFileName";
+
+    // Check if document already exists by DocumentName = ProjectID-SafeDocName
+    $documentName = "$projectId-$safeDocName";
+    $sqlCheckDoc = "SELECT DocumentID, DigitalLocation FROM document WHERE DocumentName = '".mysqli_real_escape_string($conn, $documentName)."' LIMIT 1";
     $resDoc = $conn->query($sqlCheckDoc);
 
     if ($resDoc && $resDoc->num_rows > 0) {
+        // Document exists — update
         $docRow = $resDoc->fetch_assoc();
-        $existingDocID = $docRow['DocumentID'];
+        $existingDocId = $docRow['DocumentID'];
         $existingFiles = $docRow['DigitalLocation'];
 
-        // Append new files if any to existing files
+        // Append new files if uploaded
         $newDigitalLocation = $existingFiles;
         if (count($uploadedPaths) > 0) {
-            $newDigitalLocation = trim($existingFiles . ";" . implode(";", $uploadedPaths), ";");
+            $parts = array_filter(explode(";", $existingFiles));
+            $parts = array_merge($parts, $uploadedPaths);
+            $newDigitalLocation = implode(";", $parts);
         }
 
-        // Generate/update QR code
-        $qrFileName = "$projectID-$safeDocName-QR.png";
-        $qrFilePath = "$docFolder/$qrFileName";
-        $qrContent = "uploads/$projectID/$safeDocName";
-        QRcode::png($qrContent, $qrFilePath, QR_ECLEVEL_L, 4);
-        $qrPath = "uploads/$projectID/$safeDocName/$qrFileName";
-
-        // Update document record
         $sqlUpdateDoc = "UPDATE document SET 
             PhysicalLocation = " . ($physicalChecked ? "'YES'" : "NULL") . ", 
-            DigitalLocation = " . ($newDigitalLocation ? "'$newDigitalLocation'" : "NULL") . ",
-            DocumentQR = '$qrPath',
+            DigitalLocation = " . ($newDigitalLocation ? "'".mysqli_real_escape_string($conn, $newDigitalLocation)."'" : "NULL") . ",
+            DocumentQR = '".mysqli_real_escape_string($conn, $qrPath)."',
             DocumentStatus = " . ($status !== null ? "'$status'" : "NULL") . "
-            WHERE DocumentID = '$existingDocID'";
+            WHERE DocumentID = '".mysqli_real_escape_string($conn, $existingDocId)."'";
 
-        $conn->query($sqlUpdateDoc);
-    } else {
-        // Insert new document record if physical checked or files uploaded
-        if ($physicalChecked || count($uploadedPaths) > 0) {
-            // Generate QR code
-            $qrFileName = "$projectID-$safeDocName-QR.png";
-            $qrFilePath = "$docFolder/$qrFileName";
-            $qrContent = "uploads/$projectID/$safeDocName";
-            QRcode::png($qrContent, $qrFilePath, QR_ECLEVEL_L, 4);
-            $qrPath = "uploads/$projectID/$safeDocName/$qrFileName";
-
-            $sqlInsertDoc = "INSERT INTO document 
-                (ProjectID, DocumentType, PhysicalLocation, DigitalLocation, DocumentQR, DocumentStatus) VALUES (
-                '$projectID',
-                '$docName',
-                " . ($physicalChecked ? "'YES'" : "NULL") . ",
-                " . (count($uploadedPaths) > 0 ? "'" . implode(";", $uploadedPaths) . "'" : "NULL") . ",
-                '$qrPath',
-                " . ($status !== null ? "'$status'" : "NULL") . ")";
-
-            $conn->query($sqlInsertDoc);
+        if (!$conn->query($sqlUpdateDoc)) {
+            die(json_encode(['status' => 'error', 'message' => 'Error updating document: '.$conn->error]));
         }
+
+        // Log document UPDATED activity
+        $resLastActDoc = $conn->query("SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1");
+        $newActNumDoc = ($resLastActDoc && $resLastActDoc->num_rows > 0)
+            ? str_pad(intval(substr($resLastActDoc->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+            : "001";
+        $activityLogIdDoc = "ACT-" . $newActNumDoc;
+        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time) 
+                      VALUES ('".$activityLogIdDoc."','".mysqli_real_escape_string($conn, $projectId)."','".mysqli_real_escape_string($conn, $existingDocId)."','UPDATED','".mysqli_real_escape_string($conn, $employeeId)."', '$timeNow')");
+
+    } else {
+        // Document doesn't exist — insert new with unique DocumentID
+        // Generate new DocumentID (e.g. DOC-00001)
+        $sqlLastDocNum = "SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1";
+        $resLastDocNum = $conn->query($sqlLastDocNum);
+        $newDocNum = "00001"; // default
+        if ($resLastDocNum && $resLastDocNum->num_rows > 0) {
+            $lastDocId = $resLastDocNum->fetch_assoc()['DocumentID'];
+            $lastNum = intval(substr($lastDocId, 4));
+            $newDocNum = str_pad($lastNum + 1, 5, "0", STR_PAD_LEFT);
+        }
+        $newDocumentID = "DOC-" . $newDocNum;
+
+        $sqlInsertDoc = "INSERT INTO document 
+            (DocumentID, DocumentName, ProjectID, DocumentType, PhysicalLocation, DigitalLocation, DocumentQR, DocumentStatus) VALUES (
+            '".mysqli_real_escape_string($conn, $newDocumentID)."',
+            '".mysqli_real_escape_string($conn, $documentName)."',
+            '".mysqli_real_escape_string($conn, $projectId)."',
+            '".mysqli_real_escape_string($conn, $docName)."',
+            ".($physicalChecked ? "'YES'" : "NULL").",
+            ".(count($uploadedPaths) > 0 ? "'".mysqli_real_escape_string($conn, implode(";", $uploadedPaths))."'" : "NULL").",
+            '".mysqli_real_escape_string($conn, $qrPath)."',
+            ".($status !== null ? "'$status'" : "NULL")."
+        )";
+
+        if (!$conn->query($sqlInsertDoc)) {
+            die(json_encode(['status' => 'error', 'message' => 'Error inserting document: '.$conn->error]));
+        }
+
+        // Log document UPLOADED activity
+        $resLastActDoc = $conn->query("SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1");
+        $newActNumDoc = ($resLastActDoc && $resLastActDoc->num_rows > 0)
+            ? str_pad(intval(substr($resLastActDoc->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+            : "001";
+        $activityLogIdDoc = "ACT-" . $newActNumDoc;
+        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time) 
+                      VALUES ('".$activityLogIdDoc."','".mysqli_real_escape_string($conn, $projectId)."','".mysqli_real_escape_string($conn, $newDocumentID)."','UPLOADED','".mysqli_real_escape_string($conn, $employeeId)."', '$timeNow')");
     }
 }
 
 file_put_contents('php://stderr', "POST data: " . print_r($_POST, true));
-echo json_encode(['status' => 'error', 'message' => 'Something went wrong']);
+echo json_encode(['status' => 'success', 'message' => 'Project updated successfully']);
 exit;
+?>

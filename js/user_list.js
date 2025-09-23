@@ -17,10 +17,9 @@ function loadAdminPage(page) {
       // Initialize correct handlers after loading content
       if (page === 'user_list.php') {
         initUserListHandlers();
-      } else if (page === 'profile.php') {
-        initChangePassword();
-      } else if (page === 'project_list.php') {
+      } else if (cleanPage  === 'project_list.php') {
         initPreviewModal();
+        initeditBackButton();
       } else if (page === 'upload.php') {
         initUploadHandlers();
       } else if (page === 'search.php') {
@@ -36,6 +35,7 @@ function loadAdminPage(page) {
         initQRFormToggles();
       } else if (cleanPage  === 'edit_project.php') {
         initToggleEditSave();
+        initeditBackButton();
       }else {
         initUserMenuDropdown();
       }
@@ -51,6 +51,16 @@ function initBackButton() {
 
   backBtn.addEventListener('click', () => {
     const lastPage = sessionStorage.getItem('lastPage') || 'project_list.php';
+    loadAdminPage(lastPage);
+  });
+}
+
+function initeditBackButton() {
+  const backBtn = document.getElementById('update-back-btn');
+  if (!backBtn) return;
+
+  backBtn.addEventListener('click', () => {
+    const lastPage = sessionStorage.getItem('lastPage') || 'documents.php';
     loadAdminPage(lastPage);
   });
 }
@@ -73,12 +83,31 @@ function toggleClickHandler(e) {
   }
 
   if (saveBtn) {
-    submitForm(e);
+    submitEditForm(e);
   }
 }
 
-// AJAX submit handler
-function submitForm(e) {
+function saveCurrentFormState() {
+  const form = document.getElementById('update_projectForm');
+  if (!form) return;
+
+  initialFormState = {};
+
+  form.querySelectorAll('input, select').forEach(el => {
+    const key = el.id || el.name;
+    if (!key) return;
+
+    if (el.type === 'checkbox' || el.type === 'radio') {
+      initialFormState[key] = el.checked;
+    } else {
+      initialFormState[key] = el.value;
+    }
+  });
+
+  console.log('Saved current form state:', initialFormState);
+}
+
+function submitEditForm(e) {
   e.preventDefault(); // prevent default form submit
 
   const form = document.getElementById('update_projectForm');
@@ -104,6 +133,11 @@ function submitForm(e) {
 .then(data => {
   if (data.status === 'success') {
     alert('Project updated successfully!');
+    
+    // Save current form values as the new initial state
+    saveCurrentFormState();
+    
+    // Then toggle off edit mode (disable inputs, etc)
     handleEditButton();
   } else {
     alert('Update failed: ' + (data.message || 'Unknown error'));

@@ -1,73 +1,176 @@
-<style>
-  input {
-    width: 100%;
-    padding: 1.2vh 1vw;
-    border-radius: 0.26vw;
-    border: 1px solid #ccc;
-    color: #7B0302;
-    background-color: #f5f5f5;
-    margin-bottom: 1.5vh;
-  }
+<?php
+session_start();
+include 'server/server.php';
 
-  #user-circle-icon:hover,
-  #notification-circle-icon:hover {
+$employeeID = $_SESSION['employeeid'] ?? null;
+$empFName = '';
+$empLName = '';
+$jobPosition = '';
+$empEmail = '';
+
+if ($employeeID) {
+    $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
+    $stmt->bind_param("s", $employeeID);
+    $stmt->execute();
+    $stmt->bind_result($empFName, $empLName, $jobPosition, $empEmail);
+    $stmt->fetch();
+    $stmt->close();
+}
+?>
+
+<style> 
+#user-circle-icon {
+    font-size: 2.25cqw;
+    color: #7B0302;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#user-circle-icon:hover {
     filter: brightness(1.25);
     transform: scale(1.05);
-    transition: filter 0.2s ease;
-  }
+}
 
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
+#user-circle-icon.active {
+    color: white;
+}
 
-  .dropdown-menu {
+.user-menu-panel {
     display: none;
     position: absolute;
+    background: white;
+    top: 0;
     right: 0;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    border-radius: 5px;
-    min-width: 6%;
-    z-index: 1000;
-    margin-top: 7%;
-    margin-right: 1.75%;
+    width: 26%;
+    height: 100%;
+    z-index: 999;
     text-align: center;
-  }
+}
 
-  .dropdown-menu a {
+.user-panel-top {
+    background-color: #7B0302;
+    height: 14rem;
+}
+
+.user-top-info {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    text-align: left;
+    color: white;
+}
+
+.user-bottom-info {
     display: block;
-    padding: 7.5% 12%;
+    position: absolute;
+    top: 40%;
+    left: 10%;
     color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-bottom-info input {
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#changepassword-button {
+    position: absolute;
+    top: 95%;
+    right: -40%;
+    font-size: 1rem;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#changepassword-button:hover {
+    color: #600202;
+}
+
+a.signout-button {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 0.8cqw;
-  }
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
 
-  .dropdown-menu a:first-child:hover {
+a.signout-button:hover {
+    background-color: #600202;
+}
+
+.user-forgot-password {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.user-forgot-password input {
+    color: #7B0302;
+    border: 1px solid;
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#confirmchangepassword-button {
     background-color: #7B0302;
     color: white;
-    border-radius: 8px 8px 0 0;
-  }
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
 
-  .dropdown-menu a:last-child:hover {
+#cancelchangepassword-button {
+    background-color: #868886ff;
+    color: #7B0302;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: all 0.3s ease;
+}
+
+#confirmchangepassword-button:hover {
+    background-color: #600202;
+}
+
+#cancelchangepassword-button:hover {
     background-color: #7B0302;
     color: white;
-    border-radius: 0 0 8px 8px;
-  }
+}
 
-  .dropdown-menu a:not(:first-child):not(:last-child):hover {
-    background-color: #7B0302;
-    color: white;
-  }
-
-  .userlist-grid {
+.userlist-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5%;
     margin: 5% 10% 1% 10%;
-  }
+}
 
-  .user-card {
+.user-card {
     background: #7B0302;
     padding: 1cqw;
     border-radius: 1cqw;
@@ -81,9 +184,9 @@
     align-items: center;
     text-align: center;
     position: relative;
-  }
+}
 
-  .user-status {
+.user-status {
     position: absolute;
     top: 1cqw;
     left: 1cqw;
@@ -93,41 +196,41 @@
     padding: 0.3cqw 0.8cqw;
     border-radius: 0.5cqw;
     color: white;
-  }
+}
 
-  .status-active {
+.status-active {
     background-color: #00830F;
-  }
+}
 
-  .status-inactive {
+.status-inactive {
     background-color: black;
-  }
+}
 
-  .user-name {
+.user-name {
     font-size: 1cqw;
     font-weight: 600;
     margin: 0.3cqw 0;
-  }
-
-  .user-position {
-    font-size: 0.75cqw;
-    margin: 0.5cqw 0;
-  }
-
-.iconEllipsis {
-  position: absolute; 
-  top: 1cqw;
-  right: 1cqw;  
-  font-size: 1cqw;
-  cursor: pointer;
 }
 
-  #iconUL {
+.user-position {
+    font-size: 0.75cqw;
+    margin: 0.5cqw 0;
+}
+
+.iconEllipsis {
+    position: absolute;
+    top: 1cqw;
+    right: 1cqw;
+    font-size: 1cqw;
+    cursor: pointer;
+}
+
+#iconUL {
     font-size: 3cqw;
     margin-bottom: 0.5cqw;
-  }
+}
 
-  .status-dropdown {
+.status-dropdown {
     position: absolute;
     top: 3cqw;
     left: 11cqw;
@@ -138,29 +241,29 @@
     display: none;
     flex-direction: column;
     z-index: 10;
-  }
+}
 
-  .status-option {
+.status-option {
     padding: 0.5cqw 1cqw;
     cursor: pointer;
-  }
+}
 
-  .status-option:first-child {
+.status-option:first-child {
     border-top-left-radius: 0.5cqw;
     border-top-right-radius: 0.5cqw;
-  }
+}
 
-  .status-option:last-child {
+.status-option:last-child {
     border-bottom-left-radius: 0.5cqw;
     border-bottom-right-radius: 0.5cqw;
-  }
+}
 
-  .status-option:hover {
+.status-option:hover {
     background-color: #eee;
     border-radius: 0.5cqw;
-  }
+}
 
-  .floating-add-user {
+.floating-add-user {
     position: fixed;
     bottom: 50px;
     right: 50px;
@@ -175,13 +278,13 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     z-index: 50;
     transition: transform 0.3s ease;
-  }
+}
 
-  .floating-add-user:hover {
+.floating-add-user:hover {
     transform: scale(1.2);
-  }
+}
 
-  .modal {
+.modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -193,35 +296,35 @@
     background-color: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(0.1cqw);
     -webkit-backdrop-filter: blur(0.1cqw);
-  }
+}
 
-  .modal-content {
+.modal-content {
     margin: 3cqw auto;
     max-width: 50cqw;
     max-height: 35cqw;
     border-radius: 1cqw !important;
     border: none;
-  }
+}
 
-  label {
+label {
     color: #7B0302;
-  }
+}
 
-  input[disabled] {
+#employeeid_display {
     background-color: #e0e0e0;
     border: 1px solid #ccc;
     color: #444;
     font-weight: 600;
-  }
+}
 
-  .form-section input {
+.form-section input {
     border-radius: 0.26vw;
     border: 1px solid #ccc;
     background-color: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  }
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
 
-  button {
+button {
     width: 100%;
     padding: 1.11vh 0.83vw;
     background-color: #7B0302;
@@ -230,114 +333,159 @@
     border-radius: 0.26vw;
     cursor: pointer;
     margin-top: 2vh;
-  }
+}
 
-  .toast {
-  background-color: #333;
-  color: #fff;
-  padding: 1cqw 2cqw;
-  border-radius: 0.5cqw;
-  margin-bottom: 1cqw;
-  min-width: 15cqw;
-  max-width: 25cqw;
-  font-size: 0.9cqw;
-  opacity: 0.95;
-  box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.2);
-  animation: fadeInOut 4s ease forwards;
+.toast {
+    background-color: #333;
+    color: #fff;
+    padding: 1cqw 2cqw;
+    border-radius: 0.5cqw;
+    margin-bottom: 1cqw;
+    min-width: 15cqw;
+    max-width: 25cqw;
+    font-size: 0.9cqw;
+    opacity: 0.95;
+    box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.2);
+    animation: fadeInOut 4s ease forwards;
 }
 
 .toast-success {
-  background-color: #28a745;
+    background-color: #28a745;
 }
 
 .toast-error {
-  background-color: #dc3545;
+    background-color: #dc3545;
 }
 
 @keyframes fadeInOut {
-  0%   { opacity: 0; transform: translateY(-10px); }
-  10%  { opacity: 1; transform: translateY(0); }
-  90%  { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-10px); }
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 }
 </style>
 
-<?php
-include 'server/server.php';
+<div class="user-menu-panel" id="userPanel">
+    <div class="user-panel-top">
+        <div class="user-top-info">
+            <p style="font-size: 2rem; font-weight: 700;">
+                <?= htmlspecialchars($empFName . ' ' . $empLName) ?>
+            </p>
+            <p style="font-size: 1rem;">
+                <?= htmlspecialchars($jobPosition) ?>
+            </p>
+        </div>
+    </div>
 
-$nextEmployeeId = 'ES0001';
-$sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'ES%' ORDER BY employeeid DESC LIMIT 1";
-$result = $conn->query($sql);
+    <div class="user-bottom-info">
+        <p>Employee ID</p>
+        <input placeholder="<?= htmlspecialchars($employeeID) ?>" disabled>
+        <p>Email</p>
+        <input placeholder="<?= htmlspecialchars($empEmail) ?>" disabled>
+        <p>Password</p>
+        <input type="password" placeholder="*******" disabled>
+        <a id="changepassword-button">Change Password</a>
+        <a href="model/logout.php" class="signout-button">Sign out</a>
+    </div>
 
-if ($result && $row = $result->fetch_assoc()) {
-    $lastId = intval(substr($row['employeeid'], 5));
-    $nextId = $lastId + 1;
-    $nextEmployeeId = 'ES' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
-}
-?>
+    <div class="user-forgot-password">
+        <p style="font-size: 2rem; margin-top: -25%; margin-bottom: 10%;">Change Password</p>
+        <p>Current Password</p>
+        <input type="password" required>
+        <p>New Password</p>
+        <input type="password" required>
+        <p>Confirm New Password</p>
+        <input type="password" required>
+        <div style="display: flex; position: absolute; right: -35%; gap: 5%;">
+            <a id="confirmchangepassword-button">Confirm</a>
+            <a id="cancelchangepassword-button">Cancel</a>
+        </div>
+    </div>
+</div>
 
 <div class="topbar">
-  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">User List</span>
-  <div class="topbar-content">
-    <div class="icons">
-      <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
-      <div class="dropdown-menu" id="user-menu">
-        <a data-page="profile.php">Profile</a>
-        <a href="model/logout.php">Sign Out</a>
-      </div>
+    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">User List</span>
+    <div class="topbar-content">
+        <div class="icons">
+            <span id="user-circle-icon" class="fa fa-user-circle"></span>
+        </div>
     </div>
-  </div>
 </div>
 
 <hr class="top-line" />
 
 <div class="floating-add-user" id="add-account-btn" data-next-id="<?= $nextEmployeeId ?>">
-  <span class="fa fa-plus" style="font-size: 1.5cqw; color: white;"></span>
+    <span class="fa fa-plus" style="font-size: 1.5cqw; color: white;"></span>
 </div>
 
 <div id="modalAddUser" class="modal">
-  <div class="modal-content" style="max-width: 20cqw; margin-top: 10cqw; padding: 2cqw; background: white; border-radius: 1cqw;">
-    <span class="close" style="cursor:pointer; font-size: 2cqw; position: relative; top: -2cqw; left: 19rem; color: #7B0302;">&times;</span>
-    <div class="form-section" style="display: flex; gap: 3cqw;">
-      <div style="flex: 1;">
-        <form id="adduser-form" action="model/register_processing.php" method="POST" style="display: flex; flex-direction: column; gap: 1.5cqw;">
+    <div class="modal-content"
+        style="max-width: 20cqw; margin-top: 10cqw; padding: 2cqw; background: white; border-radius: 1cqw;">
+        <span class="close"
+            style="cursor:pointer; font-size: 2cqw; position: relative; top: -2cqw; left: 19rem; color: #7B0302;">&times;</span>
+        <div class="form-section" style="display: flex; gap: 3cqw;">
+            <div style="flex: 1;">
+                <form id="adduser-form" action="model/register_processing.php" method="POST"
+                    style="display: flex; flex-direction: column; gap: 1.5cqw;">
 
-          <div style="display: flex; align-items: flex-start; gap: 0cqw;">
-            <label for="employeeid_display" style="min-width: 6cqw; font-weight: 700; margin-top: 0.3cqw;">EMPLOYEE ID:</label>
-            <input type="text" id="employeeid_display" value="<?= $nextEmployeeId ?>" disabled style="flex: 1;" />
-            <input type="hidden" id="employeeid" name="employeeid" value="<?= $nextEmployeeId ?>" />
-          </div>
+                    <div style="display: flex; align-items: flex-start; gap: 0cqw;">
+                        <label for="employeeid_display"
+                            style="min-width: 6cqw; font-weight: 700; margin-top: 0.3cqw;">EMPLOYEE ID:</label>
+                        <input type="text" id="employeeid_display" value="<?= $nextEmployeeId ?>" disabled
+                            style="flex: 1;" />
+                        <input type="hidden" id="employeeid" name="employeeid" value="<?= $nextEmployeeId ?>" />
+                    </div>
 
-          <div style="display: flex; align-items: flex-start; gap: 0cqw;">
-            <label for="first_name" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">First Name:</label>
-            <input type="text" id="first_name" name="first_name" required class="adduser-firstname" style="flex: 1;" />
-          </div>
+                    <div style="display: flex; align-items: flex-start; gap: 0cqw;">
+                        <label for="first_name" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">First
+                            Name:</label>
+                        <input type="text" id="first_name" name="first_name" required class="adduser-firstname"
+                            style="flex: 1;" />
+                    </div>
 
-          <div style="display: flex; align-items: flex-start; gap: 0cqw;">
-            <label for="last_name" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Last Name:</label>
-            <input type="text" id="last_name" name="last_name" required class="adduser-lastname" style="flex: 1;" />
-          </div>
+                    <div style="display: flex; align-items: flex-start; gap: 0cqw;">
+                        <label for="last_name" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Last
+                            Name:</label>
+                        <input type="text" id="last_name" name="last_name" required class="adduser-lastname"
+                            style="flex: 1;" />
+                    </div>
 
-          <div style="display: flex; align-items: flex-start; gap: 0cqw;">
-            <label for="email" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Email:</label>
-            <input type="email" id="email" name="email" required style="flex: 1;" />
-          </div>
+                    <div style="display: flex; align-items: flex-start; gap: 0cqw;">
+                        <label for="email" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Email:</label>
+                        <input type="email" id="email" name="email" required style="flex: 1;" />
+                    </div>
 
-          <div style="display: flex; align-items: flex-start; gap: 0cqw;">
-            <label for="position" style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Position:</label>
-            <select id="position" name="position" required style="flex: 1; max-width: 16cqw;">
-              <option value="" disabled selected>Select Position</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Compliance Officer">Compliance Officer</option>
-              <option value="CAD Operator">CAD Operator</option>
-            </select>
-          </div>
+                    <div style="display: flex; align-items: flex-start; gap: 0cqw;">
+                        <label for="position"
+                            style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Position:</label>
+                        <select id="position" name="position" required style="flex: 1; max-width: 16cqw;">
+                            <option value="" disabled selected>Select Position</option>
+                            <option value="Secretary">Secretary</option>
+                            <option value="Compliance Officer">Compliance Officer</option>
+                            <option value="CAD Operator">CAD Operator</option>
+                        </select>
+                    </div>
 
-          <button id="signup-button" type="submit" style="margin-left: 4cqw; max-width: 8cqw;">Add Employee</button>
-        </form>
-      </div>
+                    <button id="signup-button" type="submit" style="margin-left: 4cqw; max-width: 8cqw;">Add
+                        Employee</button>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <?php

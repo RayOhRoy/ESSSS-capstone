@@ -1,138 +1,273 @@
+<?php
+session_start();
+include 'server/server.php';
+
+$employeeID = $_SESSION['employeeid'] ?? null;
+$empFName = '';
+$empLName = '';
+$jobPosition = '';
+$empEmail = '';
+
+if ($employeeID) {
+    $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
+    $stmt->bind_param("s", $employeeID);
+    $stmt->execute();
+    $stmt->bind_result($empFName, $empLName, $jobPosition, $empEmail);
+    $stmt->fetch();
+    $stmt->close();
+}
+?>
 
 <style>
-    
-  input {
-      width: 100%;
-      padding: 1.2vh 1vw;
-      border-radius: 0.26vw; 
-      border: 1px solid #ccc;
-      color: #7B0302;
-      background-color: #f5f5f5;
-      margin-bottom: 1.5vh;
-  }
+body,
+html {
+    overflow-y: hidden;
+}
 
-  #user-circle-icon:hover,
-  #notification-circle-icon:hover {
-    filter: brightness(1.25); 
+#user-circle-icon {
+    font-size: 2.25cqw;
+    color: #7B0302;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#user-circle-icon:hover {
+    filter: brightness(1.25);
     transform: scale(1.05);
-    transition: filter 0.2s ease; 
-  }
+}
 
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
+#user-circle-icon.active {
+    color: white;
+}
 
-  .dropdown-menu {
+.user-menu-panel {
     display: none;
     position: absolute;
+    background: white;
+    top: 0;
     right: 0;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    border-radius: 5px;
-    min-width: 6%;
-    z-index: 1000;
-    margin-top: 7%;
-    margin-right: 1.75%;
+    width: 26%;
+    height: 100%;
+    z-index: 999;
     text-align: center;
-  }
+}
 
-  .dropdown-menu a {
+.user-panel-top {
+    background-color: #7B0302;
+    height: 14rem;
+}
+
+.user-top-info {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    text-align: left;
+    color: white;
+}
+
+.user-bottom-info {
     display: block;
-    padding: 7.5% 12%;
+    position: absolute;
+    top: 40%;
+    left: 10%;
     color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-bottom-info input {
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#changepassword-button {
+    position: absolute;
+    top: 95%;
+    right: -40%;
+    font-size: 1rem;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#changepassword-button:hover {
+    color: #600202;
+}
+
+a.signout-button {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
     text-decoration: none;
-    font-size: 0.8cqw;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
 
-  }
+a.signout-button:hover {
+    background-color: #600202;
+}
 
- .dropdown-menu a:first-child:hover {
+.user-forgot-password {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.user-forgot-password input {
+    color: #7B0302;
+    border: 1px solid;
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#confirmchangepassword-button {
     background-color: #7B0302;
     color: white;
-    border-radius: 8px 8px 0 0;
-  }
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
 
-  .dropdown-menu a:last-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 0 0 8px 8px;
-  }
+#cancelchangepassword-button {
+    background-color: #868886ff;
+    color: #7B0302;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: all 0.3s ease;
+}
 
-  .dropdown-menu a:not(:first-child):not(:last-child):hover {
+#confirmchangepassword-button:hover {
+    background-color: #600202;
+}
+
+#cancelchangepassword-button:hover {
     background-color: #7B0302;
-    color: white;
-  }
-    .recent-list {
+    color: white; 
+}
+
+.recent-list {
     min-width: 40%;
     margin: 20px auto;
     font-family: Arial, sans-serif;
-  }
+}
 
-    .recent-list h3 {
-  color: #7B0302;
-    }
-  .recent-item {
+.recent-list h3 {
+    color: #7B0302;
+}
+
+.recent-item {
     display: flex;
     align-items: center;
     padding: 15px 0;
     border-bottom: 1px solid #ddd;
-  }
+}
 
-  .employee-info {
+.employee-info {
     display: flex;
     flex-direction: column;
     font-size: 0.9rem;
     min-width: 180px;
     margin-left: 20px;
-  }
+}
 
-  .employee-info strong {
+.employee-info strong {
     font-weight: 900;
-  }
+}
 
-  .employee-role {
+.employee-role {
     font-size: 0.8rem;
     margin-top: 3px;
-  }
+}
 
-  .status {
+.status {
     margin-left: 2%;
     flex: 1;
     text-align: left;
     font-size: 0.9rem;
-  }
+}
 
-  .display-info {
-  min-width: 25%;
-  font-size: 0.7rem;
-  text-align: left;
-  }
+.display-info {
+    min-width: 25%;
+    font-size: 0.7rem;
+    text-align: left;
+}
 
-  .datetime {
+.datetime {
     font-size: 0.8rem;
     text-align: right;
     margin-right: 2%;
-     font-size: 0.9rem;
-  }
+    font-size: 0.9rem;
+}
 </style>
 
-<?php
-session_start();
-?>
+<div class="user-menu-panel" id="userPanel">
+    <div class="user-panel-top">
+        <div class="user-top-info">
+            <p style="font-size: 2rem; font-weight: 700;">
+                <?= htmlspecialchars($empFName . ' ' . $empLName) ?>
+            </p>
+            <p style="font-size: 1rem;">
+                <?= htmlspecialchars($jobPosition) ?>
+            </p>
+        </div>
+    </div>
 
+    <div class="user-bottom-info">
+        <p>Employee ID</p>
+        <input placeholder="<?= htmlspecialchars($employeeID) ?>" disabled>
+        <p>Email</p>
+        <input placeholder="<?= htmlspecialchars($empEmail) ?>" disabled>
+        <p>Password</p>
+        <input type="password" placeholder="*******" disabled>
+        <a id="changepassword-button">Change Password</a>
+        <a href="model/logout.php" class="signout-button">Sign out</a>
+    </div>
+
+    <div class="user-forgot-password">
+        <p style="font-size: 2rem; margin-top: -25%; margin-bottom: 10%;">Change Password</p>
+        <p>Current Password</p>
+        <input type="password" required>
+        <p>New Password</p>
+        <input type="password" required>
+        <p>Confirm New Password</p>
+        <input type="password" required>
+        <div style="display: flex; position: absolute; right: -35%; gap: 5%;">
+            <a id="confirmchangepassword-button">Confirm</a>
+            <a id="cancelchangepassword-button">Cancel</a>
+        </div>
+    </div>
+</div>
 
 <div class="topbar">
-  <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
-  <div class="topbar-content">
-    <div class="icons">
-      <span id="user-circle-icon" class="fa fa-user-circle" style="font-size: 2.25cqw; color: #7B0302;"></span>
-      <div class="dropdown-menu" id="user-menu">
-        <a data-page="profile.php">Profile</a>
-        <a href="model/logout.php">Sign Out</a>
-      </div>
+    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
+    <div class="topbar-content">
+        <div class="icons">
+            <span id="user-circle-icon" class="fa fa-user-circle"></span>
+        </div>
     </div>
-  </div>
-</div>
 </div>
 
 <hr class="top-line" />
@@ -178,57 +313,63 @@ $conn->close();
 ?>
 
 <div class="stats">
-  <?php foreach ($stats as $stat): ?>
+    <?php foreach ($stats as $stat): ?>
     <div class="stat-box">
-      <div class="stat-top">
-        <p><?= $stat["label"] ?></p>
-        <?php if (isset($stat["percent"])): ?>
-          <span class="percent"><?= $stat["percent"] ?>%</span>
-        <?php endif; ?>
-      </div>
-      <div class="stat-bottom">
-        <div class="stat-info">
-          <h2><?= $stat["value"] ?></h2>
-          <span class="label"><?= $stat["text"] ?></span>
+        <div class="stat-top">
+            <p><?= $stat["label"] ?></p>
+            <?php if (isset($stat["percent"])): ?>
+            <span class="percent"><?= $stat["percent"] ?>%</span>
+            <?php endif; ?>
         </div>
-        <div class="icon-container">
-          <img src="picture/<?= $stat["icon"] ?>" alt="<?= $stat["text"] ?> Icon" />
+        <div class="stat-bottom">
+            <div class="stat-info">
+                <h2><?= $stat["value"] ?></h2>
+                <span class="label"><?= $stat["text"] ?></span>
+            </div>
+            <div class="icon-container">
+                <img src="picture/<?= $stat["icon"] ?>" alt="<?= $stat["text"] ?> Icon" />
+            </div>
         </div>
-      </div>
     </div>
-  <?php endforeach; ?>
+    <?php endforeach; ?>
 </div>
 
 <div class="mid-section">
 
-  <div class="chart-section">
-    <h3>DOCUMENT MOVEMENT OVER TIME</h3>
-    <div class="graph-box">
-      <div class="y-labels"><div>200</div><div>150</div><div>100</div><div>50</div><div>0</div></div>
-      <div class="graph-area">
-        <div class="graph-grid"></div>
-        <div class="x-labels">
-          <span>January</span><span>March</span><span>May</span>
-          <span>July</span><span>September</span><span>November</span>
+    <div class="chart-section">
+        <h3>DOCUMENT MOVEMENT OVER TIME</h3>
+        <div class="graph-box">
+            <div class="y-labels">
+                <div>200</div>
+                <div>150</div>
+                <div>100</div>
+                <div>50</div>
+                <div>0</div>
+            </div>
+            <div class="graph-area">
+                <div class="graph-grid"></div>
+                <div class="x-labels">
+                    <span>January</span><span>March</span><span>May</span>
+                    <span>July</span><span>September</span><span>November</span>
+                </div>
+            </div>
         </div>
-      </div>
+
+
+        <div class="breakdown-section">
+            <h3>DOCUMENT TYPE BREAKDOWN</h3>
+            <div class="legend">
+                <span><span class="dot" style="background:#8B5E5E"></span>Tax Declaration</span>
+                <span><span class="dot" style="background:#C27C7C"></span>Lot Title</span>
+                <span><span class="dot" style="background:#D88F8F"></span>Survey Plan</span>
+                <span><span class="dot" style="background:#B25454"></span>CAD File</span>
+                <span><span class="dot" style="background:#E0BABA"></span>Lot Data</span>
+                <span><span class="dot" style="background:#F2DCDC"></span>Others</span>
+            </div>
+        </div>
     </div>
 
-
-    <div class="breakdown-section">
-      <h3>DOCUMENT TYPE BREAKDOWN</h3>
-      <div class="legend">
-        <span><span class="dot" style="background:#8B5E5E"></span>Tax Declaration</span>
-        <span><span class="dot" style="background:#C27C7C"></span>Lot Title</span>
-        <span><span class="dot" style="background:#D88F8F"></span>Survey Plan</span>
-        <span><span class="dot" style="background:#B25454"></span>CAD File</span>
-        <span><span class="dot" style="background:#E0BABA"></span>Lot Data</span>
-        <span><span class="dot" style="background:#F2DCDC"></span>Others</span>
-      </div>
-    </div>
-  </div>
-
-<?php
+    <?php
 include 'server/server.php';
 
 $userRole = $_SESSION['role'] ?? null;
@@ -312,27 +453,25 @@ if (!empty($sql)) {
 $conn->close();
 ?>
 
-<div class="recent-list">
-  <h3>Recent Activity</h3>
-  <?php if (empty($recent_activities)): ?>
-    <p>No recent activities to display.</p>
-  <?php else: ?>
-    <?php foreach ($recent_activities as $activity): ?>
-      <div class="recent-item">
-        <div class="status">
-          <?= htmlspecialchars(strtoupper($activity['status'])) ?>
+    <div class="recent-list">
+        <h3>Recent Activity</h3>
+        <?php if (empty($recent_activities)): ?>
+        <p>No recent activities to display.</p>
+        <?php else: ?>
+        <?php foreach ($recent_activities as $activity): ?>
+        <div class="recent-item">
+            <div class="status">
+                <?= htmlspecialchars(strtoupper($activity['status'])) ?>
+            </div>
+            <div class="display-info">
+                <?= htmlspecialchars($activity['display_info']) ?>
+            </div>
+            <div class="datetime">
+                <?= date('d M Y H:i', strtotime($activity['time'])) ?>
+            </div>
         </div>
-        <div class="display-info">
-          <?= htmlspecialchars($activity['display_info']) ?>
-        </div>
-        <div class="datetime">
-          <?= date('d M Y H:i', strtotime($activity['time'])) ?>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  <?php endif; ?>
+        <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </div>
-
-
-  </div>
 </div>

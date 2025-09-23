@@ -17,6 +17,7 @@ if ($employeeID) {
     $stmt->close();
 }
 ?>
+
 <style>
 #user-circle-icon {
     font-size: 2.25cqw;
@@ -162,61 +163,22 @@ a.signout-button:hover {
     color: white;
 }
 
-.activitylist-table {
+button {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
-    font-size: 0.8vw;
-}
-
-.activitylist-table th,
-.activitylist-table td {
-    padding: 8px;
-    text-align: center;
-    min-width: 10cqw;
-}
-
-.activitylist-table td {
-    text-align: center;
-    padding: 8px;
-}
-
-.sort-btn {
-    width: 100%;
-    background: transparent;
+    height: 10%;
+    margin-bottom: 1%;
     border: none;
+    border-radius: 1vw;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    padding-left: 5rem;
     color: #7B0302;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 6px;
-    transition: background 0.3s, color 0.3s;
+    font-size: 1.7rem;
+    font-weight: 700;
+    transition: all 0.3s;
 }
 
-.sort-btn.active-sort {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 4cqw;
-}
-
-#employeeFilter {
-    width: 100%;
-    padding: 6px;
-    font-weight: bold;
-    color: #7B0302;
-    border-radius: 4px;
-}
-
-.filter-clear {
-    margin: 10px 0;
-    padding: 6px 10px;
-    background-color: #eee;
-    border: 1px solid #ccc;
-    color: #7B0302;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-.filter-clear:hover {
+button:hover {
     background-color: #7B0302;
     color: white;
 }
@@ -261,7 +223,7 @@ a.signout-button:hover {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Activity Log</span>
+    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Documents</span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -271,97 +233,5 @@ a.signout-button:hover {
 
 <hr class="top-line" />
 
-<?php
-include 'server/server.php';
-
-$employeeOptions = [];
-$employeeResult = $conn->query("SELECT EmployeeID, EmpFName, EmpLName FROM employee ORDER BY EmpFName, EmpLName");
-if ($employeeResult && $employeeResult->num_rows > 0) {
-    while ($emp = $employeeResult->fetch_assoc()) {
-        $fullName = $emp['EmpFName'] . ' ' . $emp['EmpLName'];
-        $employeeOptions[$emp['EmployeeID']] = $fullName;
-    }
-}
-
-$activity_logs = [];
-$sql = "
-    SELECT 
-        al.ActivityLogID,
-        al.ProjectID,
-        al.DocumentID,
-        al.Status,
-        al.Time,
-        e.EmpFName,
-        e.EmpLName,
-        e.JobPosition,
-        d.DocumentName
-    FROM activity_log al
-    JOIN employee e ON al.EmployeeID = e.EmployeeID
-    LEFT JOIN document d ON al.DocumentID = d.DocumentID
-    ORDER BY al.Time DESC
-";
-
-$result = $conn->query($sql);
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $fullName = $row['EmpFName'] . ' ' . $row['EmpLName'];
-        $documentInfo = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentName'];
-        $activity_logs[] = [
-            'employee_name' => $fullName,
-            'job_position' => $row['JobPosition'],
-            'document_info' => $documentInfo,
-            'status' => strtoupper($row['Status']),
-            'time' => date('d M Y H:i', strtotime($row['Time']))
-        ];
-    }
-}
-$conn->close();
-?>
-
-<label for="dateFrom">From:</label>
-<input type="date" id="dateFrom" onchange="filterByDate()" />
-
-<label for="dateTo">To:</label>
-<input type="date" id="dateTo" onchange="filterByDate()" />
-
-<table class="activitylist-table" id="projectTable">
-    <thead>
-        <tr>
-            <th>
-                <select id="employeeFilter" onchange="filterByEmployee()"
-                    style="min-width: 100%; font-weight: bold; color: #7B0302; border-radius: 4px;">
-                    <option value="">All Employees</option>
-                    <?php foreach ($employeeOptions as $id => $name): ?>
-                    <option value="<?= htmlspecialchars($name) ?>"><?= htmlspecialchars($name) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </th>
-            <th><button class="sort-btn" onclick="sortTable(1, this)">Document</button></th>
-            <th><button class="sort-btn" onclick="sortTable(2, this)">Action</button></th>
-            <th><button class="sort-btn" onclick="sortTable(3, this)">Timestamp</button></th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if (empty($activity_logs)): ?>
-        <tr>
-            <td colspan="4">No activity logs available.</td>
-        </tr>
-        <?php else: ?>
-        <?php foreach ($activity_logs as $log): ?>
-        <tr data-employee="<?= htmlspecialchars($log['employee_name']) ?>">
-            <td>
-                <div style="color: #7B0302; font-weight: bold; text-transform: uppercase;">
-                    <?= htmlspecialchars($log['employee_name']) ?>
-                </div>
-                <div style="color: #7B0302; font-weight: normal;">
-                    <?= htmlspecialchars($log['job_position']) ?>
-                </div>
-            </td>
-            <td><?= htmlspecialchars($log['document_info']) ?></td>
-            <td><?= htmlspecialchars($log['status']) ?></td>
-            <td><?= htmlspecialchars($log['time']) ?></td>
-        </tr>
-        <?php endforeach; ?>
-        <?php endif; ?>
-    </tbody>
-</table>
+<button data-municipality="Calumpit" onclick="redirectToProjectList(this)">Calumpit</button>
+<button data-municipality="Hagonoy" onclick="redirectToProjectList(this)">Hagonoy</button>

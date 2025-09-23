@@ -45,14 +45,7 @@
 
 <div class="container">
   <div class="sidebar">
-    <!-- <span  class="fa fa-bars" id="sidetoggle" alt="Bars"></span> -->
-    <!-- <div class="logo"> -->
       <img class="side-logo" src="picture/logoOutlined.png" alt="Logo">
-      <!-- <div class="logo-text">
-        <div>ESSSS Centralized Document</div>
-        <div>Management System with QR Technology</div>
-      </div> -->
-    <!-- </div> -->
 
     <div class="menu-icons">
       <a href="#" class="menu-item active" data-page="admin_dashboard.php">
@@ -63,12 +56,12 @@
         <span  class="fa fa-upload" alt="Upload"></span>
         <span>Upload</span>
       </a>
-      <a href="#" class="menu-item" data-page="project_list.php">
+      <a href="#" class="menu-item" data-page="documents.php">
         <span  class="fa fa-list" alt="Documents"></span>
         <span>Documents</span>
       </a>
-      <a href="#" class="menu-item" data-page="project_list.php">
-        <span  class="fa fa-list" alt="Physical Storage"></span>
+      <a href="#" class="menu-item" data-page="physical_storage.php">
+        <span  class="fa fa-database" alt="Physical Storage"></span>
         <span>Physical Storage</span>
       </a>
       <a href="#" class="menu-item" data-page="search.php">
