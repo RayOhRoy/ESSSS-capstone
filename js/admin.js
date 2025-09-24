@@ -8,40 +8,41 @@ function initAdminPage() {
     loadScript('js/qr_search.js');
     loadScript('js/edit_project.js');
     loadScript('js/project.js');
+    loadScript('js/physical_storage.js');
     loadScript('js/user_list.js');
   }
 
   // Universal listener for any element with data-page
-document.addEventListener('click', function (e) {
-  const target = e.target.closest('[data-page]');
-  if (!target) return;
+  document.addEventListener('click', function (e) {
+    const target = e.target.closest('[data-page]');
+    if (!target) return;
 
-  e.preventDefault();
-  const page = target.getAttribute('data-page');
+    e.preventDefault();
+    const page = target.getAttribute('data-page');
 
-  if (page) {
-    if (page === 'admin_dashboard.php') {
-      loadAdminPage(page, initUserMenuDropdown);
-    } else {
-      loadAdminPage(page);
+    if (page) {
+      if (page === 'admin_dashboard.php') {
+        loadAdminPage(page, initUserMenuDropdown);
+      } else {
+        loadAdminPage(page);
+      }
     }
-  }
 
-  // --- Update sidebar highlight ---
-  // First remove all highlights
-  document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+    // --- Update sidebar highlight ---
+    // First remove all highlights
+    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
 
-  // Case 1: clicked element *is* a sidebar menu item
-  if (target.classList.contains('menu-item')) {
-    target.classList.add('active');
-  } 
-  // Case 2: clicked element is outside (e.g., floating btn),
-  // find the matching sidebar menu with same data-page
-  else {
-    const matchingMenu = document.querySelector(`.menu-item[data-page="${page}"]`);
-    if (matchingMenu) matchingMenu.classList.add('active');
-  }
-});
+    // Case 1: clicked element *is* a sidebar menu item
+    if (target.classList.contains('menu-item')) {
+      target.classList.add('active');
+    }
+    // Case 2: clicked element is outside (e.g., floating btn),
+    // find the matching sidebar menu with same data-page
+    else {
+      const matchingMenu = document.querySelector(`.menu-item[data-page="${page}"]`);
+      if (matchingMenu) matchingMenu.classList.add('active');
+    }
+  });
 }
 
 function loadAdminPage(page) {
@@ -145,7 +146,7 @@ function initUserMenuDropdown() {
   if (window.__changePasswordSetup) return;
   window.__changePasswordSetup = true;
 
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const changeBtn = e.target.closest('#changepassword-button');
     const cancelBtn = e.target.closest('#cancelchangepassword-button');
     const userBottomInfo = document.querySelector('.user-bottom-info');
@@ -241,3 +242,45 @@ function initUserMenuDropdown() {
       });
   });
 })();
+
+// para sa sidebar
+let originalActive = null;
+
+// isara lang sidebar pag load kung mobile view
+if (window.matchMedia("(max-width: 1080px)").matches) {
+  document.querySelector(".sidebar").classList.add("closed");
+  document.querySelector(".hamburger").classList.add("closed");
+}
+
+function toggleMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  const hamburger = document.querySelector('.hamburger');
+  const main = document.querySelector('.main');
+  const span = document.querySelector('.hamburger span');
+
+  span.classList.toggle('closed');
+  sidebar.classList.toggle('closed');
+  hamburger.classList.toggle('closed');
+  main.classList.toggle('expanded');
+
+  if (sidebar.classList.contains('closed')) {
+    if (activeLink) {
+      originalActive = activeLink;
+      activeLink.classList.remove('active');
+    }
+  } else {
+    // open state logic
+  }
+}
+
+// kapag nag click sa menu item, auto close sidebar (mobile view lang)
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const sidebar = document.querySelector('.sidebar');
+    if (window.matchMedia("(max-width: 1080px)").matches) {
+      if (!sidebar.classList.contains('closed')) {
+        toggleMenu();
+      }
+    }
+  });
+});

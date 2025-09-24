@@ -24,6 +24,12 @@ html {
     overflow-y: hidden;
 }
 
+.topbar span {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
 #user-circle-icon {
     font-size: 2.25cqw;
     color: #7B0302;
@@ -165,7 +171,7 @@ a.signout-button:hover {
 
 #cancelchangepassword-button:hover {
     background-color: #7B0302;
-    color: white; 
+    color: white;
 }
 
 .recent-list {
@@ -221,6 +227,58 @@ a.signout-button:hover {
     margin-right: 2%;
     font-size: 0.9rem;
 }
+
+@media (max-width: 1080px) {
+    body,
+    html {
+        overflow-y: visible;
+    }
+
+    .topbar p {
+        font-size: 80px;
+        color: #7B0302;
+    }
+
+    .topbar span {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    .welcome {
+        font-size: 5.5cqw;
+        color: #7B0302;
+        padding: 30px 30px 30px 0px;
+
+    }
+
+    .status {
+        margin-left: 1%;
+        flex: 1;
+        text-align: left;
+        font-size: 20px;
+    }
+
+    .display-info {
+        min-width: 25%;
+        font-size: 20px;
+        text-align: left;
+    }
+
+    .datetime {
+        font-size: 20px;
+        text-align: right;
+        margin-right: 1%;
+
+    }
+
+    .fa.fa-user-circle {
+        font-size: 70px;
+        color: #7B0302;
+    }
+
+}
 </style>
 
 <div class="user-menu-panel" id="userPanel">
@@ -262,7 +320,7 @@ a.signout-button:hover {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
+    <span>Dashboard</span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -271,7 +329,7 @@ a.signout-button:hover {
 </div>
 
 <hr class="top-line" />
-<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">Welcome, Admin!</div>
+<div class="welcome">Welcome, Admin!</div>
 
 
 <?php

@@ -17,7 +17,7 @@ function loadAdminPage(page) {
       // Initialize correct handlers after loading content
       if (page === 'user_list.php') {
         initUserListHandlers();
-      } else if (cleanPage  === 'project_list.php') {
+      } else if (cleanPage === 'project_list.php') {
         initPreviewModal();
         initeditBackButton();
       } else if (page === 'upload.php') {
@@ -27,16 +27,16 @@ function loadAdminPage(page) {
         initLiveProjectSearch();
       } else if (page === 'activity_log.php') {
         filterByDate();
-      } else if (cleanPage  === 'project.php') {
+      } else if (cleanPage === 'project.php') {
         initBackButton();
         initImageModal();
         initDocumentTabSwitching();
         initQRFormHandler();
         initQRFormToggles();
-      } else if (cleanPage  === 'edit_project.php') {
+      } else if (cleanPage === 'edit_project.php') {
         initToggleEditSave();
         initeditBackButton();
-      }else {
+      } else {
         initUserMenuDropdown();
       }
     })
@@ -118,109 +118,108 @@ function submitEditForm(e) {
 
   const formData = new FormData(form);
 
- fetch('model/update_project.php', {
-  method: 'POST',
-  body: formData,
-})
-.then(response => {
-  if (!response.ok) {
-    return response.text().then(text => {
-      throw new Error(`HTTP ${response.status}: ${text}`);
+  fetch('model/update_project.php', {
+    method: 'POST',
+    body: formData,
+  })
+    .then(response => {
+      if (!response.ok) {
+        return response.text().then(text => {
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.status === 'success') {
+        alert('Project updated successfully!');
+
+        // Save current form values as the new initial state
+        saveCurrentFormState();
+
+        // Then toggle off edit mode (disable inputs, etc)
+        handleEditButton();
+      } else {
+        alert('Update failed: ' + (data.message || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+      alert('There was an error updating the project:\n' + error.message);
     });
-  }
-  return response.json();
-})
-.then(data => {
-  if (data.status === 'success') {
-    alert('Project updated successfully!');
-    
-    // Save current form values as the new initial state
-    saveCurrentFormState();
-    
-    // Then toggle off edit mode (disable inputs, etc)
-    handleEditButton();
-  } else {
-    alert('Update failed: ' + (data.message || 'Unknown error'));
-  }
-})
-.catch(error => {
-  console.error('Fetch error:', error);
-  alert('There was an error updating the project:\n' + error.message);
-});
 
 }
 
-
 function filterByDate() {
-    const dateFromInput = document.getElementById('dateFrom');
-    const dateToInput = document.getElementById('dateTo');
-    const dateFrom = dateFromInput.value;
-    const dateTo = dateToInput.value;
-    const employeeFilter = document.getElementById('employeeFilter').value.toLowerCase();
+  const dateFromInput = document.getElementById('dateFrom');
+  const dateToInput = document.getElementById('dateTo');
+  const dateFrom = dateFromInput.value;
+  const dateTo = dateToInput.value;
+  const employeeFilter = document.getElementById('employeeFilter').value.toLowerCase();
 
-    // Ensure "To" date cannot be earlier than "From"
-    if (dateFrom) {
-        dateToInput.min = dateFrom;
-    } else {
-        dateToInput.removeAttribute('min');
+  // Ensure "To" date cannot be earlier than "From"
+  if (dateFrom) {
+    dateToInput.min = dateFrom;
+  } else {
+    dateToInput.removeAttribute('min');
+  }
+
+  // Optionally ensure "From" date cannot be later than "To"
+  if (dateTo) {
+    dateFromInput.max = dateTo;
+  } else {
+    dateFromInput.removeAttribute('max');
+  }
+
+  const table = document.getElementById('projectTable');
+  const tbody = table.tBodies[0];
+  const rows = tbody.getElementsByTagName('tr');
+
+  for (let row of rows) {
+    const employeeName = row.getAttribute('data-employee').toLowerCase();
+    const timestampCell = row.cells[3].textContent.trim();
+
+    let rowDate = new Date(timestampCell);
+    if (isNaN(rowDate)) {
+      const parts = timestampCell.split(' ');
+      const day = parts[0];
+      const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(parts[1]);
+      const year = parts[2];
+      const timeParts = parts[3].split(':');
+      rowDate = new Date(year, month, day, timeParts[0], timeParts[1]);
     }
 
-    // Optionally ensure "From" date cannot be later than "To"
-    if (dateTo) {
-        dateFromInput.max = dateTo;
-    } else {
-        dateFromInput.removeAttribute('max');
+    let show = true;
+
+    if (employeeFilter && !employeeName.includes(employeeFilter)) {
+      show = false;
     }
 
-    const table = document.getElementById('projectTable');
-    const tbody = table.tBodies[0];
-    const rows = tbody.getElementsByTagName('tr');
-
-    for (let row of rows) {
-        const employeeName = row.getAttribute('data-employee').toLowerCase();
-        const timestampCell = row.cells[3].textContent.trim();
-
-        let rowDate = new Date(timestampCell);
-        if (isNaN(rowDate)) {
-            const parts = timestampCell.split(' ');
-            const day = parts[0];
-            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(parts[1]);
-            const year = parts[2];
-            const timeParts = parts[3].split(':');
-            rowDate = new Date(year, month, day, timeParts[0], timeParts[1]);
-        }
-
-        let show = true;
-
-        if (employeeFilter && !employeeName.includes(employeeFilter)) {
-            show = false;
-        }
-
-        if (show) {
-            if (dateFrom) {
-                const fromDate = new Date(dateFrom);
-                if (rowDate < fromDate) show = false;
-            }
-            if (dateTo) {
-                const toDate = new Date(dateTo);
-                toDate.setHours(23, 59, 59, 999);
-                if (rowDate > toDate) show = false;
-            }
-        }
-
-        row.style.display = show ? '' : 'none';
+    if (show) {
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        if (rowDate < fromDate) show = false;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (rowDate > toDate) show = false;
+      }
     }
+
+    row.style.display = show ? '' : 'none';
+  }
 }
 
 function filterByEmployee() {
-    // Reuse filterByDate to apply combined filters
-    filterByDate();
+  // Reuse filterByDate to apply combined filters
+  filterByDate();
 }
 
 
 function clearFilter() {
-    document.getElementById("employeeFilter").value = "";
-    filterByEmployee();
+  document.getElementById("employeeFilter").value = "";
+  filterByEmployee();
 }
 
 function initPreviewModal() {
@@ -259,18 +258,18 @@ function initPreviewModal() {
         },
         body: JSON.stringify({ projectId: projectID })
       })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.success) {
-          if (details) details.innerHTML = `<p>Error: ${data.message}</p>`;
-          if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
-          return;
-        }
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            if (details) details.innerHTML = `<p>Error: ${data.message}</p>`;
+            if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
+            return;
+          }
 
-        const project = data.project;
+          const project = data.project;
 
-        if (details) {
-          details.innerHTML = `
+          if (details) {
+            details.innerHTML = `
             <p><strong>Lot No.:</strong> ${project.LotNo || ''}</p>
             <p><strong>Address:</strong> ${project.FullAddress || ''}</p>
             <p><strong>Survey Type:</strong> ${project.SurveyType || ''}</p>
@@ -278,56 +277,56 @@ function initPreviewModal() {
             <p><strong>Agent:</strong> ${project.Agent || 'not available'}</p>
             <p><strong>Survey Period:</strong> ${project.SurveyStartDate || ''} - ${project.SurveyEndDate || ''}</p>
           `;
-        }
+          }
 
-        const qrImage = modal.querySelector('.qr-img');
-        if (qrImage && project.ProjectID) {
-          qrImage.src = `uploads/${project.ProjectID}/${project.ProjectID}-QR.png`;
-          qrImage.alt = `QR Code for ${project.ProjectID}`;
-        }
+          const qrImage = modal.querySelector('.qr-img');
+          if (qrImage && project.ProjectID) {
+            qrImage.src = `uploads/${project.ProjectID}/${project.ProjectID}-QR.png`;
+            qrImage.alt = `QR Code for ${project.ProjectID}`;
+          }
 
-        if (docTableBody) {
-          docTableBody.innerHTML = ''; // Clear table body
+          if (docTableBody) {
+            docTableBody.innerHTML = ''; // Clear table body
 
-          if (!project.documents || project.documents.length === 0) {
-            docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
-          } else {
-            project.documents.forEach(doc => {
-              let physicalStatusClass = '';
-              if (doc.physical_status === 'STORED') {
-                physicalStatusClass = 'stored';
-              } else if (doc.physical_status === 'RELEASED') {
-                physicalStatusClass = 'released';
-              }
-
-              let digitalStatusClass = '';
-              let digitalStatusText = '';
-              if (doc.digital_status === 'available') {
-                digitalStatusClass = 'available';
-                digitalStatusText = 'AVAILABLE';
-                if (doc.physical_status === 'RELEASED') {
-                  digitalStatusClass += ' released';
+            if (!project.documents || project.documents.length === 0) {
+              docTableBody.innerHTML = '<tr><td colspan="3">No documents found.</td></tr>';
+            } else {
+              project.documents.forEach(doc => {
+                let physicalStatusClass = '';
+                if (doc.physical_status === 'STORED') {
+                  physicalStatusClass = 'stored';
+                } else if (doc.physical_status === 'RELEASED') {
+                  physicalStatusClass = 'released';
                 }
-              }
 
-              docTableBody.innerHTML += `
+                let digitalStatusClass = '';
+                let digitalStatusText = '';
+                if (doc.digital_status === 'available') {
+                  digitalStatusClass = 'available';
+                  digitalStatusText = 'AVAILABLE';
+                  if (doc.physical_status === 'RELEASED') {
+                    digitalStatusClass += ' released';
+                  }
+                }
+
+                docTableBody.innerHTML += `
                 <tr>
                   <td>${doc.name}</td>
                   <td class="status ${physicalStatusClass}">${doc.physical_status || ''}</td>
                   <td class="status ${digitalStatusClass}">${digitalStatusText}</td>
                 </tr>
               `;
-            });
+              });
+            }
           }
-        }
 
-        modal.style.display = 'block'; // Show modal
-      })
-      .catch(error => {
-        if (details) details.innerHTML = `<p>Error fetching data</p>`;
-        if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Error loading documents.</td></tr>';
-        console.error('Error:', error);
-      });
+          modal.style.display = 'block'; // Show modal
+        })
+        .catch(error => {
+          if (details) details.innerHTML = `<p>Error fetching data</p>`;
+          if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Error loading documents.</td></tr>';
+          console.error('Error:', error);
+        });
     });
   });
 

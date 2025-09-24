@@ -18,7 +18,13 @@ if ($employeeID) {
 }
 ?>
 
-<style> 
+<style>
+.topbar span {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
 #user-circle-icon {
     font-size: 2.25cqw;
     color: #7B0302;
@@ -377,6 +383,239 @@ button {
         transform: translateY(-10px);
     }
 }
+
+@media (max-width: 1080px) {
+    #adduser-form {
+        margin: 100px 0px 0px 140px;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .topbar span {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    .userlist-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin-left: 142px;
+
+    }
+
+    .user-card {
+        background: #7B0302;
+        padding: 1cqw;
+        border-radius: 1cqw;
+        box-shadow: 0.25cqw 0.25cqw 1cqw rgba(0, 0, 0, 0.3);
+        height: 500px;
+        width: 300px;
+        margin-bottom: 5%;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .user-status {
+        position: absolute;
+        top: 1cqw;
+        left: 1cqw;
+        font-size: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.3cqw 0.8cqw;
+        border-radius: 0.5cqw;
+        color: white;
+        width: 85px;
+        height: 30px;
+    }
+
+    .status-active {
+
+        background-color: #00830F;
+    }
+
+    .status-inactive {
+        background-color: black;
+    }
+
+    .iconEllipsis {
+        position: absolute;
+
+        left: 12cqw;
+        font-size: 5cqw;
+        cursor: pointer;
+    }
+
+    #iconUL {
+        font-size: 10cqw;
+        margin-bottom: 0.5cqw;
+        color: white;
+
+    }
+
+    .user-name {
+        font-size: 3cqw;
+        font-weight: 600;
+        margin: 0.3cqw 0;
+    }
+
+    .user-position {
+        font-size: 2cqw;
+        margin: 0.5cqw 0;
+    }
+
+    .user-id {
+        font-size: 2cqw;
+        margin: 0.5cqw 0;
+    }
+
+    .status-option {
+        padding: 0.5cqw 1cqw;
+        cursor: pointer;
+        width: 300px;
+        height: 100px;
+
+
+    }
+
+    .status-option:first-child {
+        border-top-left-radius: 0.5cqw;
+        border-top-right-radius: 0.5cqw;
+        font-size: 50px;
+    }
+
+    .status-option:last-child {
+        border-bottom-left-radius: 0.5cqw;
+        border-bottom-right-radius: 0.5cqw;
+        font-size: 50px;
+    }
+
+    .status-option:hover {
+        background-color: #eee;
+        border-radius: 0.5cqw;
+    }
+
+    .floating-add-user {
+        width: 150px;
+        height: 150px;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(0.1cqw);
+        -webkit-backdrop-filter: blur(0.1cqw);
+    }
+
+    .modal-content {
+        margin: 3cqw auto;
+        max-width: 50cqh;
+        width: 100%;
+        max-height: 70vh;
+        height: 100%;
+        border-radius: 1cqw !important;
+        border: none;
+        left: 50%;
+        transform: translate(-50%, 10px);
+        margin-top: 200px;
+    }
+
+    .fa.fa-plus {
+        font-size: 4.5cqw;
+        color: white;
+    }
+
+    .fa.fa-bell-o {
+        font-size: 70px;
+        color: #7B0302;
+    }
+
+    .fa.fa-user-circle {
+        font-size: 70px;
+        color: #7B0302;
+        "
+
+    }
+
+    .dropdown-menu {
+        margin-top: 250px;
+    }
+
+    .dropdown-menu a {
+        font-size: 40px;
+        width: 250px;
+        height: auto;
+    }
+
+    .close {
+        font-size: 7cqw;
+        top: -2cqw;
+        left: 52rem;
+    }
+
+    .form-row label {
+        font-size: 4cqw;
+        font-weight: 700;
+        color: #7B0302;
+        margin-bottom: 0.5cqw;
+        display: block;
+    }
+
+
+    .form-row input {
+        width: 80%;
+        padding: 0.8cqw 1cqw;
+        font-size: 5cqw;
+        border: 1px solid #ccc;
+        border-radius: 0.3cqw;
+        background-color: #f8f8f8;
+        margin-left: 2cqw;
+    }
+
+    .form-row select {
+        width: 46%;
+        padding: 0.8cqw 1cqw;
+        font-size: 4cqw;
+        border: 1px solid #ccc;
+        border-radius: 0.3cqw;
+        background-color: #f8f8f8;
+        margin-left: 2cqw;
+        position: absolute;
+        left: 35%;
+    }
+
+    .form-row input:focus,
+    .form-row select:focus {
+        outline: none;
+        border: 2px solid #7B0302;
+        background-color: #fff;
+    }
+
+    #signup-button {
+        margin-left: 18.2cqw;
+        max-width: 25cqw;
+        height: 7cqw;
+        font-size: 2.5cqw;
+        margin-top: 80px;
+
+    }
+}
 </style>
 
 <div class="user-menu-panel" id="userPanel">
@@ -418,7 +657,7 @@ button {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">User List</span>
+    <span>User List</span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -431,6 +670,20 @@ button {
 <div class="floating-add-user" id="add-account-btn" data-next-id="<?= $nextEmployeeId ?>">
     <span class="fa fa-plus" style="font-size: 1.5cqw; color: white;"></span>
 </div>
+
+<?php
+include 'server/server.php';
+
+$nextEmployeeId = 'ESSSS0001';
+$sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'ES%' ORDER BY employeeid DESC LIMIT 1";
+$result = $conn->query($sql);
+
+if ($result && $row = $result->fetch_assoc()) {
+    $lastId = intval(substr($row['employeeid'], 5));
+    $nextId = $lastId + 1;
+    $nextEmployeeId = 'ES' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+}
+?>
 
 <div id="modalAddUser" class="modal">
     <div class="modal-content"

@@ -19,6 +19,12 @@ if ($employeeID) {
 ?>
 
 <style>
+.topbar span {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
 #user-circle-icon {
     font-size: 2.25cqw;
     color: #7B0302;
@@ -442,6 +448,170 @@ a.signout-button:hover {
     transition: filter 0.2s ease;
     background-color: transparent;
 }
+
+@media (max-width: 1080px) {
+    .floating-add-project {
+        width: 150px;
+        height: 150px;
+    }
+
+    .fa.fa-plus {
+        font-size: 4.5cqw;
+        color: white;
+    }
+
+    .dropdown-menu {
+        margin-top: 250px;
+    }
+
+    .dropdown-menu a {
+        font-size: 40px;
+        width: 250px;
+        height: auto;
+    }
+
+    .topbar span {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    .sort-btn {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: #7B0302;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 6px;
+        transition: background 0.3s, color 0.3s;
+        font-size: 20px;
+    }
+
+    .sort-btn.active-sort {
+        background-color: #7B0302;
+        color: white;
+        border-radius: 4cqw;
+    }
+
+    .projectlist-table td {
+        text-align: center;
+        /* center table body text */
+        padding: 8px;
+        font-size: 25px;
+    }
+
+    .fa.fa-bell-o {
+        font-size: 70px;
+        color: #7B0302;
+    }
+
+    .fa.fa-user-circle {
+        font-size: 70px;
+        color: #7B0302;
+        "
+
+    }
+
+    #previewModal .modal-content {
+        max-width: 900px;
+        width: 100%;
+        position: absolute;
+        /* fixed so it stays in viewport */
+        top: 50%;
+        /* vertical center */
+        left: 50%;
+        height: 1580px;
+        /* horizontal center */
+    }
+
+    .document-table {
+        width: 100%;
+        overflow-x: auto;
+        height: 800px;
+        position: absolute;
+        top: 700px;
+        left: -.2px;
+    }
+
+    .document-table td:first-child {
+        text-align: left;
+        font-weight: 500;
+        font-size: 2cqw;
+    }
+
+    .open-btn,
+    .close-btn {
+
+        width: 20%;
+        border: none;
+        border-radius: 0.5vw;
+        font-size: 4cqw;
+        cursor: pointer;
+        position: absolute;
+        top: 94%;
+    }
+
+    .qr-section {
+        text-align: center;
+        margin-bottom: 2vh;
+    }
+
+    .qr-section img {
+        min-width: 380px;
+        min-height: 380px;
+    }
+
+    .qr-section p {
+        font-size: 4cqw;
+    }
+
+    .qr-img {
+        width: 270px;
+        height: 270px;
+    }
+
+    .qr-code-text {
+        font-weight: bold;
+        margin-top: 3vh;
+    }
+
+    .project-details p {
+        font-size: 2cqw;
+        margin: 0.5vh 0;
+        color: black;
+    }
+
+    .document-table th {
+        font-size: 2cqw;
+    }
+
+    .status.stored {
+        background-color: #7B0302;
+        color: white;
+        font-size: 2cqw;
+    }
+
+    .status.released {
+        background-color: #c2c2c2;
+        color: #7B0302;
+        font-size: 2cqw;
+    }
+
+    .status.available {
+        background-color: #7B0302;
+        color: #fff;
+        font-size: 2cqw;
+    }
+
+    #previewModal #closeModal {
+        top: -3vw;
+        right: 1vw;
+        font-size: 9cqw;
+
+    }
+}
 </style>
 
 <?php
@@ -577,7 +747,7 @@ function maskName($fname, $lname) {
 
 <div class="topbar">
     <button type="button" id="list-back-btn" class="fa fa-arrow-left" data-page="documents.php"></button>
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">
+    <span>
         <?= !empty($municipality) ? htmlspecialchars($municipality) : "Project List" ?>
     </span>
     <div class="topbar-content">

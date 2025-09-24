@@ -18,6 +18,12 @@ if ($employeeID) {
 }
 ?>
 <style>
+.topbar span {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
 #user-circle-icon {
     font-size: 2.25cqw;
     color: #7B0302;
@@ -220,6 +226,58 @@ a.signout-button:hover {
     background-color: #7B0302;
     color: white;
 }
+
+@media (max-width: 1080px) {
+    #employeeFilter {
+        width: 119%;
+        height: 60px;
+        padding: 6px 7px 6px 5px;
+        font-weight: bold;
+        color: #7B0302;
+        border-radius: 4px;
+        margin-top: 40px;
+        font-size: 20px;
+    }
+
+    .topbar span {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    .fa.fa-user-circle {
+        font-size: 70px;
+        color: #7B0302;
+    }
+
+    .sort-btn {
+
+        font-size: 35px;
+    }
+
+    .activitylist-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        font-size: 22px;
+    }
+    
+    .activitylist-table td {
+        text-align: center;
+        padding: 20px 10px 20px 5px;
+    }
+
+    .dropdown-menu {
+        margin-top: 250px;
+    }
+
+    .dropdown-menu a {
+        font-size: 40px;
+        width: 250px;
+        height: auto;
+    }
+}
 </style>
 
 <div class="user-menu-panel" id="userPanel">
@@ -261,7 +319,7 @@ a.signout-button:hover {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Activity Log</span>
+    <span>Activity Log</span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>

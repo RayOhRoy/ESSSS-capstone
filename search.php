@@ -19,6 +19,19 @@ if ($employeeID) {
 ?>
 
 <style>
+.topbar span {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
+.form-row label {
+    width: 140px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+}
+
 #user-circle-icon {
     font-size: 2.25cqw;
     color: #7B0302;
@@ -605,6 +618,104 @@ input[type="date"] {
 .result-list li:hover {
     background-color: #f9f9f9;
 }
+
+@media (max-width: 1080px) {
+    .topbar span {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    .search-dropdown select {
+        width: 500px;
+        height: 70px;
+        padding: 10px;
+        font-size: 30px;
+    }
+
+    .note {
+        font-size: 30px;
+        color: #555;
+        margin-bottom: 20px;
+    }
+
+    .form-wrapper {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: 1fr 1fr 220px;
+        gap: 100px;
+        align-items: start;
+        font-size: 30px;
+        margin-left: 120px;
+    }
+
+    .for-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-grid {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        flex: 1;
+    }
+
+    select,
+    input[type="text"],
+    input[type="date"] {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        margin-bottom: 5%;
+        height: 70px;
+        margin-top: 5%;
+        font-size: 30px;
+        width: auto;
+    }
+
+    #qrToggleBtn {
+        color: gray;
+        font-size: 35vw;
+        border: none;
+        margin-bottom: -1vw;
+    }
+
+    .qr-preview h4 {
+        margin-top: 8%;
+        font-size: 40px;
+        color: black;
+    }
+
+    .result {
+        font-size: 50px;
+    }
+
+    .result-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .result-list li {
+        padding: 5px;
+        border-bottom: 20px solid #ccc;
+        font-size: 40px;
+        gap: 20px
+    }
+
+    #liveResults {
+        margin-top: 20px;
+        padding: 10px;
+        border: 10px solid #ccc;
+        font-size: 30px;
+    }
+
+    .fa.fa-user-circle {
+        font-size: 70px;
+        color: #7B0302;
+    }
+}
 </style>
 
 <div class="user-menu-panel" id="userPanel">
@@ -646,7 +757,7 @@ input[type="date"] {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Search</span>
+    <span>Search</span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>

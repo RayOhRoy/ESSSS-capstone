@@ -16,6 +16,13 @@ if ($employeeID) {
     $stmt->fetch();
     $stmt->close();
 }
+
+// === Pagination Logic ===
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$page = max(1, min($page, 5)); // Limit between 1 and 5
+
+$leftStart = ($page - 1) * 10 + 1;
+$rightStart = $leftStart + 50;
 ?>
 
 <style>
@@ -163,24 +170,107 @@ a.signout-button:hover {
     color: white;
 }
 
-button {
-    width: 100%;
-    height: 10%;
-    margin-bottom: 1%;
-    border: none;
-    border-radius: 1vw;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    text-align: left;
-    padding-left: 5rem;
-    color: #7B0302;
-    font-size: 1.7rem;
-    font-weight: 700;
-    transition: all 0.3s;
+.card-container {
+    display: flex;
+    gap: 1rem;
 }
 
-button:hover {
+.card {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px 40px;
+    text-align: center;
+    width: 20%;
+}
+
+.card-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #7a0c0c;
+    margin-bottom: 20px;
+}
+
+.open-button {
     background-color: #7B0302;
     color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.open-button:hover {
+    background-color: #5e0909;
+}
+.envelope-columns {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    width: 100%;
+    padding: 1rem;
+}
+
+/* Vertical container */
+.envelope-container {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    width: 48%;
+}
+
+/* Card style */
+.envelope-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #7a0c0c;;   
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    padding: 10px 20px;
+    height: 3rem;
+    font-size: 0.9rem;
+}
+
+/* Title style */
+.envelope-title {
+    font-weight: bold;
+    color: #7a0c0c;
+}
+
+/* Eye + Button group */
+.envelope-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.fa-eye {
+    color: #7a0c0c;
+    cursor: pointer;
+    font-size: 1.25rem;
+}
+
+.envelope-button {
+    background-color: #7B0302;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.envelope-button:hover {
+    background-color: #5e0909;
+}
+
+.fa-eye:hover {
+    color: #5e0909;
 }
 </style>
 
@@ -233,5 +323,43 @@ button:hover {
 
 <hr class="top-line" />
 
-<button data-municipality="Calumpit" onclick="redirectToProjectList(this)">Calumpit</button>
-<button data-municipality="Hagonoy" onclick="redirectToProjectList(this)">Hagonoy</button>
+<div class="card-container">
+    <div class="card">
+        <div class="card-title">HAG-01</div>
+        <button class="open-button">OPEN</button>
+    </div>
+    <div class="card">
+        <div class="card-title">CAL-01</div>
+        <button class="open-button">OPEN</button>
+    </div>
+</div>
+
+<div class="envelope-columns"  style="display: none;">
+    <!-- Left Column: 001–010 -->
+    <div class="envelope-container">
+        <?php for ($i = 1; $i <= 10; $i++): ?>
+            <?php $num = str_pad($i, 3, '0', STR_PAD_LEFT); ?>
+            <div class="envelope-card">
+                <div class="envelope-title">HAG-01-<?= $num ?></div>
+                <div class="envelope-right">
+                    <div class="fa fa-eye"></div>
+                    <button class="envelope-button">RETRIEVE</button>
+                </div>
+            </div>
+        <?php endfor; ?>
+    </div>
+
+    <!-- Right Column: 051–060 -->
+    <div class="envelope-container">
+        <?php for ($i = 51; $i <= 60; $i++): ?>
+            <?php $num = str_pad($i, 3, '0', STR_PAD_LEFT); ?>
+            <div class="envelope-card">
+                <div class="envelope-title">HAG-01-<?= $num ?></div>
+                <div class="envelope-right">
+                    <div class="fa fa-eye"></div>
+                    <button class="envelope-button">RETRIEVE</button>
+                </div>
+            </div>
+        <?php endfor; ?>
+    </div>
+</div>
