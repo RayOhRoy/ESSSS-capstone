@@ -24,7 +24,6 @@ if ($employeeID) {
     font-weight: 700;
 }
 
-
 .form-wrapper {
     display: flex;
     justify-content: space-between;
@@ -195,22 +194,6 @@ a.signout-button:hover {
     color: white;
 }
 
-.document-table {
-    width: 80%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 13px;
-    background-color: #fafafa;
-}
-
-.document-table th,
-.document-table td {
-    border: 1px solid #ccc;
-    padding: 6px 10px;
-    text-align: center;
-    vertical-align: middle;
-}
-
 .note {
     margin-top: 20px;
     font-style: italic;
@@ -291,9 +274,8 @@ a.signout-button:hover {
     color: #7B0302;
 }
 
-/* --- Scrollable table container --- */
 .table-container {
-    /* max-height: 18rem; */
+    max-height: 18rem;
     overflow-y: auto;
     overflow-x: auto;
 }

@@ -19,7 +19,6 @@ function loadAdminPage(page) {
         initUserListHandlers();
       } else if (cleanPage === 'project_list.php') {
         initPreviewModal();
-        initeditBackButton();
       } else if (page === 'upload.php') {
         initUploadHandlers();
       } else if (page === 'search.php') {
@@ -34,8 +33,13 @@ function loadAdminPage(page) {
         initQRFormHandler();
         initQRFormToggles();
       } else if (cleanPage === 'edit_project.php') {
-        initToggleEditSave();
-        initeditBackButton();
+  setTimeout(() => {
+    initializeEditForm();     // ✅ Set initial state (view mode, fields disabled)
+    initeditBackButton();     // ✅ If you have a back button, call its initializer
+
+    // ❌ DO NOT call toggleEditSave() here
+    // ❗ Only call toggleEditSave() on actual button click ("Edit")
+  }, 0);
       } else {
         initUserMenuDropdown();
       }
@@ -63,91 +67,6 @@ function initeditBackButton() {
     const lastPage = sessionStorage.getItem('lastPage') || 'documents.php';
     loadAdminPage(lastPage);
   });
-}
-
-function initToggleEditSave() {
-  const contentArea = document.getElementById('content-area');
-  if (!contentArea) return;
-
-  contentArea.removeEventListener('click', toggleClickHandler); // remove old listener if any
-
-  contentArea.addEventListener('click', toggleClickHandler);
-}
-
-function toggleClickHandler(e) {
-  const editBtn = e.target.closest('#update-edit-btn');
-  const saveBtn = e.target.closest('#update-save-btn');
-
-  if (editBtn) {
-    handleEditButton();
-  }
-
-  if (saveBtn) {
-    submitEditForm(e);
-  }
-}
-
-function saveCurrentFormState() {
-  const form = document.getElementById('update_projectForm');
-  if (!form) return;
-
-  initialFormState = {};
-
-  form.querySelectorAll('input, select').forEach(el => {
-    const key = el.id || el.name;
-    if (!key) return;
-
-    if (el.type === 'checkbox' || el.type === 'radio') {
-      initialFormState[key] = el.checked;
-    } else {
-      initialFormState[key] = el.value;
-    }
-  });
-
-  console.log('Saved current form state:', initialFormState);
-}
-
-function submitEditForm(e) {
-  e.preventDefault(); // prevent default form submit
-
-  const form = document.getElementById('update_projectForm');
-  if (!form) {
-    alert('Form not found!');
-    return;
-  }
-
-  const formData = new FormData(form);
-
-  fetch('model/update_project.php', {
-    method: 'POST',
-    body: formData,
-  })
-    .then(response => {
-      if (!response.ok) {
-        return response.text().then(text => {
-          throw new Error(`HTTP ${response.status}: ${text}`);
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.status === 'success') {
-        alert('Project updated successfully!');
-
-        // Save current form values as the new initial state
-        saveCurrentFormState();
-
-        // Then toggle off edit mode (disable inputs, etc)
-        handleEditButton();
-      } else {
-        alert('Update failed: ' + (data.message || 'Unknown error'));
-      }
-    })
-    .catch(error => {
-      console.error('Fetch error:', error);
-      alert('There was an error updating the project:\n' + error.message);
-    });
-
 }
 
 function filterByDate() {

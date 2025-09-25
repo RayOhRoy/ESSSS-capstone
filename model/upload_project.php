@@ -64,10 +64,10 @@ $projectFolder = $uploadBase . $projectID;
 if (!is_dir($projectFolder)) mkdir($projectFolder, 0777, true);
 
 $sqlProject = "INSERT INTO project 
-    (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation, ProjectStatus) 
+    (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation, ProjectStatus, StorageStatus) 
     VALUES ('$projectID','$lotNo','$fname','$lname','$surveyType','$startDate','$endDate','$agent','$requestType',"
-    . ($approval !== null ? "'$approval'" : "NULL") .
-      ",'$addressID','uploads/$projectID','$projectStatus')";
+    . ($approval !== null ? "'$approval'" : "NULL") . 
+      ",'$addressID','uploads/$projectID','$projectStatus', 'Stored')";
 if ($conn->query($sqlProject) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error inserting project', 'error' => $conn->error]));
 }

@@ -1,211 +1,329 @@
+<?php
+session_start();
+include 'server/server.php';
+
+$employeeID = $_SESSION['employeeid'] ?? null;
+$empFName = '';
+$empLName = '';
+$jobPosition = '';
+$empEmail = '';
+
+if ($employeeID) {
+    $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
+    $stmt->bind_param("s", $employeeID);
+    $stmt->execute();
+    $stmt->bind_result($empFName, $empLName, $jobPosition, $empEmail);
+    $stmt->fetch();
+    $stmt->close();
+}
+?>
+
 <style>
-#user-circle-icon:hover,
-#notification-circle-icon:hover {
-    filter: brightness(1.25);
-    transform: scale(1.05);
-    transition: filter 0.2s ease;
-}
+    .topbar span {
+        font-size: 2cqw;
+        color: #7B0302;
+        font-weight: 700;
+    }
 
-/* Add this style for the toggle buttons */
-.doc-tab-button {
-  background-color: #f1f1f1;
-  color: #7B0302;
-  border: 1px solid #ccc;
-  padding: 10px 20px;
-  font-size: 1.2vw;
-  margin: 0 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-}
+    #user-circle-icon {
+        font-size: 2.25cqw;
+        color: #7B0302;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
 
-.doc-tab-button:hover {
-  background-color: #ddd;
-}
+    #user-circle-icon:hover {
+        filter: brightness(1.25);
+        transform: scale(1.05);
+    }
 
-.active-tab {
-  background-color: #7B0302;
-  color: white;
-  border-color: #7B0302;
-}
+    #user-circle-icon.active {
+        color: white;
+    }
 
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
+    .user-menu-panel {
+        display: none;
+        position: absolute;
+        background: white;
+        top: 0;
+        right: 0;
+        width: 26%;
+        height: 100%;
+        z-index: 999;
+        text-align: center;
+    }
 
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    border-radius: 5px;
-    min-width: 6%;
-    z-index: 1000;
-    margin-top: 7%;
-    margin-right: 1.75%;
-    text-align: center;
-}
+    .user-panel-top {
+        background-color: #7B0302;
+        height: 14rem;
+    }
 
-.dropdown-menu a {
-    display: block;
-    padding: 7.5% 12%;
-    color: #7B0302;
-    text-decoration: none;
-    font-size: 0.8cqw;
-}
+    .user-top-info {
+        position: absolute;
+        top: 15%;
+        left: 5%;
+        text-align: left;
+        color: white;
+    }
 
-.dropdown-menu a:first-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 8px 8px 0 0;
-}
+    .user-bottom-info {
+        display: block;
+        position: absolute;
+        top: 40%;
+        left: 10%;
+        color: #7B0302;
+        text-align: left;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
 
-.dropdown-menu a:last-child:hover {
-    background-color: #7B0302;
-    color: white;
-    border-radius: 0 0 8px 8px;
-}
+    .user-bottom-info input {
+        margin-bottom: 10%;
+        width: 140%;
+        height: 2.5rem;
+        font-size: 1.5rem;
+    }
 
-.dropdown-menu a:not(:first-child):not(:last-child):hover {
-    background-color: #7B0302;
-    color: white;
-}
+    #changepassword-button {
+        position: absolute;
+        top: 95%;
+        right: -40%;
+        font-size: 1rem;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
 
-#project-back-btn {
-    font-size: 2vw;
-    border: none;
-    color: #7B0302;
-    cursor: pointer;
-    transition: color 0.3s;
-}
+    #changepassword-button:hover {
+        color: #600202;
+    }
 
-#project-back-btn:hover {
-    filter: brightness(1.25);
-    transform: scale(1.05);
-    transition: filter 0.2s ease;
-    background-color: transparent;
-}
+    a.signout-button {
+        position: absolute;
+        top: 110%;
+        left: 50%;
+        background-color: #7B0302;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
 
-  .document-section {
-    margin-top: 20px;
-    padding: 15px;
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-  }
+    a.signout-button:hover {
+        background-color: #600202;
+    }
 
-  .document-section h3 {
-    margin-bottom: 10px;
-    color: #7B0302;
-  }
+    .user-forgot-password {
+        display: none;
+        position: absolute;
+        top: 40%;
+        left: 10%;
+        color: #7B0302;
+        text-align: left;
+        font-size: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
 
-  .document-section ul {
-    list-style: none;
-    padding-left: 0;
-  }
+    .user-forgot-password input {
+        color: #7B0302;
+        border: 1px solid;
+        margin-bottom: 10%;
+        width: 140%;
+        height: 2.5rem;
+        font-size: 1.5rem;
+    }
 
-  .document-section li {
-    margin-bottom: 8px;
-  }
+    #confirmchangepassword-button {
+        background-color: #7B0302;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
 
-  .document-section a {
-    text-decoration: none;
-  }
+    #cancelchangepassword-button {
+        background-color: #868886ff;
+        color: #7B0302;
+        padding: 10px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 400;
+        transition: all 0.3s ease;
+    }
 
-  .document-section a:hover {
-    text-decoration: underline;
-  }
+    #confirmchangepassword-button:hover {
+        background-color: #600202;
+    }
 
-  .image-modal {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  padding-top: 60px;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.8);
-}
+    #cancelchangepassword-button:hover {
+        background-color: #7B0302;
+        color: white;
+    }
 
-.image-modal-content {
-  margin: auto;
-  display: block;
-  max-width: 90%;
-  max-height: 80vh;
-  box-shadow: 0 0 20px #000;
-  border-radius: 8px;
-}
+    .doc-tab-button {
+        background-color: #f1f1f1;
+        color: #7B0302;
+        border: 1px solid #ccc;
+        padding: 10px 20px;
+        font-size: 1.2vw;
+        margin: 0 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+    }
 
-.close-image-modal {
-  position: absolute;
-  right: 2vw;
-  color: #fff;
-  font-size: 2vw;
-  font-weight: bold;
-  cursor: pointer;
-}
+    .doc-tab-button:hover {
+        background-color: #ddd;
+    }
 
-.download-image-modal {
-  position: absolute; 
-  margin-top: 4vw !important;
-  right: 2.2vw;
-  color: #fff;
-  font-size: 1vw;
-  font-weight: bold;
-  cursor: pointer;
-}
+    .active-tab {
+        background-color: #7B0302;
+        color: white;
+        border-color: #7B0302;
+    }
 
-.folderName {
-    font-size: 1.5vw;
-    font-weight: 700;
-}
+    #project-back-btn {
+        font-size: 2vw;
+        border: none;
+        color: #7B0302;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
 
-.file-name {
-  cursor: pointer;
-  color: inherit;
-  transition: color 0.2s;
-}
+    #project-back-btn:hover {
+        filter: brightness(1.25);
+        transform: scale(1.05);
+        transition: filter 0.2s ease;
+        background-color: transparent;
+    }
 
-.file-name:hover {
-  color: #007BFF;
-  text-decoration: underline;
-}
+    .document-section {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+    }
 
-.physical-toggle-btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+    .document-section h3 {
+        margin-bottom: 10px;
+        color: #7B0302;
+    }
 
-.physical-toggle-btn.store {
-  background-color: #7B0302;
-}
+    .document-section ul {
+        list-style: none;
+        padding-left: 0;
+    }
 
-.physical-toggle-btn.retrieve {
-  background-color: #7B0302;
-}
+    .document-section li {
+        margin-bottom: 8px;
+    }
 
-.update-btn {
-  color: #7B0302;
-  cursor: pointer;
-  font-size: 1.25cqw;
-  transition: color 0.3s;
-  border: none; 
-  background-color: transparent;
-}
+    .document-section a {
+        text-decoration: none;
+    }
 
-.update-btn:hover {
-  color: #7B0302;
-  transform: scale(1.05);
-  transition: scale 0.2s ease;
-  background-color: transparent;
-}
+    .document-section a:hover {
+        text-decoration: underline;
+    }
+
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        padding-top: 60px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .image-modal-content {
+        margin: auto;
+        display: block;
+        max-width: 90%;
+        max-height: 80vh;
+        box-shadow: 0 0 20px #000;
+        border-radius: 8px;
+    }
+
+    .close-image-modal {
+        position: absolute;
+        right: 2vw;
+        color: #fff;
+        font-size: 2vw;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .download-image-modal {
+        position: absolute;
+        margin-top: 4vw !important;
+        right: 2.2vw;
+        color: #fff;
+        font-size: 1vw;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .folderName {
+        font-size: 1.5vw;
+        font-weight: 700;
+    }
+
+    .file-name {
+        cursor: pointer;
+        color: inherit;
+        transition: color 0.2s;
+    }
+
+    .file-name:hover {
+        color: #007BFF;
+        text-decoration: underline;
+    }
+
+    .physical-toggle-btn {
+        padding: 6px 14px;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .physical-toggle-btn.store {
+        background-color: #7B0302;
+    }
+
+    .physical-toggle-btn.retrieve {
+        background-color: #7B0302;
+    }
+
+    .update-btn {
+        color: #7B0302;
+        cursor: pointer;
+        font-size: 1.25cqw;
+        transition: color 0.3s;
+        border: none;
+        background-color: transparent;
+    }
+
+    .update-btn:hover {
+        color: #7B0302;
+        transform: scale(1.05);
+        transition: scale 0.2s ease;
+        background-color: transparent;
+    }
 </style>
 
 <?php
@@ -258,26 +376,6 @@ foreach ($documents as $doc) {
 }
 ?>
 
-<?php
-session_start();
-include 'server/server.php';
-
-$employeeID = $_SESSION['employeeid'] ?? null;
-$empFName = '';
-$empLName = '';
-$jobPosition = '';
-$empEmail = '';
-
-if ($employeeID) {
-    $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
-    $stmt->bind_param("s", $employeeID);
-    $stmt->execute();
-    $stmt->bind_result($empFName, $empLName, $jobPosition, $empEmail);
-    $stmt->fetch();
-    $stmt->close();
-}
-?>
-
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">
         <div class="user-top-info">
@@ -317,7 +415,8 @@ if ($employeeID) {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
+    <button type="button" id="project-back-btn" class="fa fa-arrow-left"></button>
+    <span><?= htmlspecialchars($projectId) ?></span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -328,15 +427,13 @@ if ($employeeID) {
 <hr class="top-line" />
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; width: 100%;">
-  <div style="display: flex; gap: 10px; justify-content: center; flex: 1;">
-    <button id="btn-digital" class="doc-tab-button active-tab">Digital Documents</button>
-    <button id="btn-physical" class="doc-tab-button">Physical Documents</button>
-  </div>
-  <button 
-    class="update-btn fa fa-edit" 
-    data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
-    onclick="redirectToUpdate(this)">
-  </button>
+    <div style="display: flex; gap: 10px; justify-content: center; flex: 1;">
+        <button id="btn-digital" class="doc-tab-button active-tab">Digital Documents</button>
+        <button id="btn-physical" class="doc-tab-button">Physical Documents</button>
+    </div>
+    <button class="update-btn fa fa-edit" data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
+        onclick="redirectToUpdate(this)">
+    </button>
 </div>
 
 
@@ -347,153 +444,133 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
 
 <!-- Digital Documents Section -->
 <div id="digital-section" class="document-section">
-  <?php if (!empty($groupedDocuments)): ?>
-    <?php
-    $baseDir = __DIR__ . '/uploads';
-    foreach ($groupedDocuments as $folder => $docs):
-      $firstDoc = reset($docs);
-      $folderPathRaw = $firstDoc['DigitalLocation'];
-      $folderPath = explode(';', $folderPathRaw)[0];
-
-      $folderPathParts = explode('/', $folderPath);
-      array_pop($folderPathParts);
-      $cleanFolderPath = implode('/', $folderPathParts);
-
-      $fullFolderPath = $baseDir . '/' . $cleanFolderPath;
-      $fileList = [];
-
-      if (is_dir($fullFolderPath)) {
-          $files = scandir($fullFolderPath);
-          foreach ($files as $file) {
-              if ($file === '.' || $file === '..') continue;
-              if (strpos($file, '-QR') !== false) continue;
-
-              $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-              if (in_array($ext, array_merge($previewableExts, ['other_extensions_if_any']))) {
-                  $fileList[] = $file;
-              }
-          }
-      }
-    ?>
-
-    <div class="document-folder" style="margin-bottom: 20px;">
-      <div class="folderName" style="color: #7B0302; font-weight: bold;">
-        <?= htmlspecialchars($folder) ?>
-      </div>
-      <ul>
-      <?php foreach ($fileList as $file): ?>
+    <?php if (!empty($groupedDocuments)): ?>
         <?php
-          $relativeWebPath = str_replace(['../', './'], '', $cleanFolderPath . '/' . $file);
-          $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-          $downloadUrl = '/uploads/' . $relativeWebPath;
-          $isPreviewable = in_array($ext, $previewableExts);
-        ?>
-        <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-          <?php if ($isPreviewable): ?>
-            <div 
-              class="file-name preview-doc"
-              data-file="<?= htmlspecialchars($relativeWebPath) ?>"
-              title="Preview"
-            >
-              <?= htmlspecialchars($file) ?>
-            </div>
-          <?php else: ?>
-            <a 
-              href="<?= htmlspecialchars($downloadUrl) ?>"
-              class="file-name"
-              title="Download"
-              download="<?= htmlspecialchars($file) ?>"
-            >
-              <?= htmlspecialchars($file) ?>
-            </a>
-          <?php endif; ?>
+        $baseDir = __DIR__ . '/uploads';
+        foreach ($groupedDocuments as $folder => $docs):
+            $firstDoc = reset($docs);
+            $folderPathRaw = $firstDoc['DigitalLocation'];
+            $folderPath = explode(';', $folderPathRaw)[0];
 
-          <div style="display: flex; gap: 10px;">
-            <?php if ($isPreviewable): ?>
-              <div 
-                class="fa fa-eye preview-doc"
-                data-file="<?= htmlspecialchars($relativeWebPath) ?>"
-                title="Preview"
-                style="cursor: pointer; color: #000000ff;"
-                onmouseover="this.style.color='#007BFF';"
-                onmouseout="this.style.color='#000000ff';"
-              ></div>
-            <?php endif; ?>
-            <a 
-              href="<?= htmlspecialchars($downloadUrl) ?>" 
-              class="fa fa-download" 
-              title="Download"
-              download="<?= htmlspecialchars($file) ?>"
-              style="color: #000000ff;"
-              onmouseover="this.style.color='#007BFF';"
-              onmouseout="this.style.color='#000000ff';"
-            ></a>
-          </div>
-        </li>
-      <?php endforeach; ?>
-      </ul>
-    </div>
-    <?php endforeach; ?>
-  <?php endif; ?>
+            $folderPathParts = explode('/', $folderPath);
+            array_pop($folderPathParts);
+            $cleanFolderPath = implode('/', $folderPathParts);
+
+            $fullFolderPath = $baseDir . '/' . $cleanFolderPath;
+            $fileList = [];
+
+            if (is_dir($fullFolderPath)) {
+                $files = scandir($fullFolderPath);
+                foreach ($files as $file) {
+                    if ($file === '.' || $file === '..')
+                        continue;
+                    if (strpos($file, '-QR') !== false)
+                        continue;
+
+                    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    if (in_array($ext, array_merge($previewableExts, ['other_extensions_if_any']))) {
+                        $fileList[] = $file;
+                    }
+                }
+            }
+            ?>
+
+            <div class="document-folder" style="margin-bottom: 20px;">
+                <div class="folderName" style="color: #7B0302; font-weight: bold;">
+                    <?= htmlspecialchars($folder) ?>
+                </div>
+                <ul>
+                    <?php foreach ($fileList as $file): ?>
+                        <?php
+                        $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+                        $relativeWebPath = str_replace(['../', './'], '', $cleanFolderPath . '/' . $file);
+                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        $downloadUrl = $basePath . '/' . ltrim($relativeWebPath, '/');
+                        $isPreviewable = in_array($ext, $previewableExts);
+                        ?>
+                        <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                            <?php if ($isPreviewable): ?>
+                                <div class="file-name preview-doc" data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+                                    title="Preview">
+                                    <?= htmlspecialchars($file) ?>
+                                </div>
+                            <?php else: ?>
+                                <a href="<?= htmlspecialchars($downloadUrl) ?>" class="file-name" title="Download"
+                                    download="<?= htmlspecialchars($file) ?>">
+                                    <?= htmlspecialchars($file) ?>
+                                </a>
+                            <?php endif; ?>
+
+                            <div style="display: flex; gap: 10px;">
+                                <?php if ($isPreviewable): ?>
+                                    <div class="fa fa-eye preview-doc" data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+                                        title="Preview" style="font-size: 1.25rem; cursor: pointer; color: #000000ff;"
+                                        onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></div>
+                                <?php endif; ?>
+                                <a href="<?= htmlspecialchars($downloadUrl) ?>" class="fa fa-download" title="Download"
+                                    download="<?= htmlspecialchars($file) ?>" style="font-size: 1.25rem; color: #000000ff;"
+                                    onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></a>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </div>
 
 <!-- Physical Documents Section -->
 <div id="physical-section" class="document-section" style="display: none;">
-  <h3>Physical Documents</h3>
+    <h3>Physical Documents</h3>
 
-  <ul>
-    <?php foreach ($documents as $doc): ?>
-      <?php
-        $statusRaw = $doc['DocumentStatus'];
-        $statusUpper = strtoupper(trim($statusRaw));
+    <ul>
+        <?php foreach ($documents as $doc): ?>
+            <?php
+            $statusRaw = $doc['DocumentStatus'];
+            $statusUpper = strtoupper(trim($statusRaw));
 
-        // Only show if DocumentStatus is STORED or RELEASE
-        if (in_array($statusUpper, ['STORED', 'RELEASE'])):
-          $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
-      ?>
-    <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
-  <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
+            // Only show if DocumentStatus is STORED or RELEASE
+            if (in_array($statusUpper, ['STORED', 'RELEASE'])):
+                $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
+                ?>
+                <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
+                    <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
 
-  <form class="qr-validate-form"
-        data-projectid="<?= htmlspecialchars($projectId) ?>"
-        data-docname="<?= htmlspecialchars($doc['DocumentName']) ?>"
-        data-newstatus="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>"
-        style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <form class="qr-validate-form" data-projectid="<?= htmlspecialchars($projectId) ?>"
+                        data-docname="<?= htmlspecialchars($doc['DocumentName']) ?>"
+                        data-newstatus="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>"
+                        style="margin: 0; display: flex; align-items: center; gap: 10px;">
 
-    <!-- The toggle/cancel button -->
-    <button type="button" class="toggle-qr-btn"
-            style="padding: 6px 14px; border: none; border-radius: 5px; background-color: #7B0302; color: white; cursor: pointer;">
-      <?= $toggleLabel ?>
-    </button>
+                        <!-- The toggle/cancel button -->
+                        <button type="button" class="toggle-qr-btn"
+                            style="padding: 6px 14px; border: none; border-radius: 5px; background-color: #7B0302; color: white; cursor: pointer;">
+                            <?= $toggleLabel ?>
+                        </button>
 
-    <!-- Hidden input for QR scanning -->
-    <input type="text" name="scannedQR" required autocomplete="off" autocorrect="off"
-           style="opacity: 0; position: absolute; pointer-events: none; width: 1px; height: 1px;">
+                        <!-- Hidden input for QR scanning -->
+                        <input type="text" name="scannedQR" required autocomplete="off" autocorrect="off"
+                            style="opacity: 0; position: absolute; pointer-events: none; width: 1px; height: 1px;">
 
-    <!-- The Scan QR instruction text, hidden initially -->
-    <span class="scan-qr-text" style="display: none; font-style: italic; color: #555;">
-      Scan QR Code to proceed
-    </span>
-  </form>
-</li>
+                        <!-- The Scan QR instruction text, hidden initially -->
+                        <span class="scan-qr-text" style="display: none; font-style: italic; color: #555;">
+                            Scan QR Code to proceed
+                        </span>
+                    </form>
+                </li>
 
 
-      <?php endif; ?>
-    <?php endforeach; ?>
-  </ul>
+            <?php endif; ?>
+        <?php endforeach; ?>
+    </ul>
 </div>
 
 
 <!-- Image Preview Modal -->
 <div id="imageModal" class="image-modal">
-  <span class="close-image-modal">&times;</span>
-  <a 
-    href="#" 
-    class="fa fa-download download-image-modal" 
-    title="Download"
-    download
-  ></a>
-  <div id="modalContent" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-    <!-- Preview content injected here dynamically -->
-  </div>
+    <span class="close-image-modal">&times;</span>
+    <a href="#" class="fa fa-download download-image-modal" title="Download" download></a>
+    <div id="modalContent"
+        style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+        <!-- Preview content injected here dynamically -->
+    </div>
 </div>

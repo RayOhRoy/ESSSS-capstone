@@ -212,7 +212,6 @@ function submitForm() {
           doc.close();
         });
 
-        // OK button
         document.getElementById("okBtn").addEventListener("click", () => {
           document.body.removeChild(modal);
           form.reset();
@@ -227,10 +226,22 @@ function submitForm() {
             generateQRBtn.classList.add("btn-red");
           }
 
-          // Simulate page switch
-          const menuItem = document.querySelector('.menu-item[data-page="project_list.php"]');
-          if (menuItem) menuItem.click();
+          // --- Update sidebar highlight ---
+          // First remove all highlights
+          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+
+          // Find the matching menu item for "documents.php" and set it active
+          const menuItem = document.querySelector('.menu-item[data-page="documents.php"]');
+          if (menuItem) {
+            menuItem.classList.add('active'); // Mark it as active
+            // Simulate the click event to trigger page switch if needed (or just rely on the class change)
+            menuItem.click();
+          }
+
+          // Alternatively, if you're switching the page without using clicks:
+          // window.location.href = 'documents.php'; // Uncomment if you want full page reload
         });
+
       }
 
       // Re-enable button after 5 seconds
@@ -665,7 +676,6 @@ function loadBarangays() {
   barangaySelect.disabled = false;
 }
 
-// ❌ REMOVED toggleStorageStatus – no longer used
 function updateDocumentTableBasedOnSelection() {
   const requestType = document.getElementById("requestType")?.value;
   const approvalType = document.querySelector("input[name='approval']:checked")?.value;

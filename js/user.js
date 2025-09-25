@@ -240,3 +240,45 @@ function initUserMenuDropdown() {
       });
   });
 })();
+
+// para sa sidebar
+let originalActive = null;
+
+// isara lang sidebar pag load kung mobile view
+if (window.matchMedia("(max-width: 1080px)").matches) {
+  document.querySelector(".sidebar").classList.add("closed");
+  document.querySelector(".hamburger").classList.add("closed");
+}
+
+function toggleMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  const hamburger = document.querySelector('.hamburger');
+  const main = document.querySelector('.main');
+  const span = document.querySelector('.hamburger span');
+
+  span.classList.toggle('closed');
+  sidebar.classList.toggle('closed');
+  hamburger.classList.toggle('closed');
+  main.classList.toggle('expanded');
+
+  if (sidebar.classList.contains('closed')) {
+    if (activeLink) {
+      originalActive = activeLink;
+      activeLink.classList.remove('active');
+    }
+  } else {
+    // open state logic
+  }
+}
+
+// kapag nag click sa menu item, auto close sidebar (mobile view lang)
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const sidebar = document.querySelector('.sidebar');
+    if (window.matchMedia("(max-width: 1080px)").matches) {
+      if (!sidebar.classList.contains('closed')) {
+        toggleMenu();
+      }
+    }
+  });
+});

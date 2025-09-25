@@ -155,7 +155,7 @@ function initQRFormToggles() {
   forms.forEach(form => {
     const toggleBtn = form.querySelector('.toggle-qr-btn');
     const qrInput = form.querySelector('input[name="scannedQR"]');
-    
+
     // Create the scan text span
     const scanText = document.createElement('span');
     scanText.textContent = 'Scan QR Code to proceed';

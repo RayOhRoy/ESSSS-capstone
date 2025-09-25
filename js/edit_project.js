@@ -1,402 +1,375 @@
-let toggleEditInitialized = false;
-let initialFormState = {}; // Store original values before editing
+let isEditing = false; // Start in view mode
+let originalValues = {}; // Store original field values
 
-// Address data hierarchy
-const dataMap = {
-  'Bulacan': {
-    'Hagonoy': [
-      "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
-      "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
-      "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
-      "Santa Cruz", "Santa Elena", "Santa Monica", "Santa Niño", "Santa Rosario",
-      "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
-    ],
-    'Calumpit': [
-      "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
-      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos",
-      "Meyto", "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose",
-      "Santo Niño", "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
-    ]
-  }
-};
+// Call this after the HTML is injected (e.g. via fetch in SPA)
+function initializeEditForm() {
+    storeOriginalValues();
+    disableFormUI();
+    updateApprovalSectionVisibility();
 
-function handleEditButton() {
-  const form = document.getElementById('update_projectForm');
-  const editBtn = document.getElementById('update-edit-btn');
-  const saveBtn = document.getElementById('update-save-btn');
-
-  if (!form || !editBtn || !saveBtn) {
-    console.warn('Form, Edit button, or Save button not found.');
-    return;
-  }
-
-  // Check if currently in edit mode by looking at the first input's readonly/disabled state
-  const firstInput = form.querySelector('input, select');
-  const isEditable = firstInput && !firstInput.hasAttribute('readonly') && !firstInput.hasAttribute('disabled');
-
-  if (!isEditable) {
-    // --- Enter Edit Mode ---
-    saveInitialFormState();
-
-    // Enable inputs for editing
-    form.querySelectorAll('input[readonly], select[disabled], input[type="radio"][disabled], input[type="checkbox"][disabled]')
-      .forEach(el => {
-        el.removeAttribute('readonly');
-        el.removeAttribute('disabled');
-      });
-
-    ['province', 'municipality', 'barangay'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.removeAttribute('disabled');
-    });
-
-    // Initialize handlers after enabling inputs
-    handleProvinceChange();
-    handleMunicipalityChange();
-    // Attach change listener for requestType only once
-    const requestTypeSelect = document.getElementById('requestType');
-    if (requestTypeSelect && !requestTypeSelect.hasAttribute('data-listener-attached')) {
-      requestTypeSelect.addEventListener('change', updateApprovalVisibility);
-      requestTypeSelect.setAttribute('data-listener-attached', 'true');  // prevent duplicates
+    // Attach save button listener here
+    const saveBtn = document.getElementById('update-save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveChanges);
     }
-
-    updateApprovalVisibility();
-
-    editBtn.textContent = 'Cancel';
-    editBtn.style.backgroundColor = 'gray';
-    saveBtn.style.display = 'inline-block';
-
-    document.querySelectorAll('.attach-icon').forEach(label => {
-      label.style.display = 'inline-block';
-      const input = label.querySelector('input[type="file"]');
-      if (input) input.style.display = 'none';
-    });
-
-    addRemoveIcons();
-
-  } else {
-    // --- Cancel Edit Mode ---
-    restoreInitialFormState();
-
-    // Disable inputs again
-    form.querySelectorAll('input, select').forEach(el => {
-      if (el.type === 'checkbox' || el.type === 'radio') {
-        el.setAttribute('disabled', 'disabled');
-      } else {
-        el.setAttribute('readonly', 'readonly');
-      }
-    });
-
-    editBtn.textContent = 'Edit';
-    editBtn.style.backgroundColor = '#7B0302';
-    saveBtn.style.display = 'none';
-
-    document.querySelectorAll('.attach-icon').forEach(label => {
-      label.style.display = 'none';
-      const input = label.querySelector('input[type="file"]');
-      if (input) input.style.display = 'none';
-    });
-
-    document.querySelectorAll('.remove-icon').forEach(icon => icon.remove());
-
-    // Optionally reset survey date inputs disabled state manually here if needed
-    const startDateInput = document.getElementById('survey_start_date');
-    const endDateInput = document.getElementById('survey_end_date');
-    if (startDateInput && endDateInput) {
-      if (!startDateInput.value) {
-        endDateInput.disabled = true;
-        endDateInput.value = '';
-      }
-    }
-  }
 }
 
-function addRemoveIcons() {
-  // Only add remove icons in edit mode (button text = 'Cancel')
-  const isEditMode = document.getElementById('update-edit-btn').textContent === 'Cancel';
-  if (!isEditMode) return;
 
-  // Remove existing remove icons first to prevent duplicates
-  document.querySelectorAll('.remove-icon').forEach(icon => icon.remove());
+// 🧠 Store current values, fix radio group handling
+function storeOriginalValues() {
+    const form = document.getElementById('update_projectForm');
+    const inputs = form.querySelectorAll('input:not([type="hidden"])');
+    const selects = form.querySelectorAll('select');
 
-  // Add remove icon to each existing file span that does not already have one
-  document.querySelectorAll('.digital-cell .file-list .existing-file').forEach(span => {
-    const removeIcon = document.createElement('span');
-    removeIcon.className = 'remove-icon';
-    removeIcon.textContent = '×';
-    removeIcon.title = 'Remove file';
-    removeIcon.style.color = 'red';
-    removeIcon.style.cursor = 'pointer';
-    removeIcon.style.fontWeight = 'bold';
-    removeIcon.style.marginLeft = '5px';
+    originalValues = {};
 
-    removeIcon.addEventListener('click', () => removeAttachedFile(removeIcon));
-    span.appendChild(removeIcon);
-  });
-}
+    // Store checked radio button values per group
+    const radioGroups = {};
 
-function saveInitialFormState() {
-  const form = document.getElementById('update_projectForm');
-  if (!form) return;
+    inputs.forEach(input => {
+        if (!input.name) return;
 
-  initialFormState = {};
-
-  form.querySelectorAll('input, select').forEach(el => {
-    const key = el.id || el.name;
-    if (!key) return;
-
-    if (el.type === 'checkbox' || el.type === 'radio') {
-      initialFormState[key] = el.checked;
-    } else {
-      initialFormState[key] = el.value;
-    }
-  });
-
-  // Store original filenames for digital files
-  document.querySelectorAll('.digital-cell').forEach(cell => {
-    const fileNameEl = cell.querySelector('.existing-file');
-    cell.setAttribute('data-original-filename', fileNameEl ? fileNameEl.textContent : '');
-  });
-
-  console.log('Initial form state saved:', initialFormState);
-}
-
-function restoreInitialFormState() {
-  const form = document.getElementById('update_projectForm');
-  if (!form) return;
-
-  form.querySelectorAll('input, select').forEach(el => {
-    const key = el.id || el.name;
-    if (!key) return;
-
-    if (key in initialFormState) {
-      if (el.type === 'checkbox' || el.type === 'radio') {
-        el.checked = initialFormState[key];
-      } else {
-        el.value = initialFormState[key];
-      }
-    }
-  });
-
-  const province = initialFormState['province'] || "";
-  const municipality = initialFormState['municipality'] || "";
-  const barangay = initialFormState['barangay'] || "";
-
-  if (province) {
-    handleProvinceChange();
-    const municipalitySelect = document.getElementById('municipality');
-    if (municipalitySelect && municipality) {
-      municipalitySelect.value = municipality;
-      handleMunicipalityChange();
-    }
-
-    const barangaySelect = document.getElementById('barangay');
-    if (barangaySelect && barangay) {
-      barangaySelect.value = barangay;
-    }
-  }
-
-  // Restore filenames and remove hidden removal inputs
-  document.querySelectorAll('.digital-cell').forEach(cell => {
-    // Remove hidden inputs that mark removal
-    cell.querySelectorAll('input[type="hidden"][name^="remove_file_"]').forEach(input => input.remove());
-
-    const fileList = cell.querySelector('.file-list');
-    if (!fileList) return;
-
-    // Clear everything inside fileList to avoid duplicates
-    fileList.innerHTML = '';
-
-    const originalFilename = cell.getAttribute('data-original-filename')?.trim();
-
-    if (originalFilename) {
-      // Create file span
-      const fileSpan = document.createElement('span');
-      fileSpan.className = 'existing-file';
-      fileSpan.textContent = originalFilename;
-
-      // Only add remove icon if in edit mode (edit button text = 'Cancel')
-      if (document.getElementById('update-edit-btn').textContent === 'Cancel') {
-        const removeIcon = document.createElement('span');
-        removeIcon.className = 'remove-icon';
-        removeIcon.textContent = '×';
-
-        // Style remove icon explicitly (same as your CSS or better)
-        removeIcon.style.color = 'red';
-        removeIcon.style.cursor = 'pointer';
-        removeIcon.style.fontWeight = 'bold';
-        removeIcon.style.marginLeft = '5px';
-        removeIcon.title = 'Remove file';
-
-        // Attach click handler
-        removeIcon.addEventListener('click', () => removeAttachedFile(removeIcon));
-
-        fileSpan.appendChild(removeIcon);
-      }
-
-      fileList.appendChild(fileSpan);
-    } else {
-      // No file present, show no file text
-      const noFile = document.createElement('i');
-      noFile.className = 'no-file';
-      noFile.textContent = 'No file';
-      fileList.appendChild(noFile);
-    }
-  });
-}
-
-function handleProvinceChange() {
-  const province = document.getElementById('province').value;
-  const municipalitySelect = document.getElementById('municipality');
-  const barangaySelect = document.getElementById('barangay');
-
-  const selectedMunicipality = municipalitySelect.value;
-  const selectedBarangay = barangaySelect.value;
-
-  municipalitySelect.innerHTML = '<option value="">Select Municipality</option>';
-
-  if (dataMap[province]) {
-    Object.keys(dataMap[province]).forEach(municipality => {
-      const option = document.createElement('option');
-      option.value = municipality;
-      option.textContent = municipality;
-      municipalitySelect.appendChild(option);
-    });
-    municipalitySelect.disabled = false;
-
-    if (selectedMunicipality && Object.keys(dataMap[province]).includes(selectedMunicipality)) {
-      municipalitySelect.value = selectedMunicipality;
-    } else {
-      municipalitySelect.value = "";
-    }
-  } else {
-    municipalitySelect.value = "";
-    municipalitySelect.disabled = true;
-  }
-
-  updateBarangays(province, municipalitySelect.value, selectedBarangay);
-}
-
-function handleMunicipalityChange() {
-  const province = document.getElementById('province').value;
-  const municipality = document.getElementById('municipality').value;
-  const barangaySelect = document.getElementById('barangay');
-
-  const selectedBarangay = barangaySelect.value;
-  updateBarangays(province, municipality, selectedBarangay);
-}
-
-function updateBarangays(province, municipality, selectedBarangay) {
-  const barangaySelect = document.getElementById('barangay');
-
-  barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
-
-  const barangays = dataMap[province]?.[municipality] || [];
-
-  barangays.forEach(barangay => {
-    const option = document.createElement('option');
-    option.value = barangay;
-    option.textContent = barangay;
-    barangaySelect.appendChild(option);
-  });
-
-  barangaySelect.disabled = barangays.length === 0;
-
-  if (selectedBarangay && barangays.includes(selectedBarangay)) {
-    barangaySelect.value = selectedBarangay;
-  } else {
-    barangaySelect.value = "";
-  }
-}
-
-// Remove attached file (red × icon)
-function removeAttachedFile(element) {
-  const fileSpan = element.closest('.existing-file');
-  if (!fileSpan) return;
-
-  const container = element.closest('.digital-cell');
-  const fileList = container.querySelector('.file-list');
-
-  // Remove the file name span
-  fileSpan.remove();
-
-  // Show "No file" text if none present
-  if (!fileList.querySelector('.existing-file')) {
-    const noFile = document.createElement('i');
-    noFile.className = 'no-file';
-    noFile.textContent = 'No file';
-    fileList.appendChild(noFile);
-  }
-
-  // Add hidden input to mark file for removal on submit
-  const hiddenInput = document.createElement('input');
-  hiddenInput.type = 'hidden';
-  hiddenInput.name = `remove_file_${Date.now()}`;
-  hiddenInput.value = '1';
-  container.appendChild(hiddenInput);
-}
-
-function uploadFile(input, key) {
-  const container = input.closest('.digital-cell');
-  const fileList = container.querySelector('.file-list');
-
-  if (!container || !fileList || !input.files.length) return;
-
-  // Hide "No file" text if present
-  const noFileText = fileList.querySelector('.no-file');
-  if (noFileText) noFileText.style.display = 'none';
-
-  // Loop through selected files and append each one
-  Array.from(input.files).forEach(file => {
-    const fileSpan = document.createElement('span');
-    fileSpan.className = 'existing-file';
-    fileSpan.textContent = file.name;
-
-    // Add remove icon
-    const removeIcon = document.createElement('span');
-    removeIcon.className = 'remove-icon';
-    removeIcon.textContent = '×';
-    removeIcon.title = 'Remove file';
-    removeIcon.style.color = 'red';
-    removeIcon.style.cursor = 'pointer';
-    removeIcon.style.fontWeight = 'bold';
-    removeIcon.style.marginLeft = '5px';
-
-    removeIcon.addEventListener('click', () => {
-      fileSpan.remove();
-
-      // Show "No file" if no files remain
-      if (!fileList.querySelector('.existing-file')) {
-        if (noFileText) {
-          noFileText.style.display = 'inline';
+        if (input.type === 'radio') {
+            if (input.checked) {
+                radioGroups[input.name] = input.value;
+            }
         } else {
-          const noFile = document.createElement('i');
-          noFile.className = 'no-file';
-          noFile.textContent = 'No file';
-          fileList.appendChild(noFile);
+            originalValues[input.name] = input.value;
         }
-      }
     });
 
-    fileSpan.appendChild(removeIcon);
-    fileList.appendChild(fileSpan);
-  });
+    // Save radio group checked values
+    for (const name in radioGroups) {
+        originalValues[name] = radioGroups[name];
+    }
 
-  // Clear the input so same file can be re-uploaded if needed
-  input.value = '';
+    selects.forEach(select => {
+        if (select.name) {
+            originalValues[select.name] = select.value;
+        }
+    });
 }
 
-function updateApprovalVisibility() {
-  const requestTypeSelect = document.getElementById('requestType');
-  const toBeApprovedByDiv = document.getElementById('toBeApprovedBy');
+// 🚫 Disable inputs, selects, buttons initially
+function disableFormUI() {
+    const form = document.getElementById('update_projectForm');
+    const inputs = form.querySelectorAll('input:not([type="hidden"])');
+    const selects = form.querySelectorAll('select');
+    const attachIcons = form.querySelectorAll('.attach-icon');
+    const saveBtn = document.getElementById('update-save-btn');
 
-  if (!requestTypeSelect || !toBeApprovedByDiv) return;
+    inputs.forEach(input => {
+        if (input.type !== 'file') input.readOnly = true;
+        if (input.type === 'radio') input.disabled = true;
+    });
 
-  const selectedType = requestTypeSelect.value;
+    selects.forEach(select => select.disabled = true);
+    attachIcons.forEach(icon => icon.style.display = 'none');
+    if (saveBtn) saveBtn.style.display = 'none';
+}
 
-  if (selectedType === 'Sketch Plan') {
-    toBeApprovedByDiv.style.display = 'none';
-  } else {
-    toBeApprovedByDiv.style.display = 'block';
-  }
+// 🟢 Toggle Edit <-> Cancel
+function toggleEditSave() {
+    const form = document.getElementById('update_projectForm');
+    const inputs = form.querySelectorAll('input:not([type="hidden"])');
+    const selects = form.querySelectorAll('select');
+    const attachIcons = form.querySelectorAll('.attach-icon');
+    const saveBtn = document.getElementById('update-save-btn');
+    const editBtn = document.getElementById('update-edit-btn');
+    const requestTypeField = document.getElementById('requestType');
+
+    isEditing = !isEditing;
+
+    if (isEditing) {
+        // Enable edit mode
+        inputs.forEach(input => {
+            if (input.type !== 'file') input.readOnly = false;
+            if (input.type === 'radio') input.disabled = false;
+        });
+
+        selects.forEach(select => select.disabled = false);
+        attachIcons.forEach(icon => icon.style.display = 'inline-block');
+
+        if (saveBtn) saveBtn.style.display = 'inline-block';
+        if (editBtn) {
+            editBtn.textContent = 'Cancel';
+            editBtn.classList.remove('btn-red');
+            editBtn.classList.add('btn-gray');
+        }
+
+        repopulateMunicipalitySelect();
+        repopulateBarangaySelect();
+        updateApprovalSectionVisibility();
+
+        // ✅ Add live listener for request type
+        if (requestTypeField) {
+            requestTypeField.addEventListener('change', updateApprovalSectionVisibility);
+        }
+
+        const startInput = document.getElementById('surveyStartDate');
+        const endInput = document.getElementById('surveyEndDate');
+
+        if (startInput && endInput) {
+            updateSurveyEndDateMin();  // Set initial min value
+            startInput.addEventListener('change', updateSurveyEndDateMin);
+        }
+
+    } else {
+
+        const startInput = document.getElementById('surveyStartDate');
+        if (startInput) {
+            startInput.removeEventListener('change', updateSurveyEndDateMin);
+        }
+        // Cancel: revert to original values (fix radio groups)
+        inputs.forEach(input => {
+            if (!input.name) return;
+
+            if (input.type === 'radio') {
+                input.checked = (originalValues[input.name] === input.value);
+            } else {
+                input.value = originalValues[input.name] || '';
+            }
+        });
+
+        selects.forEach(select => {
+            if (select.name && originalValues[select.name] !== undefined) {
+                select.value = originalValues[select.name];
+            }
+            select.disabled = true;
+        });
+
+        inputs.forEach(input => {
+            if (input.type !== 'file') input.readOnly = true;
+            if (input.type === 'radio') input.disabled = true;
+        });
+
+        attachIcons.forEach(icon => icon.style.display = 'none');
+        if (saveBtn) saveBtn.style.display = 'none';
+
+        if (editBtn) {
+            editBtn.textContent = 'Edit';
+            editBtn.classList.remove('btn-gray');
+            editBtn.classList.add('btn-red');
+        }
+
+        updateApprovalSectionVisibility();
+
+        // ✅ Remove change listener to avoid duplicate calls
+        if (requestTypeField) {
+            requestTypeField.removeEventListener('change', updateApprovalSectionVisibility);
+        }
+    }
+}
+
+function updateSurveyEndDateMin() {
+    const startInput = document.getElementById('surveyStartDate');
+    const endInput = document.getElementById('surveyEndDate');
+    if (!startInput || !endInput) return;
+
+    if (startInput.value) {
+        endInput.min = startInput.value;
+        // If end date is before start date, reset it
+        if (endInput.value && endInput.value < startInput.value) {
+            endInput.value = startInput.value;
+        }
+    } else {
+        endInput.min = ''; // Remove min if no start date
+    }
+}
+
+function updateApprovalSectionVisibility() {
+    const requestType = document.getElementById('requestType')?.value;
+    const toBeApprovedBy = document.getElementById('toBeApprovedBy');
+
+    if (!toBeApprovedBy) return;
+
+    if (requestType === 'Sketch Plan') {
+        // Hide the approval section
+        toBeApprovedBy.style.display = 'none';
+
+        // Set PSD radio checked by default inside this container
+        const psdRadio = toBeApprovedBy.querySelector('input[type="radio"][value="PSD"]');
+        if (psdRadio) {
+            psdRadio.checked = true;
+        }
+
+    } else {
+        // Show the approval section
+        toBeApprovedBy.style.display = 'block';
+    }
+}
+
+// 🔁 Reload Municipality dropdown while keeping selected value
+function repopulateMunicipalitySelect() {
+    const province = document.getElementById("province").value;
+    const municipalitySelect = document.getElementById("municipality");
+    const currentValue = municipalitySelect.value;
+
+    municipalitySelect.innerHTML = "";
+
+    let municipalities = [];
+
+    if (province === "Bulacan") {
+        municipalities = ["Hagonoy", "Calumpit"];
+    }
+
+    municipalities.forEach(m => {
+        const option = document.createElement("option");
+        option.value = m;
+        option.textContent = m;
+        municipalitySelect.appendChild(option);
+    });
+
+    municipalitySelect.value = currentValue;
+    municipalitySelect.disabled = false;
+}
+
+// 🔁 Reload Barangay dropdown while keeping selected value
+function repopulateBarangaySelect() {
+    const municipality = document.getElementById("municipality").value;
+    const barangaySelect = document.getElementById("barangay");
+    const currentValue = barangaySelect.value;
+
+    barangaySelect.innerHTML = "";
+
+    let barangays = [];
+
+    if (municipality === "Hagonoy") {
+        barangays = [
+            "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
+            "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
+            "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
+            "Santa Cruz", "Santa Elena", "Santa Monica", "Santa Niño", "Santa Rosario",
+            "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
+        ];
+    } else if (municipality === "Calumpit") {
+        barangays = [
+            "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
+            "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos",
+            "Meyto", "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose",
+            "Santo Niño", "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+        ];
+    }
+
+    barangays.forEach(b => {
+        const option = document.createElement("option");
+        option.value = b;
+        option.textContent = b;
+        barangaySelect.appendChild(option);
+    });
+
+    barangaySelect.value = currentValue;
+    barangaySelect.disabled = false;
+}
+
+async function saveChanges() {
+    const form = document.getElementById('update_projectForm');
+    if (!form) {
+        alert('Form not found!');
+        return;
+    }
+
+    // Required fields to check
+    const requiredFields = [
+        'lotNumber',
+        'clientFirstName',
+        'clientLastName',
+        'province',
+        'municipality',
+        'barangay',
+        'surveyType',
+        'projectStatus',        // Assuming 'status' field's name is 'projectStatus'
+        'surveyStartDate',
+        'requestType'
+    ];
+
+    // Validate required fields are not empty
+    for (const fieldName of requiredFields) {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (!field || !field.value.trim()) {
+            alert('Please fill in all required fields.');
+            field?.focus();
+            return;  // Stop saving
+        }
+    }
+
+    // Collect form data
+    const formData = new FormData(form);
+
+    // Check if projectId is present
+    if (!formData.has('projectId')) {
+        const projectIdInput = document.getElementById('projectId');
+        if (!projectIdInput || !projectIdInput.value) {
+            alert('Project ID is missing!');
+            return;
+        }
+        formData.append('projectId', projectIdInput.value);
+    }
+
+    try {
+        const response = await fetch('model/update_project.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            alert(`Network error: ${response.statusText}`);
+            return;
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            alert('Changes saved successfully!');
+
+            const projectIdInput = document.getElementById('projectId');
+            if (projectIdInput) {
+                projectIdInput.value = data.projectID;
+            }
+            // Update originalValues with current form values to prevent revert to old data
+            storeCurrentValues();
+
+            // Switch back to view mode (disabled inputs, etc.)
+            toggleEditSave();
+
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+
+// Helper: Store current form values into originalValues (similar to storeOriginalValues)
+function storeCurrentValues() {
+    const form = document.getElementById('update_projectForm');
+    const inputs = form.querySelectorAll('input:not([type="hidden"])');
+    const selects = form.querySelectorAll('select');
+
+    // Store checked radio buttons per group
+    const radioGroups = {};
+
+    inputs.forEach(input => {
+        if (!input.name) return;
+
+        if (input.type === 'radio') {
+            if (input.checked) {
+                radioGroups[input.name] = input.value;
+            }
+        } else {
+            originalValues[input.name] = input.value;
+        }
+    });
+
+    // Save radio group checked values
+    for (const name in radioGroups) {
+        originalValues[name] = radioGroups[name];
+    }
+
+    selects.forEach(select => {
+        if (select.name) {
+            originalValues[select.name] = select.value;
+        }
+    });
 }

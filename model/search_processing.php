@@ -3,14 +3,14 @@
 include '../server/server.php';
 
 // Get inputs from GET with keys matching your form input names
-$project      = $_GET['projectName']    ?? '';
-$lot          = $_GET['lotNumber']      ?? '';
-$fname        = $_GET['clientFName']    ?? '';
-$lname        = $_GET['clientLName']    ?? '';
-$province     = $_GET['province']       ?? '';
-$municipality = $_GET['municipality']   ?? '';
-$barangay     = $_GET['barangay']       ?? '';
-$surveyType   = $_GET['surveyType']     ?? '';
+$project = $_GET['projectName'] ?? '';
+$lot = $_GET['lotNumber'] ?? '';
+$fname = $_GET['clientFName'] ?? '';
+$lname = $_GET['clientLName'] ?? '';
+$province = $_GET['province'] ?? '';
+$municipality = $_GET['municipality'] ?? '';
+$barangay = $_GET['barangay'] ?? '';
+$surveyType = $_GET['surveyType'] ?? '';
 
 // 🛑 Prevent query execution if all fields are empty
 if (
@@ -98,6 +98,17 @@ if ($result->num_rows === 0) {
     // Style block
     echo "
     <style>
+        .result-header {
+            display: flex;
+            padding: 12px 20px;
+            font-weight: bold;
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+        }
+
         .result-list {
             list-style: none;
             padding: 0;
@@ -122,9 +133,13 @@ if ($result->num_rows === 0) {
         }
 
         .field {
-            flex: 1 1 7%;
-            min-width: 190px;
+            flex: 1;
+            min-width: 0;
         }
+
+        .field:nth-child(1) { color: #7B0302; font-weight: 700; text-align: left; }
+        .field:nth-child(2) { text-align: center; }
+        .field:nth-child(3) { color: #7B0302; text-align: right; }
 
         .field strong {
             display: block;
@@ -146,24 +161,29 @@ if ($result->num_rows === 0) {
     </style>";
 
     // Result list
+    echo "
+    <div class='result-header'>
+        <div class='field'>Document Type</div>
+        <div class='field'>Project Name</div>
+        <div class='field'>Survey Type</div>
+    </div>
+    ";
     echo "<ul class='result-list'>";
 
     while ($row = $result->fetch_assoc()) {
-        $projectId     = htmlspecialchars($row['ProjectID']);
-        $lot           = htmlspecialchars($row['LotNo']);
-        $client        = htmlspecialchars($row['ClientFName'] . ' ' . $row['ClientLName']);
-        $province      = htmlspecialchars($row['Province']);
-        $municipality  = htmlspecialchars($row['Municipality']);
-        $barangay      = htmlspecialchars($row['Barangay']);
-        $address       = htmlspecialchars("{$barangay}, {$municipality}, {$province}");
-        $surveyType    = htmlspecialchars($row['SurveyType']);
+        $projectId = htmlspecialchars($row['ProjectID']);
+        $lot = htmlspecialchars($row['LotNo']);
+        $client = htmlspecialchars($row['ClientFName'] . ' ' . $row['ClientLName']);
+        $province = htmlspecialchars($row['Province']);
+        $municipality = htmlspecialchars($row['Municipality']);
+        $barangay = htmlspecialchars($row['Barangay']);
+        $address = htmlspecialchars("{$barangay}, {$municipality}, {$province}");
+        $surveyType = htmlspecialchars($row['SurveyType']);
 
         echo "<li class='result-item' data-projectid='{$projectId}'>
-                <div class='field'><strong>Project ID</strong>{$projectId}</div>
-                <div class='field'><strong>Lot No</strong>{$lot}</div>
-                <div class='field'><strong>Client</strong>{$client}</div>
-                <div class='field'><strong>Address</strong>{$address}</div>
-                <div class='field'><strong>Survey Type</strong>{$surveyType}</div>
+                <div class='field'>Project</div>
+                <div class='field'>{$projectId}</div>
+                <div class='field'>{$surveyType}</div>
             </li>";
     }
 
