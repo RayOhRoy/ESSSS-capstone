@@ -19,49 +19,65 @@ function loadAdminPage(page) {
 }
 
 function searchProjectByQR(scannedCode) {
-  // Remove "uploads/" prefix if present
   const prefix = "uploads/";
-  let projectId = scannedCode;
+  let path = scannedCode;
+
   if (scannedCode.startsWith(prefix)) {
-    projectId = scannedCode.substring(prefix.length);
+    path = scannedCode.substring(prefix.length);
   }
 
-  // Show loading indicator or clear previous data
+  // Split the remaining path by '/'
+  const parts = path.split('/');
+
+  // The first part is projectId
+  const projectId = parts[0];
+
+  // Decide which PHP to call:
+  // If there's more after projectId (parts.length > 1), call get_document_info.php
+  // else call get_project_info.php
+  const useDocumentInfo = parts.length > 1;
+
   const modalBody = document.getElementById('modalBody');
   if (!modalBody) return;
 
   modalBody.innerHTML = '<p>Loading project info...</p>';
 
-  fetch('model/get_project_info.php', {
+  const url = useDocumentInfo ? 'model/get_document_info.php' : 'model/get_project_info.php';
+  // Inside searchProjectByQR, after deciding which URL to fetch from:
+  fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ projectId })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(useDocumentInfo ? { projectId, documentPath: path } : { projectId })
   })
     .then(res => res.json())
-.then(data => {
-  if (data.success) {
-    selectedProjectIdFromQR = data.project.ProjectID;
-    modalBody.innerHTML = generateProjectHTML(data.project);
-
-    // ✅ Attach event listener AFTER the button is inserted
-    const openBtn = modalBody.querySelector('.open-btn');
-    if (openBtn) {
-      openBtn.addEventListener('click', () => {
-        if (selectedProjectIdFromQR) {
-          loadAdminPage('project.php?projectId=' + encodeURIComponent(selectedProjectIdFromQR));
+    .then(data => {
+      if (data.success) {
+        if (useDocumentInfo) {
+          selectedProjectIdFromQR = data.document.ProjectID;
+          modalBody.innerHTML = generateDocumentHTML(data.document);
         } else {
-          alert("No project loaded from QR.");
+          // For project info
+          selectedProjectIdFromQR = data.project.ProjectID;
+          modalBody.innerHTML = generateProjectHTML(data.project);
         }
-      });
-    }
-  } else {
-    modalBody.innerHTML = `<p style="color:red;">${data.message || "Project not found."}</p>`;
-  }
-})
+
+        // Attach open button event
+        const openBtn = modalBody.querySelector('.open-btn');
+        if (openBtn) {
+          openBtn.addEventListener('click', () => {
+            if (selectedProjectIdFromQR) {
+              loadAdminPage('project.php?projectId=' + encodeURIComponent(selectedProjectIdFromQR));
+            } else {
+              alert("No project loaded from QR.");
+            }
+          });
+        }
+      } else {
+        modalBody.innerHTML = `<p style="color:red;">${data.message || "Not found."}</p>`;
+      }
+    })
     .catch(err => {
-      console.error("Error fetching project info:", err);
+      console.error("Error fetching info:", err);
       modalBody.innerHTML = `<p style="color:red;">Network error. Please try again.</p>`;
     });
 }
@@ -109,6 +125,39 @@ function generateProjectHTML(project) {
   `;
 }
 
+function generateDocumentHTML(document) {
+  return `
+    <div class="qr-section" style="text-align:center; margin-bottom: 1em;">
+      <img src="${document.ProjectQR || 'picture/project_qr.png'}" alt="QR Code" class="qr-img" style="max-width: 150px;">
+      <p style="font-weight: bold; font-size: 1.2em; margin-top: 0.5em;">${document.DocumentType || ''}</p>
+      <p style="font-weight: 200; font-size: 1.2em; margin-top: 0.5em;">${document.ProjectID || ''}</p>
+    </div>
+
+    <div class="document-details" style="padding: 0 1em;">
+      <p><strong>Lot No.:</strong> ${document.LotNo || ''}</p>
+      <p><strong>Address:</strong> ${document.FullAddress || ''}</p>
+      <p><strong>Survey Type:</strong> ${document.SurveyType || ''}</p>
+      <p><strong>Client:</strong> ${document.ClientName || ''}</p>
+      <p><strong>Agent:</strong> ${document.Agent || ''}</p>
+      <p><strong>Survey Period:</strong> ${document.SurveyStartDate || ''} - ${document.SurveyEndDate || ''}</p>
+    </div>
+
+    <div class="document-status" style="color: maroon; font-weight: bold; margin-top: 1em; padding: 0 1em;">
+      Document Status:
+    </div>
+
+    <div class="document-availability" style="padding: 0 1em; margin-top: 0.5em;">
+      <p><strong>Digital Document:</strong> ${document.DigitalLocation && document.DigitalLocation.toLowerCase() !== 'null' ? 'Available' : 'Not available'}</p>
+      <p><strong>Physical Document:</strong> ${document.DocumentStatus || 'Unknown'}</p>
+    </div>
+
+    <div class="modal-buttons" style="margin-top: 1em; padding: 0 1em;">
+      <button class="open-btn">OPEN</button>
+    </div>
+  `;
+}
+
+
 function openModal() {
   modal.style.display = 'flex';
   disableAllInputs();
@@ -129,7 +178,7 @@ function generateDocumentRows(documents) {
 let qrSearchInitialized = false;
 
 function initQRSearch() {
-  
+
   qrSearchInitialized = true;
 
   const qrInput = document.getElementById('qrInput');
@@ -145,7 +194,7 @@ function initQRSearch() {
   }
 
   qrInput.focus();
-  
+
   let qrActive = false;
 
   // QR toggle button logic

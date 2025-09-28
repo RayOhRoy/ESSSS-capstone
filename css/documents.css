@@ -1,0 +1,205 @@
+#user-circle-icon {
+    font-size: 2.25cqw;
+    color: #7B0302;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#user-circle-icon:hover {
+    filter: brightness(1.25);
+    transform: scale(1.05);
+}
+
+#user-circle-icon.active {
+    color: white;
+}
+
+
+.user-menu-panel {
+    display: none;
+    position: absolute;
+    background: white;
+    top: 0;
+    right: 0;
+    width: 26%;
+    height: 100%;
+    z-index: 999;
+    text-align: center;
+}
+
+
+.user-panel-top {
+    background-color: #7B0302;
+    height: 14rem;
+}
+
+.user-top-info {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    text-align: left;
+    color: white;
+}
+
+.user-bottom-info {
+    display: block;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-bottom-info input {
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#changepassword-button {
+    position: absolute;
+    top: 95%;
+    right: -40%;
+    font-size: 1rem;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#changepassword-button:hover {
+    color: #600202;
+}
+
+a.signout-button {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+a.signout-button:hover {
+    background-color: #600202;
+}
+
+.user-forgot-password {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.user-forgot-password input {
+    color: #7B0302;
+    border: 1px solid;
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#confirmchangepassword-button {
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+#cancelchangepassword-button {
+    background-color: #868886ff;
+    color: #7B0302;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: all 0.3s ease;
+}
+
+#confirmchangepassword-button:hover {
+    background-color: #600202;
+}
+
+#cancelchangepassword-button:hover {
+    background-color: #7B0302;
+    color: white;
+}
+
+button {
+    width: 100%;
+    height: 10%;
+    margin-bottom: 1%;
+    border: none;
+    border-radius: 1vw;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    padding-left: 5rem;
+    color: #7B0302;
+    font-size: 1.7rem;
+    font-weight: 700;
+    transition: all 0.3s;
+}
+
+button:hover {
+    background-color: #7B0302;
+    color: white;
+}
+
+.document {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
+@media (max-width: 1080px) {
+    .user-menu-panel {
+        display: none;
+        position: absolute;
+        background: white;
+        top: 0;
+        right: 0;
+        width: 47%;
+        height: 35%;
+        z-index: 999;
+        text-align: center;
+    }
+
+    #user-circle-icon {
+        font-size: 8.25cqw;
+        color: #7B0302;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
+    .document {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    button {
+        padding-left: 24.5rem;
+        font-weight: 700;
+        font-size: 60px;
+    }
+}

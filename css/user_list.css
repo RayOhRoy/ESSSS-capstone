@@ -1,0 +1,662 @@
+.fa.fa-plus {
+    font-size: 1.5cqw;
+    color: white;
+}
+
+.topbar span {
+    font-size: 2cqw;
+    color: #7B0302;
+    font-weight: 700;
+}
+
+#user-circle-icon {
+    font-size: 2.25cqw;
+    color: #7B0302;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#user-circle-icon:hover {
+    filter: brightness(1.25);
+    transform: scale(1.05);
+}
+
+#user-circle-icon.active {
+    color: white;
+}
+
+
+.user-menu-panel {
+    display: none;
+    position: absolute;
+    background: white;
+    top: 0;
+    right: 0;
+    width: 26%;
+    height: 100%;
+    z-index: 999;
+    text-align: center;
+}
+
+
+.user-panel-top {
+    background-color: #7B0302;
+    height: 14rem;
+}
+
+.user-top-info {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    text-align: left;
+    color: white;
+}
+
+.user-bottom-info {
+    display: block;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-bottom-info input {
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#changepassword-button {
+    position: absolute;
+    top: 95%;
+    right: -40%;
+    font-size: 1rem;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#changepassword-button:hover {
+    color: #600202;
+}
+
+a.signout-button {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+a.signout-button:hover {
+    background-color: #600202;
+}
+
+.user-forgot-password {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    color: #7B0302;
+    text-align: left;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.user-forgot-password input {
+    color: #7B0302;
+    border: 1px solid;
+    margin-bottom: 10%;
+    width: 140%;
+    height: 2.5rem;
+    font-size: 1.5rem;
+}
+
+#confirmchangepassword-button {
+    background-color: #7B0302;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+#cancelchangepassword-button {
+    background-color: #868886ff;
+    color: #7B0302;
+    padding: 10px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+    transition: all 0.3s ease;
+}
+
+#confirmchangepassword-button:hover {
+    background-color: #600202;
+}
+
+#cancelchangepassword-button:hover {
+    background-color: #7B0302;
+    color: white;
+}
+
+.userlist-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5%;
+    margin: 5% 10% 1% 10%;
+}
+
+.user-card {
+    background: #7B0302;
+    padding: 1cqw;
+    border-radius: 1cqw;
+    box-shadow: 0.25cqw 0.25cqw 1cqw rgba(0, 0, 0, 0.3);
+    height: 17cqw;
+    margin-bottom: 5%;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.user-status {
+    position: absolute;
+    top: 1cqw;
+    left: 1cqw;
+    font-size: 0.75cqw;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.3cqw 0.8cqw;
+    border-radius: 0.5cqw;
+    color: white;
+}
+
+.status-active {
+    background-color: #00830F;
+}
+
+.status-inactive {
+    background-color: black;
+}
+
+.user-name {
+    font-size: 1cqw;
+    font-weight: 600;
+    margin: 0.3cqw 0;
+}
+
+.user-position {
+    font-size: 0.75cqw;
+    margin: 0.5cqw 0;
+}
+
+.iconEllipsis {
+    position: absolute;
+    top: 1cqw;
+    right: 1cqw;
+    font-size: 1cqw;
+    cursor: pointer;
+}
+
+#iconUL {
+    font-size: 3cqw;
+    margin-bottom: 0.5cqw;
+}
+
+.status-dropdown {
+    position: absolute;
+    top: 3cqw;
+    left: 11cqw;
+    background: white;
+    color: black;
+    border-radius: 0.5cqw;
+    box-shadow: 0 0.5cqw 1cqw rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    z-index: 10;
+}
+
+#position {
+    flex: 1;
+    max-width: 16cqw;
+}
+
+.status-option {
+    padding: 0.5cqw 1cqw;
+    cursor: pointer;
+}
+
+.status-option:first-child {
+    border-top-left-radius: 0.5cqw;
+    border-top-right-radius: 0.5cqw;
+}
+
+.status-option:last-child {
+    border-bottom-left-radius: 0.5cqw;
+    border-bottom-right-radius: 0.5cqw;
+}
+
+.status-option:hover {
+    background-color: #eee;
+    border-radius: 0.5cqw;
+}
+
+.floating-add-user {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    background-color: #7a0000;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    transition: transform 0.3s ease;
+}
+
+.floating-add-user:hover {
+    transform: scale(1.2);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(0.1cqw);
+    -webkit-backdrop-filter: blur(0.1cqw);
+}
+
+
+.modal-content {
+    max-width: 20cqw;
+    margin: 12cqw auto 0 auto;
+    /* center horizontally, may space sa taas */
+    padding: 2cqw;
+    background: white;
+    border-radius: 1cqw !important;
+    border: none;
+}
+
+label {
+    color: #7B0302;
+}
+
+#employeeid_display {
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    color: #444;
+    font-weight: 600;
+}
+
+#signup-button {
+    margin-left: 4cqw;
+    max-width: 8cqw;
+}
+
+.form-section input {
+    border-radius: 0.26vw;
+    border: 1px solid #ccc;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    height: 2cqw;
+}
+
+button {
+    width: 100%;
+    padding: 1.11vh 0.83vw;
+    background-color: #7B0302;
+    color: #fff;
+    border: none;
+    border-radius: 0.26vw;
+    cursor: pointer;
+    margin-top: 2vh;
+}
+
+.toast {
+    background-color: #333;
+    color: #fff;
+    padding: 1cqw 2cqw;
+    border-radius: 0.5cqw;
+    margin-bottom: 1cqw;
+    min-width: 15cqw;
+    max-width: 25cqw;
+    font-size: 0.9cqw;
+    opacity: 0.95;
+    box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.2);
+    animation: fadeInOut 4s ease forwards;
+}
+
+
+.toast-success {
+    background-color: #28a745;
+}
+
+.toast-error {
+    background-color: #dc3545;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+
+@media (max-width: 1080px) {
+
+    .user-menu-panel {
+        display: none;
+        position: absolute;
+        background: white;
+        top: 0;
+        right: 0;
+        width: 47%;
+        height: 35%;
+        z-index: 999;
+        text-align: center;
+    }
+
+    #user-circle-icon {
+        font-size: 8.25cqw;
+    }
+
+    .fa.fa-plus {
+        font-size: 4.5cqw;
+        color: white;
+    }
+
+    #adduser-form {
+        margin: 100px 0px 0px 140px;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .topbar span {
+        font-size: 70px;
+        color: #7B0302;
+        font-weight: 700;
+        padding: 20px 0px 20px 0px;
+    }
+
+    .userlist-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin-left: 142px;
+
+    }
+
+    .user-card {
+        background: #7B0302;
+        padding: 1cqw;
+        border-radius: 1cqw;
+        box-shadow: 0.25cqw 0.25cqw 1cqw rgba(0, 0, 0, 0.3);
+        height: 500px;
+        width: 300px;
+        margin-bottom: 5%;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .user-status {
+        position: absolute;
+        top: 1cqw;
+        left: 1cqw;
+        font-size: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 0.3cqw 0.8cqw;
+        border-radius: 0.5cqw;
+        color: white;
+        width: 85px;
+        height: 30px;
+    }
+
+    .status-active {
+
+        background-color: #00830F;
+    }
+
+    .status-inactive {
+        background-color: black;
+    }
+
+    .iconEllipsis {
+        position: absolute;
+        left: 20cqw;
+        font-size: 5cqw;
+        cursor: pointer;
+    }
+
+    #iconUL {
+        font-size: 10cqw;
+        margin-bottom: 0.5cqw;
+        color: white;
+
+    }
+
+    .user-name {
+        font-size: 3cqw;
+        font-weight: 600;
+        margin: 0.3cqw 0;
+    }
+
+    .user-position {
+        font-size: 2cqw;
+        margin: 0.5cqw 0;
+    }
+
+    .user-id {
+        font-size: 2cqw;
+        margin: 0.5cqw 0;
+    }
+
+    .status-option {
+        padding: 0.5cqw 1cqw;
+        cursor: pointer;
+        width: 300px;
+        height: 100px;
+
+
+    }
+
+    .status-option:first-child {
+        border-top-left-radius: 0.5cqw;
+        border-top-right-radius: 0.5cqw;
+        font-size: 50px;
+    }
+
+    .status-option:last-child {
+        border-bottom-left-radius: 0.5cqw;
+        border-bottom-right-radius: 0.5cqw;
+        font-size: 50px;
+    }
+
+    .status-option:hover {
+        background-color: #eee;
+        border-radius: 0.5cqw;
+    }
+
+    .floating-add-user {
+        width: 150px;
+        height: 150px;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(0.1cqw);
+        -webkit-backdrop-filter: blur(0.1cqw);
+    }
+
+    .modal-content {
+        max-width: 90%;
+        margin: 20% auto;
+        padding: 4cqw;
+        height: 42%;
+        margin-top: 50%;
+        border-radius: 2cqw;
+    }
+
+    label {
+        font-size: 4cqw;
+        margin-left: -15%;
+        margin-bottom: 5cqw;
+        width: 40%;
+    }
+
+    #employeeid_display {
+        font-weight: 600;
+        font-size: 3cqw;
+        height: 6cqw;
+
+    }
+
+    .form-section input {
+        font-size: 4cqw;
+        height: 6cqw;
+    }
+
+    #position {
+        font-size: 3cqw;
+        width: 100%;
+        max-width: 280px;
+        padding: 8px;
+    }
+
+
+    .fa.fa-plus {
+        font-size: 4.5cqw;
+        color: white;
+    }
+
+    .fa.fa-bell-o {
+        font-size: 70px;
+        color: #7B0302;
+    }
+
+    .fa.fa-user-circle {
+        font-size: 4.5cqw;
+        color: #7B0302;
+    }
+
+    .dropdown-menu {
+        margin-top: 250px;
+    }
+
+    .dropdown-menu a {
+        font-size: 40px;
+        width: 250px;
+        height: auto;
+    }
+
+    .close {
+        font-size: 7cqw;
+        top: -2cqw;
+        left: 52rem;
+    }
+
+    .form-row label {
+        font-size: 4cqw;
+        font-weight: 700;
+        color: #7B0302;
+        margin-bottom: 0.5cqw;
+        display: block;
+    }
+
+
+    .form-row input {
+        width: 80%;
+        padding: 0.8cqw 1cqw;
+        font-size: 5cqw;
+        border: 1px solid #ccc;
+        border-radius: 0.3cqw;
+        background-color: #f8f8f8;
+        margin-left: 2cqw;
+    }
+
+    .form-row select {
+        width: 46%;
+        padding: 0.8cqw 1cqw;
+        font-size: 4cqw;
+        border: 1px solid #ccc;
+        border-radius: 0.3cqw;
+        background-color: #f8f8f8;
+        margin-left: 2cqw;
+        position: absolute;
+        left: 35%;
+    }
+
+    .form-row input:focus,
+    .form-row select:focus {
+        outline: none;
+        border: 2px solid #7B0302;
+        background-color: #fff;
+    }
+
+    #signup-button {
+        margin-left: 18.2cqw;
+        max-width: 25cqw;
+        height: 7cqw;
+        font-size: 2.5cqw;
+        margin-top: 80px;
+
+    }
+}

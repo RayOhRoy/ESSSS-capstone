@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../server/server.php'; 
+include '../server/server.php';
 include 'phpqrcode/qrlib.php';
 header('Content-Type: application/json');
 
@@ -22,9 +22,11 @@ if (!$projectID) {
 }
 
 // Sanitize helper
-function safe_escape(mysqli $conn, $key) {
+function safe_escape(mysqli $conn, $key)
+{
     $val = $_POST[$key] ?? '';
-    if (!is_string($val)) $val = '';
+    if (!is_string($val))
+        $val = '';
     return mysqli_real_escape_string($conn, $val);
 }
 
@@ -54,7 +56,7 @@ if (!$conn->query($sqlUpdateAddress)) {
 $lotNo = safe_escape($conn, 'lotNumber');
 $fname = safe_escape($conn, 'clientFirstName');
 $lname = safe_escape($conn, 'clientLastName');
-$surveyType = safe_escape($conn, 'surveyType'); // ✅ This must not be empty!
+$surveyType = safe_escape($conn, 'surveyType');
 $agent = safe_escape($conn, 'agent');
 $projectStatus = safe_escape($conn, 'projectStatus');
 $startDate = safe_escape($conn, 'surveyStartDate');
@@ -62,25 +64,68 @@ $endDate = safe_escape($conn, 'surveyEndDate');
 $requestType = safe_escape($conn, 'requestType');
 $approval = isset($_POST['approval']) ? mysqli_real_escape_string($conn, $_POST['approval']) : null;
 
-// ✅ Compute new project ID suffix from first 3 letters of survey type, uppercase, no spaces or slashes
-function getSurveyCode($type) {
-    $typeClean = strtoupper(str_replace([' ', '/'], '', trim($type)));
+// Generate new Survey Code
+function getSurveyCode($type)
+{
+    $typeClean = strtoupper(str_replace([' ', '/', '-'], '', trim($type)));
+    if (strpos($typeClean, 'ASBUILTSURVEY') !== false) return 'ASB';
     return substr($typeClean, 0, 3);
 }
 
 $surveyCode = getSurveyCode($surveyType);
 
-// Replace the suffix in projectID (4 parts expected: e.g. HAG-01-001-SKE)
+// Replace the suffix in projectID (e.g. HAG-01-001-SKE)
 $parts = explode('-', $projectID);
 if (count($parts) === 4) {
     $parts[3] = $surveyCode;
     $newProjectID = implode('-', $parts);
 } else {
-    // fallback if not 4 parts
     $newProjectID = $projectID;
 }
 
-// 🚨 Update project ID and SurveyType
+// — File & Folder Rename Logic —
+$basePath = '../uploads';
+$oldFolderPath = "$basePath/$projectID";
+$newFolderPath = "$basePath/$newProjectID";
+
+if (is_dir($oldFolderPath)) {
+    // Rename main folder
+    if (!rename($oldFolderPath, $newFolderPath)) {
+        die(json_encode(['status' => 'error', 'message' => 'Failed to rename project folder']));
+    }
+
+    // ✅ REGENERATE NEW PROJECT QR
+    $qrContent = "uploads/$newProjectID";
+    $newQRFile = "$newFolderPath/{$newProjectID}-QR.png";
+
+    // Remove old QR if it exists (old name)
+    $oldQRFile = "$newFolderPath/{$projectID}-QR.png";
+    if (file_exists($oldQRFile)) {
+        unlink($oldQRFile);
+    }
+
+    QRcode::png($qrContent, $newQRFile, QR_ECLEVEL_L, 4);
+
+    // Rename document QR codes inside subfolders
+    $subfolders = scandir($newFolderPath);
+    foreach ($subfolders as $folder) {
+        if ($folder === '.' || $folder === '..') continue;
+        $subfolderPath = "$newFolderPath/$folder";
+        if (is_dir($subfolderPath)) {
+            $formattedFolder = str_replace(' ', '-', $folder);
+            $oldSubQR = "$subfolderPath/{$projectID}-$formattedFolder-QR.png";
+            $newSubQR = "$subfolderPath/{$newProjectID}-$formattedFolder-QR.png";
+
+            if (file_exists($oldSubQR)) {
+                rename($oldSubQR, $newSubQR);
+            }
+        }
+    }
+}
+
+// — Update project record —
+$newQRPath = "uploads/$newProjectID/$newProjectID-QR.png";
+
 $sqlUpdateProject = "UPDATE project SET 
     ProjectID = '$newProjectID',
     LotNo = '$lotNo',
@@ -92,28 +137,57 @@ $sqlUpdateProject = "UPDATE project SET
     Agent = '$agent',
     RequestType = '$requestType',
     Approval = " . ($approval !== null ? "'$approval'" : "NULL") . ",
-    ProjectStatus = '$projectStatus'
-    WHERE ProjectID = '$projectID'"; // Old ID in WHERE clause
+    ProjectStatus = '$projectStatus',
+    ProjectQR = '$newQRPath',
+    DigitalLocation = 'uploads/$newProjectID'
+    WHERE ProjectID = '$projectID'";
 
 if (!$conn->query($sqlUpdateProject)) {
     die(json_encode(['status' => 'error', 'message' => 'Error updating project', 'error' => $conn->error]));
 }
 
-// Log activity - MODIFIED
+// — Update document table —
+$sqlGetDocuments = "SELECT DocumentID, DocumentName FROM document WHERE ProjectID = '$projectID'";
+$resDocuments = $conn->query($sqlGetDocuments);
+
+if ($resDocuments && $resDocuments->num_rows > 0) {
+    while ($doc = $resDocuments->fetch_assoc()) {
+        $docID = $doc['DocumentID'];
+        $oldDocName = $doc['DocumentName'];
+
+        $docParts = explode('-', $oldDocName);
+        if (count($docParts) < 5) continue;
+
+        $folderSuffix = implode('-', array_slice($docParts, 4));
+        $newDocName = "$newProjectID-$folderSuffix";
+        $newDocQRPath = "uploads/$newProjectID/$folderSuffix/{$newDocName}-QR.png";
+
+        $sqlUpdateDoc = "UPDATE document SET 
+            ProjectID = '$newProjectID',
+            DocumentName = '$newDocName',
+            DocumentQR = '$newDocQRPath'
+            WHERE DocumentID = '$docID'";
+
+        if (!$conn->query($sqlUpdateDoc)) {
+            die(json_encode(['status' => 'error', 'message' => 'Error updating document', 'error' => $conn->error]));
+        }
+    }
+}
+
+// Log modification
 $sqlLastActivity = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
 $resLastActivity = $conn->query($sqlLastActivity);
-$newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0) 
+$newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0)
     ? str_pad(intval(substr($resLastActivity->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
     : "001";
 $activityLogID = "ACT-" . $newActivityNum;
-
 $timeNow = date('Y-m-d H:i:s');
 
 $sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time) 
     VALUES ('$activityLogID','$newProjectID','MODIFIED','$employeeID', '$timeNow')";
 $conn->query($sqlActivityLog);
 
-// ✅ Return success response with new ProjectID
+// ✅ Return response
 echo json_encode([
     'status' => 'success',
     'message' => 'Project updated successfully.',

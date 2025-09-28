@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="css/user_dashboard.css">
+
 <?php
 session_start();
 include 'server/server.php';
@@ -17,206 +19,6 @@ if ($employeeID) {
     $stmt->close();
 }
 ?>
-
-<style>
-#user-circle-icon {
-    font-size: 2.25cqw;
-    color: #7B0302;
-    z-index: 1000;
-    transition: all 0.3s ease;
-}
-
-#user-circle-icon:hover {
-    filter: brightness(1.25);
-    transform: scale(1.05);
-}
-
-#user-circle-icon.active {
-    color: white;
-}
-
-.user-menu-panel {
-    display: none;
-    position: absolute;
-    background: white;
-    top: 0;
-    right: 0;
-    width: 26%;
-    height: 100%;
-    z-index: 999;
-    text-align: center;
-}
-
-.user-panel-top {
-    background-color: #7B0302;
-    height: 14rem;
-}
-
-.user-top-info {
-    position: absolute;
-    top: 15%;
-    left: 5%;
-    text-align: left;
-    color: white;
-}
-
-.user-bottom-info {
-    display: block;
-    position: absolute;
-    top: 40%;
-    left: 10%;
-    color: #7B0302;
-    text-align: left;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.user-bottom-info input {
-    margin-bottom: 10%;
-    width: 140%;
-    height: 2.5rem;
-    font-size: 1.5rem;
-}
-
-#changepassword-button {
-    position: absolute;
-    top: 95%;
-    right: -40%;
-    font-size: 1rem;
-    text-decoration: underline;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#changepassword-button:hover {
-    color: #600202;
-}
-
-a.signout-button {
-    position: absolute;
-    top: 110%;
-    left: 50%;
-    background-color: #7B0302;
-    color: white;
-    padding: 10px 24px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-}
-
-a.signout-button:hover {
-    background-color: #600202;
-}
-
-.user-forgot-password {
-    display: none;
-    position: absolute;
-    top: 40%;
-    left: 10%;
-    color: #7B0302;
-    text-align: left;
-    font-size: 1.5rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.user-forgot-password input {
-    color: #7B0302;
-    border: 1px solid;
-    margin-bottom: 10%;
-    width: 140%;
-    height: 2.5rem;
-    font-size: 1.5rem;
-}
-
-#confirmchangepassword-button {
-    background-color: #7B0302;
-    color: white;
-    padding: 10px 24px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-}
-
-#cancelchangepassword-button {
-    background-color: #868886ff;
-    color: #7B0302;
-    padding: 10px 24px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 400;
-    transition: all 0.3s ease;
-}
-
-#confirmchangepassword-button:hover {
-    background-color: #600202;
-}
-
-#cancelchangepassword-button:hover {
-    background-color: #7B0302;
-    color: white;
-}
-
-.recent-list {
-    min-width: 40%;
-    margin: 20px auto;
-    font-family: Arial, sans-serif;
-}
-
-.recent-list h3 {
-    color: #7B0302;
-}
-
-.recent-item {
-    display: flex;
-    align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #ddd;
-}
-
-.employee-info {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.9rem;
-    min-width: 180px;
-    margin-left: 20px;
-}
-
-.employee-info strong {
-    font-weight: 900;
-}
-
-.employee-role {
-    font-size: 0.8rem;
-    margin-top: 3px;
-}
-
-.status {
-    flex: 1;
-    text-align: left;
-    font-weight: 700;
-    font-size: 1rem;
-}
-
-.display-info {
-    min-width: 100px;
-    font-size: 0.9rem;
-    text-align: left;
-}
-
-.datetime {
-    font-size: 0.8rem;
-    min-width: 150px;
-    text-align: right;
-    margin-right: 20px;
-}
-</style>
 
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">
@@ -257,7 +59,7 @@ a.signout-button:hover {
 </div>
 
 <div class="topbar">
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Dashboard</span>
+    <span>Dashboard</span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -293,7 +95,7 @@ if ($userID) {
 $conn->close();
 ?>
 
-<div class="welcome" style="font-size: 1.5cqw; color: #7B0302;">
+<div class="welcome">
     Welcome, <span style="font-weight: 700;"><?= htmlspecialchars($welcomeName) ?></span>!
 </div>
 
@@ -337,23 +139,23 @@ $conn->close();
 
 <div class="stats">
     <?php foreach ($stats as $stat): ?>
-    <div class="stat-box">
-        <div class="stat-top">
-            <p><?= $stat["label"] ?></p>
-            <?php if (isset($stat["percent"])): ?>
-            <span class="percent"><?= $stat["percent"] ?>%</span>
-            <?php endif; ?>
-        </div>
-        <div class="stat-bottom">
-            <div class="stat-info">
-                <h2><?= $stat["value"] ?></h2>
-                <span class="label"><?= $stat["text"] ?></span>
+        <div class="stat-box">
+            <div class="stat-top">
+                <p><?= $stat["label"] ?></p>
+                <?php if (isset($stat["percent"])): ?>
+                    <span class="percent"><?= $stat["percent"] ?>%</span>
+                <?php endif; ?>
             </div>
-            <div class="icon-container">
-                <img src="picture/<?= $stat["icon"] ?>" alt="<?= $stat["text"] ?> Icon" />
+            <div class="stat-bottom">
+                <div class="stat-info">
+                    <h2><?= $stat["value"] ?></h2>
+                    <span class="label"><?= $stat["text"] ?></span>
+                </div>
+                <div class="icon-container">
+                    <img src="picture/<?= $stat["icon"] ?>" alt="<?= $stat["text"] ?> Icon" />
+                </div>
             </div>
         </div>
-    </div>
     <?php endforeach; ?>
 </div>
 
@@ -393,16 +195,16 @@ $conn->close();
     </div>
 
     <?php
-include 'server/server.php';
+    include 'server/server.php';
 
-$userRole = $_SESSION['role'] ?? null;
-$userID = $_SESSION['employeeid'] ?? null;
+    $userRole = $_SESSION['role'] ?? null;
+    $userID = $_SESSION['employeeid'] ?? null;
 
-$recent_activities = [];
+    $recent_activities = [];
 
-if ($userRole === 'admin') {
-    // Admin sees all activities (limit 5)
-    $sql = "
+    if ($userRole === 'admin') {
+        // Admin sees all activities (limit 5)
+        $sql = "
     SELECT 
       al.ActivityLogID,
       al.ProjectID,
@@ -419,9 +221,9 @@ if ($userRole === 'admin') {
     ORDER BY al.Time DESC
     LIMIT 10
     ";
-} else if ($userRole === 'user' && $userID) {
-    // Regular user sees only their own activities (limit 5)
-    $sql = "
+    } else if ($userRole === 'user' && $userID) {
+        // Regular user sees only their own activities (limit 5)
+        $sql = "
     SELECT 
       al.ActivityLogID,
       al.ProjectID,
@@ -439,65 +241,65 @@ if ($userRole === 'admin') {
     ORDER BY al.Time DESC
     LIMIT 10
     ";
-} else {
-    // No valid role or user id, no activities
-    $recent_activities = [];
-}
-
-if (!empty($sql)) {
-    if ($userRole === 'user' && $userID) {
-        // Prepare statement to avoid injection
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $userID);
-        $stmt->execute();
-        $result = $stmt->get_result();
     } else {
-        $result = $conn->query($sql);
+        // No valid role or user id, no activities
+        $recent_activities = [];
     }
 
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $display_info = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentName'];
+    if (!empty($sql)) {
+        if ($userRole === 'user' && $userID) {
+            // Prepare statement to avoid injection
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $userID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $result = $conn->query($sql);
+        }
 
-            $recent_activities[] = [
-                'activity_log_id' => $row['ActivityLogID'],
-                'project_id' => $row['ProjectID'],
-                'document_id' => $row['DocumentID'],
-                'status' => $row['Status'],
-                'time' => $row['Time'],
-                'masked_employee_name' => $row['masked_employee_name'],
-                'JobPosition' => $row['JobPosition'],
-                'display_info' => $display_info
-            ];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $display_info = empty($row['DocumentID']) ? $row['ProjectID'] : $row['DocumentName'];
+
+                $recent_activities[] = [
+                    'activity_log_id' => $row['ActivityLogID'],
+                    'project_id' => $row['ProjectID'],
+                    'document_id' => $row['DocumentID'],
+                    'status' => $row['Status'],
+                    'time' => $row['Time'],
+                    'masked_employee_name' => $row['masked_employee_name'],
+                    'JobPosition' => $row['JobPosition'],
+                    'display_info' => $display_info
+                ];
+            }
         }
     }
-}
 
-$conn->close();
-?>
+    $conn->close();
+    ?>
 
     <div class="recent-list">
         <h3>Recent Activity</h3>
         <?php if (empty($recent_activities)): ?>
-        <p>No recent activities to display.</p>
+            <p>No recent activities to display.</p>
         <?php else: ?>
-        <?php foreach ($recent_activities as $activity): ?>
-        <div class="recent-item">
-            <div class="employee-info">
-                <strong><?= htmlspecialchars($activity['masked_employee_name']) ?></strong>
-                <span class="employee-role"><?= htmlspecialchars($activity['JobPosition']) ?></span>
-            </div>
-            <div class="status">
-                <?= htmlspecialchars(strtoupper($activity['status'])) ?>
-            </div>
-            <div class="display-info">
-                <?= htmlspecialchars($activity['display_info']) ?>
-            </div>
-            <div class="datetime">
-                <?= date('d M Y H:i', strtotime($activity['time'])) ?>
-            </div>
-        </div>
-        <?php endforeach; ?>
+            <?php foreach ($recent_activities as $activity): ?>
+                <div class="recent-item">
+                    <div class="employee-info">
+                        <strong><?= htmlspecialchars($activity['masked_employee_name']) ?></strong>
+                        <span class="employee-role"><?= htmlspecialchars($activity['JobPosition']) ?></span>
+                    </div>
+                    <div class="status">
+                        <?= htmlspecialchars(strtoupper($activity['status'])) ?>
+                    </div>
+                    <div class="display-info">
+                        <?= htmlspecialchars($activity['display_info']) ?>
+                    </div>
+                    <div class="datetime">
+                        <?= date('d M Y H:i', strtotime($activity['time'])) ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         <?php endif; ?>
     </div>
 
