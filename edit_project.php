@@ -849,7 +849,7 @@ while ($docRow = $docResult->fetch_assoc()) {
                             ];
                             foreach ($approvals as $value => $label): ?>
                                 <label for="approval_<?= strtolower($value) ?>">
-                                    <input type="radio" id="approval_<?= strtolower($value) ?>" name="approvalType"
+                                    <input type="radio" id="approval_<?= strtolower($value) ?>" name="approval"
                                         value="<?= $value ?>" disabled <?= ($approvalType === $value) ? 'checked' : '' ?> />
                                     <?= $label ?>
                                 </label>

@@ -180,24 +180,31 @@ function updateSurveyEndDateMin() {
 function updateApprovalSectionVisibility() {
     const requestType = document.getElementById('requestType')?.value;
     const toBeApprovedBy = document.getElementById('toBeApprovedBy');
-
     if (!toBeApprovedBy) return;
 
     if (requestType === 'Sketch Plan') {
-        // Hide the approval section
         toBeApprovedBy.style.display = 'none';
 
-        // Set PSD radio checked by default inside this container
-        const psdRadio = toBeApprovedBy.querySelector('input[type="radio"][value="PSD"]');
+        // Auto-check PSD when hidden
+        const psdRadio = toBeApprovedBy.querySelector('input[name="approval"][value="PSD"]');
         if (psdRadio) {
             psdRadio.checked = true;
         }
-
     } else {
-        // Show the approval section
         toBeApprovedBy.style.display = 'block';
+
+        // Instead of clearing all radios, restore checked from originalValues (if available)
+        const approvalRadios = toBeApprovedBy.querySelectorAll('input[name="approval"]');
+
+        // Use saved original value or keep current checked
+        const originalApproval = originalValues['approval'] || null;
+
+        approvalRadios.forEach(radio => {
+            radio.checked = (radio.value === originalApproval);
+        });
     }
 }
+
 
 // 🔁 Reload Municipality dropdown while keeping selected value
 function repopulateMunicipalitySelect() {
@@ -321,11 +328,6 @@ async function saveChanges() {
 
         if (data.status === 'success') {
             alert('Changes saved successfully!');
-
-            const projectIdInput = document.getElementById('projectId');
-            if (projectIdInput) {
-                projectIdInput.value = data.projectID;
-            }
             // Update originalValues with current form values to prevent revert to old data
             storeCurrentValues();
 

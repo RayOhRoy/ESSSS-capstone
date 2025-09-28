@@ -60,33 +60,24 @@ $projectStatus = safe_escape($conn, 'projectStatus');
 $startDate = safe_escape($conn, 'surveyStartDate');
 $endDate = safe_escape($conn, 'surveyEndDate');
 $requestType = safe_escape($conn, 'requestType');
-$approvalType = safe_escape($conn, 'approvalType');
 $approval = isset($_POST['approval']) ? mysqli_real_escape_string($conn, $_POST['approval']) : null;
 
-// ✅ Compute new project ID based on survey type suffix
+// ✅ Compute new project ID suffix from first 3 letters of survey type, uppercase, no spaces or slashes
 function getSurveyCode($type) {
-    $map = [
-        'AS-BUILT' => 'ASB',
-        'SKETCH PLAN / VICINITY MAP' => 'SKE',
-        'TOPOGRAPHIC SURVEY' => 'TOP',
-        'SUBDIVISION PLAN' => 'SUB',
-        'LOCATION PLAN' => 'LOC',
-        // Add more mappings as needed
-    ];
-    $typeUpper = strtoupper(trim($type));
-    return $map[$typeUpper] ?? strtoupper(substr($typeUpper, 0, 3));
+    $typeClean = strtoupper(str_replace([' ', '/'], '', trim($type)));
+    return substr($typeClean, 0, 3);
 }
 
 $surveyCode = getSurveyCode($surveyType);
 
-// Replace the suffix in projectID
-// Example: HAG-01-001-SKE -> HAG-01-001-TOP
+// Replace the suffix in projectID (4 parts expected: e.g. HAG-01-001-SKE)
 $parts = explode('-', $projectID);
 if (count($parts) === 4) {
     $parts[3] = $surveyCode;
     $newProjectID = implode('-', $parts);
 } else {
-    $newProjectID = $projectID; // Fallback
+    // fallback if not 4 parts
+    $newProjectID = $projectID;
 }
 
 // 🚨 Update project ID and SurveyType

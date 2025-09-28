@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 24, 2025 at 07:23 PM
+-- Generation Time: Sep 25, 2025 at 09:47 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -35,41 +35,6 @@ CREATE TABLE `activity_log` (
   `EmployeeID` varchar(10) NOT NULL,
   `Time` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `activity_log`
---
-
-INSERT INTO `activity_log` (`ActivityLogID`, `ProjectID`, `DocumentID`, `Status`, `EmployeeID`, `Time`) VALUES
-('ACT-001', 'CAL-01-001-TOP', '', 'CREATED', 'ES0000', '2025-09-20 04:47:41'),
-('ACT-002', 'CAL-01-001-TOP', 'DOC-00001', 'UPLOADED', 'ES0000', '2025-09-20 04:47:41'),
-('ACT-003', 'CAL-01-001-TOP', 'DOC-00002', 'UPLOADED', 'ES0000', '2025-09-20 04:47:41'),
-('ACT-004', 'HAG-01-001-SUB', '', 'CREATED', 'ES0000', '2025-09-20 04:48:41'),
-('ACT-005', 'HAG-01-001-SUB', 'DOC-00003', 'UPLOADED', 'ES0000', '2025-09-20 04:48:41'),
-('ACT-006', 'HAG-01-001-SUB', 'DOC-00004', 'UPLOADED', 'ES0000', '2025-09-20 04:48:41'),
-('ACT-007', 'CAL-01-001-TOP', '', 'MODIFIED', 'ES0000', '2025-09-21 15:52:44'),
-('ACT-008', 'CAL-01-001-TOP', '', 'MODIFIED', 'ES0000', '2025-09-21 15:55:41'),
-('ACT-009', 'CAL-01-001-TOP', '', 'MODIFIED', 'ES0000', '2025-09-21 15:56:03'),
-('ACT-010', 'HAG-01-001-SUB', '', 'MODIFIED', 'ES0000', '2025-09-21 15:56:18'),
-('ACT-011', 'CAL-01-001-TOP', '', 'MODIFIED', 'ES0000', '2025-09-21 16:05:36'),
-('ACT-012', 'CAL-01-002-SKE', '', 'CREATED', 'ES0000', '2025-09-24 16:11:38'),
-('ACT-013', 'CAL-01-002-SKE', 'DOC-00005', 'UPLOADED', 'ES0000', '2025-09-24 16:11:38'),
-('ACT-014', 'CAL-01-002-SKE', 'DOC-00006', 'UPLOADED', 'ES0000', '2025-09-24 16:11:38'),
-('ACT-015', 'CAL-01-002-SKE', 'DOC-00007', 'UPLOADED', 'ES0000', '2025-09-24 16:11:38'),
-('ACT-016', 'HAG-01-001-TOP', '', 'CREATED', 'ES0000', '2025-09-24 16:15:15'),
-('ACT-017', 'HAG-01-001-TOP', 'DOC-00008', 'UPLOADED', 'ES0000', '2025-09-24 16:15:15'),
-('ACT-018', 'CAL-01-003-ASB', '', 'CREATED', 'ES0000', '2025-09-24 16:16:40'),
-('ACT-019', 'CAL-01-003-ASB', 'DOC-00009', 'UPLOADED', 'ES0000', '2025-09-24 16:16:40'),
-('ACT-020', 'CAL-01-003-ASB', 'DOC-00010', 'UPLOADED', 'ES0000', '2025-09-24 16:16:40'),
-('ACT-021', 'HAG-01-002-TOP', '', 'CREATED', 'ES0000', '2025-09-24 16:20:12'),
-('ACT-022', 'HAG-01-002-TOP', 'DOC-00011', 'UPLOADED', 'ES0000', '2025-09-24 16:20:12'),
-('ACT-023', 'HAG-01-002-TOP', 'DOC-00012', 'UPLOADED', 'ES0000', '2025-09-24 16:20:12'),
-('ACT-024', 'HAG-01-002-TOP', 'DOC-00013', 'UPLOADED', 'ES0000', '2025-09-24 16:20:12'),
-('ACT-025', 'CAL-01-003-ASB', '', 'MODIFIED', 'ES0000', '2025-09-24 16:23:24'),
-('ACT-026', 'CAL-01-003-ASB', '', 'MODIFIED', 'ES0000', '2025-09-24 16:24:43'),
-('ACT-027', 'HAG-01-002-TOP', '', 'MODIFIED', 'ES0000', '2025-09-24 16:30:39'),
-('ACT-028', 'HAG-01-002-TOP', '', 'MODIFIED', 'ES0000', '2025-09-24 16:31:34'),
-('ACT-029', '', '', 'MODIFIED', 'ES0000', '2025-09-24 16:53:05');
 
 -- --------------------------------------------------------
 
@@ -125,7 +90,7 @@ CREATE TABLE `employee` (
 --
 
 INSERT INTO `employee` (`EmployeeID`, `EmpLName`, `EmpFName`, `Email`, `Password`, `JobPosition`, `AccountType`, `AccountStatus`, `PasswordCode`, `CodeExpiry`) VALUES
-('ES0000', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$ITufGcIu4EVh7NR.oVqrTeVHG3OVJXzkPi6ByHVyHNmuCNyRKrDaK', 'Chief Operating Officer', 'Admin', 'Active', NULL, NULL),
+('ES0000', 'Felipe', 'Reo Roi', 'rayohsmurf@gmail.com', '$2y$10$qYi0V.5rYhMbQayQNAi5oOKUNect8Y05.98FMAHrFTRlqEp5Ng/5m', 'Chief Operating Officer', 'Admin', 'Active', NULL, NULL),
 ('ES0001', 'Balatayo', 'Leila Anne', 'benchudgugu@gmail.com', '$2y$10$Qx1FpqfzKMiJnvgM2ULZo.Be0Ov6iEd4vwlbAJlqh.3cC6dnsOsbS', 'Compliance Officer', 'User', 'Active', '257710', '2025-09-19 06:28:05');
 
 -- --------------------------------------------------------
@@ -196,7 +161,7 @@ ALTER TABLE `project`
 -- Constraints for table `document`
 --
 ALTER TABLE `document`
-  ADD CONSTRAINT `fk_document_project` FOREIGN KEY (`ProjectID`) REFERENCES `project` (`ProjectID`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_document_project` FOREIGN KEY (`ProjectID`) REFERENCES `project` (`ProjectID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `project`
