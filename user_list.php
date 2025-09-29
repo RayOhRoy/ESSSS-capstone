@@ -4,6 +4,17 @@
 session_start();
 include 'server/server.php';
 
+// Initialize $nextEmployeeId before output
+$nextEmployeeId = 'ES0001';
+$sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'ES%' ORDER BY employeeid DESC LIMIT 1";
+$result = $conn->query($sql);
+
+if ($result && $row = $result->fetch_assoc()) {
+    $lastId = intval(substr($row['employeeid'], 2)); // substring after 'ES' prefix
+    $nextId = $lastId + 1;
+    $nextEmployeeId = 'ES' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+}
+
 $employeeID = $_SESSION['employeeid'] ?? null;
 $empFName = '';
 $empLName = '';
@@ -69,23 +80,9 @@ if ($employeeID) {
 
 <hr class="top-line" />
 
-<div class="floating-add-user" id="add-account-btn" data-next-id="<?= $nextEmployeeId ?>">
-    <span class="fa fa-plus" ></span>
+<div class="floating-add-user" id="add-account-btn" data-next-id="<?= htmlspecialchars($nextEmployeeId) ?>">
+    <span class="fa fa-plus"></span>
 </div>
-
-<?php
-include 'server/server.php';
-
-$nextEmployeeId = 'ESSSS0001';
-$sql = "SELECT employeeid FROM employee WHERE employeeid LIKE 'ES%' ORDER BY employeeid DESC LIMIT 1";
-$result = $conn->query($sql);
-
-if ($result && $row = $result->fetch_assoc()) {
-    $lastId = intval(substr($row['employeeid'], 5));
-    $nextId = $lastId + 1;
-    $nextEmployeeId = 'ES' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
-}
-?>
 
 <div id="modalAddUser" class="modal">
     <div class="modal-content">
@@ -99,9 +96,9 @@ if ($result && $row = $result->fetch_assoc()) {
                     <div style="display: flex; align-items: flex-start; gap: 0cqw;">
                         <label for="employeeid_display"
                             style="min-width: 6cqw; font-weight: 700; margin-top: 0.3cqw;">EMPLOYEE ID:</label>
-                        <input type="text" id="employeeid_display" value="<?= $nextEmployeeId ?>" disabled
+                        <input type="text" id="employeeid_display" value="<?= htmlspecialchars($nextEmployeeId) ?>" disabled
                             style="flex: 1;" />
-                        <input type="hidden" id="employeeid" name="employeeid" value="<?= $nextEmployeeId ?>" />
+                        <input type="hidden" id="employeeid" name="employeeid" value="<?= htmlspecialchars($nextEmployeeId) ?>" />
                     </div>
 
                     <div style="display: flex; align-items: flex-start; gap: 0cqw;">
@@ -126,7 +123,7 @@ if ($result && $row = $result->fetch_assoc()) {
                     <div style="display: flex; align-items: flex-start; gap: 0cqw;">
                         <label for="position"
                             style="min-width: 6cqw; font-weight: 600; margin-top: 0.3cqw;">Position:</label>
-                        <select id="position" name="position" required >
+                        <select id="position" name="position" required>
                             <option value="" disabled selected>Select Position</option>
                             <option value="Secretary">Secretary</option>
                             <option value="Compliance Officer">Compliance Officer</option>
@@ -134,8 +131,7 @@ if ($result && $row = $result->fetch_assoc()) {
                         </select>
                     </div>
 
-                    <button id="signup-button" type="submit">Add
-                        Employee</button>
+                    <button id="signup-button" type="submit">Add Employee</button>
                 </form>
             </div>
         </div>
@@ -143,7 +139,8 @@ if ($result && $row = $result->fetch_assoc()) {
 </div>
 
 <?php
-$sql = "SELECT EmployeeID, CONCAT(EmpFName, ' ', EmpLName) AS fullname, JobPosition, AccountStatus
+// Updated SQL to also fetch Email, EmpFName, EmpLName
+$sql = "SELECT EmployeeID, EmpFName, EmpLName, Email, JobPosition, AccountStatus
         FROM employee
         WHERE AccountType = 'User'
         ORDER BY EmployeeID ASC";
@@ -159,31 +156,38 @@ if ($result && $result->num_rows > 0) {
         $status = strtolower($row['AccountStatus']);
         $accountstatusClass = $status === 'active' ? 'status-active' : 'status-inactive';
 
-        // Conditionally render status options
         $activateOption = '';
         $deactivateOption = '';
-
         if ($status === 'inactive') {
-            $activateOption = '<div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Active">Activate</div>';
+            $activateOption = '<div class="status-option" data-id="' . htmlspecialchars($row['EmployeeID']) . '" data-status="Active">Activate</div>';
         } elseif ($status === 'active') {
-            $deactivateOption = '<div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Inactive">Deactivate</div>';
+            $deactivateOption = '<div class="status-option" data-id="' . htmlspecialchars($row['EmployeeID']) . '" data-status="Inactive">Deactivate</div>';
         }
 
         echo '<div class="user-card">';
         echo '<div class="user-status ' . $accountstatusClass . '">' . strtoupper(htmlspecialchars($row['AccountStatus'])) . '</div>';
-        echo '<div class="fa fa-ellipsis-h iconEllipsis" data-id="' . $row['EmployeeID'] . '"></div>';
-        echo '<div class="status-dropdown" id="dropdown-' . $row['EmployeeID'] . '">';
+        echo '<div class="fa fa-ellipsis-h iconEllipsis" data-id="' . htmlspecialchars($row['EmployeeID']) . '"></div>';
+        echo '<div class="status-dropdown" id="dropdown-' . htmlspecialchars($row['EmployeeID']) . '">';
         echo $activateOption . $deactivateOption;
-        echo '<div class="status-option" data-id="' . $row['EmployeeID'] . '" data-status="Delete">Delete</div>';
+        echo '<div class="status-option edit-option" data-id="' . htmlspecialchars($row['EmployeeID']) . '" data-status="Edit">Edit</div>';
+        echo '<div class="status-option" data-id="' . htmlspecialchars($row['EmployeeID']) . '" data-status="Delete">Delete</div>';
         echo '</div>';
         echo '<div class="fa fa-user-circle" id="iconUL"></div>';
-        echo '<div class="user-name">' . htmlspecialchars($row['fullname']) . '</div>';
-        echo '<div class="user-position">' . htmlspecialchars($row['JobPosition']) . '</div>';
+        echo '<div class="user-name">' . htmlspecialchars($row['EmpFName'] . ' ' . $row['EmpLName']) . '</div>';
+        echo '<div class="user-position-display">' . htmlspecialchars($row['JobPosition']) . '</div>';
         echo '<div class="user-id">' . htmlspecialchars($row['EmployeeID']) . '</div>';
-        echo '</div>';
+
+        // Hidden inputs for data
+        echo '<input type="hidden" class="user-email" value="' . htmlspecialchars($row['Email']) . '">';
+        echo '<input type="hidden" class="user-position" value="' . htmlspecialchars($row['JobPosition']) . '">';
+        echo '<input type="hidden" class="user-fname" value="' . htmlspecialchars($row['EmpFName']) . '">';
+        echo '<input type="hidden" class="user-lname" value="' . htmlspecialchars($row['EmpLName']) . '">';
+
+        echo '</div>'; // close user-card
     }
 }
 
 echo '</div></div></section>';
 ?>
+
 <div id="toast-container" style="position: fixed; top: 2vh; right: 2vw; z-index: 9999;"></div>

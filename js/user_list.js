@@ -33,13 +33,13 @@ function loadAdminPage(page) {
         initQRFormHandler();
         initQRFormToggles();
       } else if (cleanPage === 'edit_project.php') {
-  setTimeout(() => {
-    initializeEditForm();     // ✅ Set initial state (view mode, fields disabled)
-    initeditBackButton();     // ✅ If you have a back button, call its initializer
+        setTimeout(() => {
+          initializeEditForm();     // ✅ Set initial state (view mode, fields disabled)
+          initeditBackButton();     // ✅ If you have a back button, call its initializer
 
-    // ❌ DO NOT call toggleEditSave() here
-    // ❗ Only call toggleEditSave() on actual button click ("Edit")
-  }, 0);
+          // ❌ DO NOT call toggleEditSave() here
+          // ❗ Only call toggleEditSave() on actual button click ("Edit")
+        }, 0);
       } else {
         initUserMenuDropdown();
       }
@@ -336,6 +336,20 @@ function initUserListHandlers() {
     return;
   }
 
+  const modal = document.getElementById('modalAddUser');
+  const closeBtn = modal.querySelector('.close');
+  const accountIdInput = modal.querySelector('#employeeid');
+  const displayIdInput = modal.querySelector('#employeeid_display');
+  const firstNameInput = modal.querySelector('#first_name');
+  const lastNameInput = modal.querySelector('#last_name');
+  const emailInput = modal.querySelector('#email');
+  const positionInput = modal.querySelector('#position');
+  const submitBtn = modal.querySelector('#signup-button');
+  const form = modal.querySelector('#adduser-form');
+
+  // ---------------------
+  // USER CARD CLICK HANDLER
+  // ---------------------
   container.addEventListener('click', function (e) {
     const ellipsis = e.target.closest('.iconEllipsis');
     if (ellipsis) {
@@ -357,6 +371,44 @@ function initUserListHandlers() {
       const accountId = option.getAttribute('data-id');
       const newStatus = option.getAttribute('data-status');
 
+      // ---------------------
+      // EDIT MODE HANDLER
+      // ---------------------
+      if (newStatus === 'Edit') {
+        e.stopPropagation();
+
+        const userCard = option.closest('.user-card');
+        const empId = userCard.querySelector('.user-id')?.textContent.trim();
+
+        // 🆕 Pull from hidden inputs
+        const firstName = userCard.querySelector('.user-fname')?.value || '';
+        const lastName = userCard.querySelector('.user-lname')?.value || '';
+        const email = userCard.querySelector('.user-email')?.value || '';
+        const position = userCard.querySelector('.user-position')?.value || '';
+
+        // Populate modal fields
+        firstNameInput.value = firstName;
+        lastNameInput.value = lastName;
+        emailInput.value = email;
+        positionInput.value = position;
+        accountIdInput.value = empId;
+        displayIdInput.value = empId;
+
+        // Disable email & position (if needed)
+        emailInput.disabled = true;
+        positionInput.disabled = true;
+
+        // Update form for editing
+        form.action = 'model/update_employee.php';
+        submitBtn.textContent = 'Save Changes';
+
+        modal.style.display = 'block';
+        return;
+      }
+
+      // ---------------------
+      // DELETE HANDLER
+      // ---------------------
       if (newStatus === 'Delete') {
         if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
           fetch('model/delete_account.php', {
@@ -380,75 +432,94 @@ function initUserListHandlers() {
               showToast('Error deleting account. Please try again.', 'error');
             });
         }
-      } else {
-        // Confirm before status change
-        const confirmMsg = `Are you sure you want to ${newStatus.toLowerCase()} this account?`;
-        if (!confirm(confirmMsg)) return;
+        return;
+      }
 
-        fetch("model/update_status.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `id=${encodeURIComponent(accountId)}&status=${encodeURIComponent(newStatus)}`
-        })
-          .then(res => res.text())
-          .then(response => {
-            const userCard = container.querySelector(`.iconEllipsis[data-id="${accountId}"]`).closest('.user-card');
-            const empId = userCard.querySelector('.user-id')?.textContent || 'Unknown ID';
+      // ---------------------
+      // ACTIVATE / DEACTIVATE HANDLER
+      // ---------------------
+      const confirmMsg = `Are you sure you want to ${newStatus.toLowerCase()} this account?`;
+      if (!confirm(confirmMsg)) return;
 
-            showToast(`Account ${empId} ${newStatus.toLowerCase()}d successfully.`, 'success');
+      fetch("model/update_status.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(accountId)}&status=${encodeURIComponent(newStatus)}`
+      })
+        .then(res => res.text())
+        .then(response => {
+          const userCard = container.querySelector(`.iconEllipsis[data-id="${accountId}"]`).closest('.user-card');
+          const empId = userCard.querySelector('.user-id')?.textContent || 'Unknown ID';
 
-            const statusBadge = userCard.querySelector('.user-status');
+          showToast(`Account ${empId} ${newStatus.toLowerCase()}d successfully.`, 'success');
 
-            // Update status text & class
-            statusBadge.textContent = newStatus.toUpperCase();
-            statusBadge.className = "user-status " + (newStatus.toLowerCase() === "active" ? "status-active" : "status-inactive");
+          const statusBadge = userCard.querySelector('.user-status');
+          statusBadge.textContent = newStatus.toUpperCase();
+          statusBadge.className = "user-status " + (newStatus.toLowerCase() === "active" ? "status-active" : "status-inactive");
 
-            // Update dropdown
-            const dropdown = document.getElementById(`dropdown-${accountId}`);
-            if (dropdown) {
-              dropdown.innerHTML = '';
+          // Update dropdown
+          const dropdown = document.getElementById(`dropdown-${accountId}`);
+          if (dropdown) {
+            dropdown.innerHTML = '';
 
-              if (newStatus === 'Active') {
-                dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Inactive">Deactivate</div>`;
-              } else {
-                dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Active">Activate</div>`;
-              }
-
-              dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Delete">Delete</div>`;
-              dropdown.style.display = 'none';
+            if (newStatus === 'Active') {
+              dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Inactive">Deactivate</div>`;
+            } else {
+              dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Active">Activate</div>`;
             }
 
-          })
-          .catch(err => {
-            console.error("Error updating status:", err);
-            showToast("Error updating status. Please try again.", 'error');
-          });
-      }
+            dropdown.innerHTML += `<div class="status-option edit-option" data-id="${accountId}" data-status="Edit">Edit</div>`;
+            dropdown.innerHTML += `<div class="status-option" data-id="${accountId}" data-status="Delete">Delete</div>`;
+            dropdown.style.display = 'none';
+          }
+        })
+        .catch(err => {
+          console.error("Error updating status:", err);
+          showToast("Error updating status. Please try again.", 'error');
+        });
 
       return;
     }
   });
 
-  // Close dropdowns when clicking outside
+  // ---------------------
+  // OUTSIDE CLICK = CLOSE DROPDOWNS
+  // ---------------------
   document.addEventListener('click', (e) => {
     if (!container.contains(e.target)) {
       container.querySelectorAll('.status-dropdown').forEach(dd => dd.style.display = 'none');
     }
   });
 
+  // ---------------------
+  // ADD BUTTON HANDLER
+  // ---------------------
   const addBtn = document.getElementById('add-account-btn');
-  const modal = document.getElementById('modalAddUser');
-  const closeBtn = modal.querySelector('.close');
-  const accountIdInput = modal.querySelector('#employeeid');
-
   addBtn.addEventListener('click', () => {
     const nextId = addBtn.getAttribute('data-next-id');
-    if (accountIdInput) {
-      accountIdInput.value = nextId;
-    }
+
+    // Reset form fields
+    firstNameInput.value = '';
+    lastNameInput.value = '';
+    emailInput.value = '';
+    positionInput.value = '';
+    accountIdInput.value = nextId;
+    displayIdInput.value = nextId;
+
+    // Enable all fields
+    emailInput.disabled = false;
+    positionInput.disabled = false;
+
+    // Set form for register
+    form.action = 'model/register_processing.php';
+    submitBtn.textContent = 'Add Employee';
+
     modal.style.display = 'block';
   });
 
+  // ---------------------
+  // MODAL CLOSE HANDLERS
+  // ---------------------
   closeBtn.addEventListener('click', () => {
     modal.style.display = 'none';
   });
