@@ -96,7 +96,7 @@ echo "
 <div class='result-header'>
     <div class='field'>Document Type</div>
     <div class='field'>Project ID</div>
-    <div class='field'>View</div>
+    <div class='field'>Preview</div>
 </div>
 <ul class='result-list'>
 ";
