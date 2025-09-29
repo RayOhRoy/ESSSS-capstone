@@ -324,7 +324,9 @@ function initLiveProjectSearch() {
       processingType: document.getElementById('processingType')?.value || '',
       projectStatus: document.getElementById('projectStatus')?.value || '',
       startDate: document.getElementById('startDate')?.value || '',
-      endDate: document.getElementById('endDate')?.value || ''
+      endDate: document.getElementById('endDate')?.value || '',
+      // Add the document type filter here:
+      doctype: document.getElementById('documentTypeFilter')?.value || ''
     };
 
     const params = new URLSearchParams(data);
@@ -348,13 +350,20 @@ function initLiveProjectSearch() {
     }
   });
 
+  // Add event listener to documentTypeFilter dropdown
+  const docTypeFilter = document.getElementById('documentTypeFilter');
+  if (docTypeFilter) {
+    docTypeFilter.addEventListener('change', fetchResults);
+  }
+
   // Click event delegation on liveResults for selecting a project
   const resultContainer = document.getElementById(resultContainerId);
   if (resultContainer) {
     resultContainer.addEventListener('click', (e) => {
       const row = e.target.closest('.result-item');
       if (row && row.dataset.projectid) {
-        handleRowDoubleClick(row);
+        const projectId = row.dataset.projectid;
+        loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
       }
     });
   }

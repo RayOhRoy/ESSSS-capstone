@@ -70,29 +70,23 @@ if ($employeeID) {
 <hr class="top-line" />
 
 <div class="search-dropdown">
-    <select>
-        <option>Search for</option>
-        <option>ORIGINAL PLAN</option>
-        <option>CERTIFIED TITLE</option>
-        <option>REF PLAN</option>
-        <option>LOT DATA</option>
-        <option>TD</option>
-        <option>TRANSMITAL</option>
-        <option>FIELDNOTES</option>
-        <option>TAX DECLARATION</option>
-        <option>DOCUMENTS</option>
-        <option>3 BP</option>
-        <option>CM</option>
-        <option>SURVEY AUTHORITY</option>
-        <option>ZOONING</option>
-        <option>LRA STATUS</option>
-        <option>I'D S</option>
-        <option>APPLICATION</option>
-        <option>TAX CLEARANCE</option>
-        <option>EXTRAJUDICIAL</option>
-        <option>DEED OF SALE</option>
+    <select id="documentTypeFilter">
+        <option value="">Search for</option>
+        <option value="Original Plan">Original Plan</option>
+        <option value="Title">Title</option>
+        <option value="Certified Title">Certified Title</option>
+        <option value="Reference Plan">Reference Plan</option>
+        <option value="Lot Data">Lot Data</option>
+        <option value="Technical Description">Technical Description</option>
+        <option value="Fieldnotes">Fieldnotes</option>
+        <option value="Transmital">Transmital</option>
+        <option value="Cadastral Map">Cadastral Map</option>
+        <option value="Survey Authority">Survey Authority</option>
+        <option value="Blueprint">Blueprint</option>
+        <option value="CAD File">CAD File</option>
     </select>
 </div>
+
 <p class="note">Enter any available information to search for a project or document. You may leave other fields blank.
 </p>
 

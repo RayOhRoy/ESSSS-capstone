@@ -390,10 +390,8 @@ input[type="text"],
 input[type="date"] {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     margin-bottom: 1%;
-    font-size: 20px;
+    font-size: 0.75rem;
     width: auto;
-    /* hindi fixed sa desktop */
-
 }
 
 .search-input {

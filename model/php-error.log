@@ -1,5 +1,0 @@
-[25-Sep-2025 15:23:46 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Cannot delete or update a parent row: a foreign key constraint fails (`esdb`.`document`, CONSTRAINT `fk_document_project` FOREIGN KEY (`ProjectID`) REFERENCES `project` (`ProjectID`) ON DELETE CASCADE) in C:\xampp\htdocs\capstone\model\update_project.php:111
-Stack trace:
-#0 C:\xampp\htdocs\capstone\model\update_project.php(111): mysqli->query('UPDATE project ...')
-#1 {main}
-  thrown in C:\xampp\htdocs\capstone\model\update_project.php on line 111
