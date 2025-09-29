@@ -32,6 +32,12 @@ if (
 // CSS and header
 echo "
 <style>
+
+.result-list {
+    max-height: 20rem;
+    overflow-y: auto; 
+}
+
 .result-item {
     display: flex;
     flex-wrap: nowrap; /* keep fields in a row */
