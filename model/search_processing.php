@@ -25,7 +25,7 @@ if (
     empty($surveyType) &&
     empty($doctype)
 ) {
-    echo "<p>Provide input or select from the list to initiate a search for matching project data...</p>";
+    echo "<p>To proceed, please enter search details or select criteria from the list.</p>";
     exit;
 }
 
