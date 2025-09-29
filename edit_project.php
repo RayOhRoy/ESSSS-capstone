@@ -268,7 +268,7 @@ while ($docRow = $docResult->fetch_assoc()) {
                     </div>
 
                     <div class="form-row">
-                        <label for="projectStatus"><span class="required-asterisk">* </span>Status:</label>
+                        <label for="projectStatus"><span class="required-asterisk">* </span>Project Status:</label>
                         <select id="projectStatus" name="projectStatus" disabled>
                             <?php
               $statusOptions = [
