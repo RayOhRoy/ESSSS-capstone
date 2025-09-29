@@ -22,7 +22,8 @@ if (
     empty($province) &&
     empty($municipality) &&
     empty($barangay) &&
-    empty($surveyType)
+    empty($surveyType) &&
+    empty($doctype)
 ) {
     echo "<p>Provide input or select from the list to initiate a search for matching project data...</p>";
     exit;
@@ -31,73 +32,69 @@ if (
 // CSS and header
 echo "
 <style>
-    .result-header {
-        display: flex;
-        padding: 12px 20px;
-        font-weight: bold;
-        background-color: #f5f5f5;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        font-family: Arial, sans-serif;
-    }
+.result-item {
+    display: flex;
+    flex-wrap: nowrap; /* keep fields in a row */
+    align-items: center;
+    height: 3rem;
+    margin-bottom: 1%;
+    background-color: white;
+    /* Removed border */
+    border-radius: 6px;
+    cursor: pointer;
+    color: black;
+    transition: all 0.2s ease;
+    justify-content: space-between;
+    /* Added subtle shadow below */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
-    .result-list {
-        list-style: none;
-        padding: 0;
-        margin-top: 20px;
-        font-family: Arial, sans-serif;
-    }
+.result-item .field {
+    flex-basis: 33%; /* equally divide space */
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: 0;
+    color: black;
+    display: flex;
+    align-items: center;
+}
 
+.result-item:hover {
+    filter: brightness(0.85);
+    /* Optionally intensify shadow on hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* First field aligned left */
+.result-item .field:nth-child(1) {
+    justify-content: flex-start;
+}
+
+/* Second field aligned center */
+.result-item .field:nth-child(2) {
+    justify-content: center;
+}
+
+/* Third field aligned right */
+.result-item .field:nth-child(3) {
+    justify-content: flex-end;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
     .result-item {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 20px;
-        padding: 15px 20px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        cursor: pointer;
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
     }
-
-    .result-item:hover {
-        background-color: #ecdedeff !important;
+    .result-item .field {
+        width: 100%;
+        justify-content: flex-start !important;
+        margin-bottom: 4px;
     }
-
-    .field {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .field:nth-child(1) { color: #7B0302; font-weight: 700; text-align: left; }
-    .field:nth-child(2) { text-align: center; }
-    .field:nth-child(3) { color: #7B0302; text-align: right; }
-
-    .field strong {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 3px;
-        font-size: 13px;
-        color: #555;
-    }
-
-    @media screen and (max-width: 768px) {
-        .result-item {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .field {
-            width: 100%;
-        }
-    }
+}
 </style>
 
-<div class='result-header'>
-    <div class='field'>Document Type</div>
-    <div class='field'>Project ID</div>
-    <div class='field'>Preview</div>
-</div>
 <ul class='result-list'>
 ";
 
@@ -163,11 +160,14 @@ $result1 = $stmt1->get_result();
 
 // Collect matched project IDs
 $matchedProjectIds = [];
+$hasResults = false;  // flag to detect if we output anything
 
-if (empty($doctype)) {  // Show projects only if no document type filter
+// Show project list only if doctype is 'Project'
+if ($doctype === "Project") {
     while ($row = $result1->fetch_assoc()) {
+        $hasResults = true;
         $projectId = htmlspecialchars($row['ProjectID']);
-        $matchedProjectIds[] = $row['ProjectID']; // store raw value for SQL use
+        $matchedProjectIds[] = $row['ProjectID']; // store raw value
 
         echo "<li class='result-item' data-projectid='{$projectId}'>
                 <div class='field'>Project</div>
@@ -175,18 +175,35 @@ if (empty($doctype)) {  // Show projects only if no document type filter
                 <div class='field'><i class='fa fa-eye'></i></div>
             </li>";
     }
-} else {
+}
+// Show projects only if no doctype filter
+elseif (empty($doctype)) {
     while ($row = $result1->fetch_assoc()) {
-        $matchedProjectIds[] = $row['ProjectID']; // just collect project IDs, no output
+        $hasResults = true;
+        $projectId = htmlspecialchars($row['ProjectID']);
+        $matchedProjectIds[] = $row['ProjectID']; // store raw value
+
+        echo "<li class='result-item' data-projectid='{$projectId}'>
+                <div class='field'>Project</div>
+                <div class='field'>{$projectId}</div>
+                <div class='field'><i class='fa fa-eye'></i></div>
+            </li>";
+    }
+}
+// For any other doctype, just collect project IDs, no output here
+else {
+    while ($row = $result1->fetch_assoc()) {
+        $matchedProjectIds[] = $row['ProjectID'];
     }
 }
 
 // ---------------------
 // 2. Fetch matching documents by filtered ProjectIDs
 // ---------------------
-if (!empty($matchedProjectIds)) {
+
+if (!empty($matchedProjectIds) && $doctype !== "Project") {
     $placeholders = implode(',', array_fill(0, count($matchedProjectIds), '?'));
-    
+
     if ($doctype) {
         $sqlDocs = "SELECT ProjectID, DocumentType FROM document WHERE ProjectID IN ($placeholders) AND DocumentType = ?";
         $stmt2 = $conn->prepare($sqlDocs);
@@ -205,6 +222,10 @@ if (!empty($matchedProjectIds)) {
     $stmt2->execute();
     $result2 = $stmt2->get_result();
 
+    if ($result2->num_rows > 0) {
+        $hasResults = true;
+    }
+
     while ($doc = $result2->fetch_assoc()) {
         $projectId = htmlspecialchars($doc['ProjectID']);
         $docType = htmlspecialchars($doc['DocumentType']);
@@ -215,6 +236,11 @@ if (!empty($matchedProjectIds)) {
             <div class='field'><i class='fa fa-eye'></i></div>
         </li>";
     }
+}
+
+// If nothing was output, show a no results message
+if (!$hasResults) {
+    echo "<p>No matching results found.</p>";
 }
 
 echo "</ul>";

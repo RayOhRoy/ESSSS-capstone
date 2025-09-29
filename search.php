@@ -72,6 +72,7 @@ if ($employeeID) {
 <div class="search-dropdown">
     <select id="documentTypeFilter">
         <option value="">Search for</option>
+        <option value="Project">Project</option>
         <option value="Original Plan">Original Plan</option>
         <option value="Title">Title</option>
         <option value="Certified Title">Certified Title</option>
@@ -156,7 +157,7 @@ if ($employeeID) {
 <span class="result">
     Results
 </span>
-<div id="liveResults" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
+<div id="liveResults" style="margin-top: 1%;">
     <p>Provide input or select from the list to initiate a search for matching project data...</p>
 </div>
 
