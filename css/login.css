@@ -91,6 +91,14 @@ hr {
     margin-bottom: 3cqw;
 }
 
+.form-row {
+    position: relative;
+    width: fit-content;
+    /* para sakto lang sa laki ng input */
+    margin: auto;
+    /* center sa loob ng panel */
+}
+
 .whitePanel input {
     border-radius: 0.5cqw;
     border: none;
@@ -100,7 +108,24 @@ hr {
     width: 20cqw;
     color: #7b0302;
     padding-left: 15px;
+    padding-right: 40px;
+    /* dagdag para may space sa eye icon */
     font-size: 1.3cqw;
+    box-sizing: border-box;
+    /* para di lumampas */
+}
+
+#togglePassword {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #7b0302;
+    font-size: 1.2em;
 }
 
 .whitePanel input::placeholder {
@@ -138,7 +163,20 @@ hr {
     background-color: #630303;
 }
 
+
 @media (max-width: 1080px) {
+    #togglePassword {
+        top: 45px;
+        font-size: 5vw;
+        right: 20px;
+    }
+
+    #tonggleIcon {
+        position: relative;
+        position: absolute;
+        font-size: 20%;
+    }
+
     .loginPanel {
         width: 90%;
         height: auto;
@@ -162,15 +200,17 @@ hr {
         width: 100%;
         height: auto;
         padding: 3cqw 0;
-
     }
 
     .whitePanel input {
-        width: 70%;
+        width: 100%;
         font-size: 3.5vw;
         height: 8vw;
         margin-bottom: 60px;
+        padding-right: 50px;
+        /* space pa rin para sa eye */
     }
+
 
     .SignInBtn {
         width: 40%;

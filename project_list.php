@@ -244,7 +244,7 @@ function maskName($fname, $lname)
             </div>
 
             <!-- Document Table -->
-            <div class="document-table" style="max-height: 10vw; min-width: 100%; overflow-y: auto;">
+            <div class="document-table">
                 <table>
                     <thead>
                         <tr>

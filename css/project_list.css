@@ -307,6 +307,7 @@ a.signout-button:hover {
 .document-table {
     width: 100%;
     overflow-x: auto;
+    height: 10vw;
     /* enables horizontal scroll on smaller screens */
 }
 
@@ -434,6 +435,18 @@ a.signout-button:hover {
 }
 
 @media (max-width: 1080px) {
+    .update-btn {
+
+        font-size: 3.25cqw;
+
+    }
+
+    .preview-btn {
+
+        font-size: 3.25cqw;
+
+    }
+
     .floating-add-project {
         width: 150px;
         height: 150px;

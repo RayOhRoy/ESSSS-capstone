@@ -175,7 +175,7 @@ while ($docRow = $docResult->fetch_assoc()) {
 
 <div class="topbar">
     <button type="button" id="update-back-btn" class="fa fa-arrow-left"></button>
-    <span style="font-size: 2cqw; color: #7B0302; font-weight: 700;">Update <?= htmlspecialchars($projectId) ?></span>
+    <span>Update <?= htmlspecialchars($projectId) ?></span>
     <div class="topbar-content">
         <div class="icons">
             <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -188,7 +188,7 @@ while ($docRow = $docResult->fetch_assoc()) {
 <div class="content">
     <form id="update_projectForm">
 
-        <input type="hidden" id="projectId" name="projectID" value="<?= htmlspecialchars($project['ProjectID']) ?>" />
+        <input type="hidden" id="projectId" name="projectId" value="<?= htmlspecialchars($project['ProjectID']) ?>" />
 
         <div class="form-wrapper">
             <div class="form-grid">

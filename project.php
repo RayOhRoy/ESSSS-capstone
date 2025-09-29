@@ -236,8 +236,7 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
                         style="margin: 0; display: flex; align-items: center; gap: 10px;">
 
                         <!-- The toggle/cancel button -->
-                        <button type="button" class="toggle-qr-btn"
-                            style="padding: 6px 14px; border: none; border-radius: 5px; background-color: #7B0302; color: white; cursor: pointer;">
+                        <button type="button" class="toggle-qr-btn">
                             <?= $toggleLabel ?>
                         </button>
 
