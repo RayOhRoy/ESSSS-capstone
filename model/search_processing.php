@@ -32,7 +32,6 @@ if (
 // CSS and header
 echo "
 <style>
-
 .result-list {
     max-height: 20rem;
     overflow-y: auto; 
@@ -40,23 +39,21 @@ echo "
 
 .result-item {
     display: flex;
-    flex-wrap: nowrap; /* keep fields in a row */
+    flex-wrap: nowrap;
     align-items: center;
     height: 3rem;
     margin-bottom: 1%;
     background-color: white;
-    /* Removed border */
     border-radius: 6px;
     cursor: pointer;
     color: black;
     transition: all 0.2s ease;
     justify-content: space-between;
-    /* Added subtle shadow below */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .result-item .field {
-    flex-basis: 33%; /* equally divide space */
+    flex-basis: 25%;
     flex-grow: 0;
     flex-shrink: 0;
     min-width: 0;
@@ -67,26 +64,22 @@ echo "
 
 .result-item:hover {
     filter: brightness(0.85);
-    /* Optionally intensify shadow on hover */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* First field aligned left */
 .result-item .field:nth-child(1) {
     justify-content: flex-start;
 }
-
-/* Second field aligned center */
 .result-item .field:nth-child(2) {
     justify-content: center;
 }
-
-/* Third field aligned right */
 .result-item .field:nth-child(3) {
+    justify-content: center;
+}
+.result-item .field:nth-child(4) {
     justify-content: flex-end;
 }
 
-/* Responsive */
 @media screen and (max-width: 768px) {
     .result-item {
         flex-direction: column;
@@ -164,87 +157,108 @@ if (!empty($params)) {
 $stmt1->execute();
 $result1 = $stmt1->get_result();
 
-// Collect matched project IDs
 $matchedProjectIds = [];
-$hasResults = false;  // flag to detect if we output anything
+$hasResults = false;
 
-// Show project list only if doctype is 'Project'
-if ($doctype === "Project") {
-    while ($row = $result1->fetch_assoc()) {
+while ($row = $result1->fetch_assoc()) {
+    $matchedProjectIds[] = $row['ProjectID'];
+}
+
+// ---------------------
+// 2. Show Project Document Type - Always 2 rows (Digital + Physical)
+// ---------------------
+
+if (!empty($matchedProjectIds) && ($doctype === "Project" || empty($doctype))) {
+    foreach ($matchedProjectIds as $projectId) {
         $hasResults = true;
-        $projectId = htmlspecialchars($row['ProjectID']);
-        $matchedProjectIds[] = $row['ProjectID']; // store raw value
 
+        // Fetch Digital version
+        $sqlDigital = "SELECT 1 FROM document WHERE ProjectID = ? AND DocumentType = 'Project' AND DigitalLocation IS NOT NULL LIMIT 1";
+        $stmtDigital = $conn->prepare($sqlDigital);
+        $stmtDigital->bind_param("s", $projectId);
+        $stmtDigital->execute();
+        $stmtDigital->store_result();
+        $hasDigital = $stmtDigital->num_rows > 0;
+
+        // Fetch Physical version
+        $sqlPhysical = "SELECT 1 FROM document WHERE ProjectID = ? AND DocumentType = 'Project' AND DocumentStatus IS NOT NULL LIMIT 1";
+        $stmtPhysical = $conn->prepare($sqlPhysical);
+        $stmtPhysical->bind_param("s", $projectId);
+        $stmtPhysical->execute();
+        $stmtPhysical->store_result();
+        $hasPhysical = $stmtPhysical->num_rows > 0;
+
+        // Output Digital row
         echo "<li class='result-item' data-projectid='{$projectId}'>
                 <div class='field'>Project</div>
                 <div class='field'>{$projectId}</div>
+                <div class='field'>Digital</div>
                 <div class='field'><i class='fa fa-eye'></i></div>
             </li>";
-    }
-}
-// Show projects only if no doctype filter
-elseif (empty($doctype)) {
-    while ($row = $result1->fetch_assoc()) {
-        $hasResults = true;
-        $projectId = htmlspecialchars($row['ProjectID']);
-        $matchedProjectIds[] = $row['ProjectID']; // store raw value
 
+        // Output Physical row
         echo "<li class='result-item' data-projectid='{$projectId}'>
                 <div class='field'>Project</div>
                 <div class='field'>{$projectId}</div>
+                <div class='field'>Physical</div>
                 <div class='field'><i class='fa fa-eye'></i></div>
             </li>";
-    }
-}
-// For any other doctype, just collect project IDs, no output here
-else {
-    while ($row = $result1->fetch_assoc()) {
-        $matchedProjectIds[] = $row['ProjectID'];
     }
 }
 
 // ---------------------
-// 2. Fetch matching documents by filtered ProjectIDs
+// 3. Other Document Types (e.g. TaxDec, SurveyPlan...)
 // ---------------------
 
 if (!empty($matchedProjectIds) && $doctype !== "Project") {
     $placeholders = implode(',', array_fill(0, count($matchedProjectIds), '?'));
-
+    $sqlDocs = "SELECT ProjectID, DocumentType, DigitalLocation, DocumentStatus 
+                FROM document 
+                WHERE ProjectID IN ($placeholders)";
     if ($doctype) {
-        $sqlDocs = "SELECT ProjectID, DocumentType FROM document WHERE ProjectID IN ($placeholders) AND DocumentType = ?";
-        $stmt2 = $conn->prepare($sqlDocs);
-
+        $sqlDocs .= " AND DocumentType = ?";
+        $stmtDocs = $conn->prepare($sqlDocs);
         $typesDoc = str_repeat('s', count($matchedProjectIds)) . 's';
         $params = array_merge($matchedProjectIds, [$doctype]);
-        $stmt2->bind_param($typesDoc, ...$params);
+        $stmtDocs->bind_param($typesDoc, ...$params);
     } else {
-        $sqlDocs = "SELECT ProjectID, DocumentType FROM document WHERE ProjectID IN ($placeholders)";
-        $stmt2 = $conn->prepare($sqlDocs);
-
+        $stmtDocs = $conn->prepare($sqlDocs);
         $typesDoc = str_repeat('s', count($matchedProjectIds));
-        $stmt2->bind_param($typesDoc, ...$matchedProjectIds);
+        $stmtDocs->bind_param($typesDoc, ...$matchedProjectIds);
     }
 
-    $stmt2->execute();
-    $result2 = $stmt2->get_result();
-
-    if ($result2->num_rows > 0) {
-        $hasResults = true;
-    }
+    $stmtDocs->execute();
+    $result2 = $stmtDocs->get_result();
 
     while ($doc = $result2->fetch_assoc()) {
         $projectId = htmlspecialchars($doc['ProjectID']);
         $docType = htmlspecialchars($doc['DocumentType']);
+        $isDigital = !empty($doc['DigitalLocation']);
+        $isPhysical = !empty($doc['DocumentStatus']);
 
-        echo "<li class='result-item' data-projectid='{$projectId}'>
-            <div class='field'>{$docType}</div>
-            <div class='field'>{$projectId}</div>
-            <div class='field'><i class='fa fa-eye'></i></div>
-        </li>";
+        if ($isDigital) {
+            echo "<li class='result-item' data-projectid='{$projectId}'>
+                    <div class='field'>{$docType}</div>
+                    <div class='field'>{$projectId}</div>
+                    <div class='field'>Digital</div>
+                    <div class='field'><i class='fa fa-eye'></i></div>
+                </li>";
+        }
+
+        if ($isPhysical) {
+            echo "<li class='result-item' data-projectid='{$projectId}'>
+                    <div class='field'>{$docType}</div>
+                    <div class='field'>{$projectId}</div>
+                    <div class='field'>Physical</div>
+                    <div class='field'><i class='fa fa-eye'></i></div>
+                </li>";
+        }
+
+        $hasResults = true;
     }
 }
 
-// If nothing was output, show a no results message
+// If no results at all
 if (!$hasResults) {
     echo "<p>No matching results found.</p>";
 }

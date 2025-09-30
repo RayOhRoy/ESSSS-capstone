@@ -68,27 +68,22 @@ function submitForm() {
     const hasPhysical = checkbox && checkbox.checked;
     const hasDigitalFiles = row.filesArray && row.filesArray.length > 0;
 
-    // Automatically save status as "stored" if physical is checked
     if (hasPhysical) {
       formData.append(`status_${docKey}`, "Stored");
     }
 
-    // Digital files
     if (hasDigitalFiles) {
       row.filesArray.forEach(file => {
         formData.append(`digital_${docKey}[]`, file);
       });
     } else if (hasPhysical) {
-      // Physical-only — send empty digital field to include the doc in PHP
       formData.append(`digital_${docKey}[]`, new Blob(), "");
     }
 
-    // Physical flag if disabled and checked
     if (checkbox && checkbox.disabled && checkbox.checked) {
       formData.append(`physical_${docKey}`, checkbox.value);
     }
 
-    // Disabled radio buttons
     const radios = row.querySelectorAll("input[type='radio']");
     radios.forEach(r => {
       if (r.disabled && r.checked) {
@@ -104,9 +99,10 @@ function submitForm() {
     .then(res => res.json())
     .then(data => {
       if (data.status === "success") {
-        const projectId = data.projectID || "Unknown Project ID";
+        const projectId = data.projectID || "UnknownProjectID";
+        const municipality = data.municipality || "UnknownMunicipality";
 
-        // Show modal
+        // Initial Modal
         const modal = document.createElement("div");
         modal.style = `
           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -114,18 +110,26 @@ function submitForm() {
           justify-content: center; z-index: 9999;
         `;
         modal.innerHTML = `
-          <div style="background:white; padding:50px; border-radius:10px; text-align:center; max-width:300px;">
+          <div style="background:white; padding:50px; border-radius:10px; text-align:center; max-width:320px;">
             <h3>Project uploaded successfully.</h3>
-            <div style="margin-top:15px;">
-              <button id="printQRBtn" style="margin-right:10px; padding:8px 15px;">Print QR</button>
-              <button id="okBtn" style="padding:8px 15px;">OK</button>
+            <div style="margin-top:20px; display: flex; justify-content: space-between; gap: 20px;">
+              <button id="printQRBtn" style="padding:8px 15px;">Print QR</button>
+              <button id="okBtn" style="
+                padding:8px 15px;
+                background-color: #ccc;
+                color: #666;
+                border: none;
+                cursor: not-allowed;
+              " disabled>Next</button>
             </div>
           </div>
         `;
         document.body.appendChild(modal);
 
-        // Print QR
-        document.getElementById("printQRBtn").addEventListener("click", () => {
+        const okBtn = document.getElementById("okBtn");
+        const printBtn = document.getElementById("printQRBtn");
+
+        printBtn.addEventListener("click", () => {
           const qrImages = [];
 
           const projectQR = document.getElementById("projectQRImg");
@@ -210,41 +214,90 @@ function submitForm() {
           doc.open();
           doc.write(printHTML);
           doc.close();
+
+          // Enable "Next" button and style it
+          okBtn.disabled = false;
+          okBtn.style.backgroundColor = printBtn.style.backgroundColor || "";
+          okBtn.style.color = printBtn.style.color || "";
+          okBtn.style.cursor = "pointer";
         });
 
-        document.getElementById("okBtn").addEventListener("click", () => {
+        okBtn.addEventListener("click", () => {
           document.body.removeChild(modal);
-          form.reset();
-          document.querySelector("#documentTable tbody").innerHTML = "";
 
-          // Reset QR state
-          qrGenerated = false;
-          const generateQRBtn = document.getElementById("generateQRBtn");
-          if (generateQRBtn) {
-            generateQRBtn.textContent = "Generate QR Code";
-            generateQRBtn.classList.remove("btn-cancel");
-            generateQRBtn.classList.add("btn-red");
+          // Build Digital Storage Path
+          let digitalStorage = `${municipality}-${projectId}`;
+          if (projectId.startsWith("CAL")) {
+            digitalStorage = `Calumpit/${projectId}`;
+          } else if (projectId.startsWith("HAG")) {
+            digitalStorage = `Hagonoy/${projectId}`;
           }
 
-          // --- Update sidebar highlight ---
-          // First remove all highlights
-          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-
-          // Find the matching menu item for "documents.php" and set it active
-          const menuItem = document.querySelector('.menu-item[data-page="documents.php"]');
-          if (menuItem) {
-            menuItem.classList.add('active'); // Mark it as active
-            // Simulate the click event to trigger page switch if needed (or just rely on the class change)
-            menuItem.click();
+          // Clean up Physical Storage ID (remove from 3rd dash onwards)
+          let physicalStorage = projectId;
+          const dashParts = projectId.split("-");
+          if (dashParts.length >= 3) {
+            physicalStorage = dashParts.slice(0, 3).join("-");
           }
+          // Create Storage Modal
+          const storageModal = document.createElement("div");
+          storageModal.style = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center;
+            justify-content: center; z-index: 10000;
+          `;
+          storageModal.innerHTML = `
+          <div style="background:white; padding:40px; border-radius:10px; max-width:450px; text-align:center;">
+            <h2 style="color:#7B0302; font-size:24px; margin-bottom:20px;">Project Storage</h2>
+            
+            <div style="text-align: left; font-size:16px;">
+              <p><strong>Digital Storage:</strong> ${digitalStorage}</p>
+              <p><strong>Physical Storage:</strong> ${physicalStorage}</p>
+            </div>
 
-          // Alternatively, if you're switching the page without using clicks:
-          // window.location.href = 'documents.php'; // Uncomment if you want full page reload
+            <div style="background:#d9f2d9; border:2px solid #3c763d; color:#2d572d; 
+                        padding:12px; margin-top:20px; border-radius:6px; display:flex; align-items:center; gap:10px;">
+              <i class="fa fa-exclamation-circle" style="font-size:18px; color:#2d572d;"></i>
+              <span style="font-size:14px;">Physical storage now open. Please place all physical documents in the assigned storage.</span>
+            </div>
+
+            <div style="margin-top:25px;">
+              <button id="closeStorageModalBtn" 
+                      style="padding:8px 15px; background:#7B0302; color:white; border:none; border-radius:5px; cursor:pointer;">
+                Close
+              </button>
+            </div>
+          </div>
+          `;
+          document.body.appendChild(storageModal);
+
+          document.getElementById("closeStorageModalBtn").addEventListener("click", () => {
+            document.body.removeChild(storageModal);
+
+            // Reset form and UI
+            form.reset();
+            document.querySelector("#documentTable tbody").innerHTML = "";
+
+            qrGenerated = false;
+            const generateQRBtn = document.getElementById("generateQRBtn");
+            if (generateQRBtn) {
+              generateQRBtn.textContent = "Generate QR Code";
+              generateQRBtn.classList.remove("btn-cancel");
+              generateQRBtn.classList.add("btn-red");
+            }
+
+            // Highlight correct sidebar menu
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            const menuItem = document.querySelector('.menu-item[data-page="documents.php"]');
+            if (menuItem) menuItem.classList.add('active');
+
+            // ✅ Redirect to project.php with projectId
+            loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
+          });
         });
-
       }
 
-      // Re-enable button after 5 seconds
+      // Re-enable upload button
       setTimeout(() => {
         if (uploadBtn) {
           uploadBtn.disabled = false;
