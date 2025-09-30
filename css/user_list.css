@@ -65,7 +65,7 @@
 
 .user-bottom-info input {
     margin-bottom: 10%;
-    width: 140%;
+    width: 120%;
     height: 2.5rem;
     font-size: 1.5rem;
 }
@@ -299,7 +299,6 @@ a.signout-button:hover {
 .modal-content {
     max-width: 20cqw;
     margin: 12cqw auto 0 auto;
-    /* center horizontally, may space sa taas */
     padding: 2cqw;
     background: white;
     border-radius: 1cqw !important;
@@ -550,7 +549,7 @@ button {
         max-width: 90%;
         margin: 20% auto;
         padding: 4cqw;
-        height: 42%;
+        height: 55%;
         margin-top: 50%;
         border-radius: 2cqw;
     }

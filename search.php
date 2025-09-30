@@ -158,7 +158,7 @@ if ($employeeID) {
 <span class="result">
     Results
 </span>
-<div id="liveResults" style="margin-top: 1%;">
+<div id="liveResults" >
     <p>Provide input or select from the list to initiate a search for matching project data...</p>
 </div>
 

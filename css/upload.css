@@ -86,7 +86,7 @@ input[type="date"] {
 
 .user-bottom-info input {
     margin-bottom: 10%;
-    width: 140%;
+    width: 120%;
     height: 2.5rem;
     font-size: 1.5rem;
 }
@@ -473,7 +473,39 @@ button {
     color: red;
     font-weight: bold;
 }
+.custom-modal {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(0,0,0,0.5); 
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
+    z-index: 9999;
+  }
 
+  .custom-modal-content {
+    background: white; 
+    padding: 50px; 
+    border-radius: 10px; 
+    text-align: center; 
+    max-width: 300px;
+  }
+
+  .custom-modal-buttons {
+    margin-top: 15px;
+  }
+
+  .custom-modal-buttons button {
+    padding: 8px 15px;
+    margin-right: 10px;
+  }
+
+  .custom-modal-buttons button:last-child {
+    margin-right: 0;
+  }
 @media (max-width: 1080px) {
     .user-menu-panel {
         display: none;
@@ -486,6 +518,47 @@ button {
         z-index: 999;
         text-align: center;
     }
+    .custom-modal h3{ 
+        font-size:7cqw;
+    }
+   .custom-modal {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(0,0,0,0.5); 
+    display: flex; 
+    align-items: center;
+    justify-content: center; 
+    z-index: 9999;
+  }
+
+  .custom-modal-content {
+    background: white; 
+    padding: 50px; 
+    border-radius: 10px; 
+    text-align: center; 
+    width:90%;
+    max-width: 100%;
+    height:50%;
+  }
+
+
+  .custom-modal-buttons {
+    margin-top: 15px;
+  }
+
+  .custom-modal-buttons button {
+    padding: 8px 15px;
+    margin-right: 10px;
+    font-size:7cqw;
+    margin-top:14cqw;
+  }
+
+  .custom-modal-buttons button:last-child {
+    margin-right: 0;
+  }
 
     .table-container {
         max-height: 200rem;

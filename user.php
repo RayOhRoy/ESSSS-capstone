@@ -19,12 +19,12 @@
                 <span>Upload</span>
             </a>
             <a href="#" class="menu-item" data-page="documents.php">
-                <span class="fa fa-list" alt="Documents"></span>
-                <span>Documents</span>
+                <span class="fa fa-list" alt="Digital Documents"></span>
+                <span>Digital Documents</span>
             </a>
             <a href="#" class="menu-item" data-page="physical_storage.php">
-                <span class="fa fa-database" alt="Physical Storage"></span>
-                <span>Physical Storage</span>
+                <span class="fa fa-database" alt="Physical Documents"></span>
+                <span>Physical Documents</span>
             </a>
             <a href="#" class="menu-item" data-page="search.php">
                 <span class="fa fa-qrcode" alt="Search"></span>
