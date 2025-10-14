@@ -20,7 +20,6 @@
     color: white;
 }
 
-
 .user-menu-panel {
     display: none;
     position: absolute;
@@ -32,7 +31,6 @@
     z-index: 999;
     text-align: center;
 }
-
 
 .user-panel-top {
     background-color: #7B0302;
@@ -167,7 +165,7 @@ a.signout-button:hover {
 .card-title {
     font-size: 2rem;
     font-weight: bold;
-    color: #7a0c0c;
+    color: #7B0302;
     margin-bottom: 20px;
 }
 
@@ -182,8 +180,29 @@ a.signout-button:hover {
     font-weight: bold;
 }
 
+.card-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    /* space between button and lock icon */
+}
+
 .open-button:hover {
     background-color: #5e0909;
+}
+
+.fa-lock,
+.fa-unlock-alt {
+    color: #7B0302;
+    font-size: 1.75rem;
+    transition: all ease 0.2s;
+}
+
+.fa-lock:hover,
+.fa-unlock-alt:hover {
+    color: #5e0909;
+    font-size: 1.75rem;
 }
 
 .envelope-columns {
@@ -202,25 +221,30 @@ a.signout-button:hover {
     width: 48%;
 }
 
-/* Card style */
 .envelope-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: white;
-    border: 1px solid #7a0c0c;
-    ;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    padding: 10px 20px;
-    height: 3rem;
-    font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #7B0302;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  padding: 10px 20px;
+  height: 3rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.envelope-card:not(.unavailable):hover {
+    background-color: #f9f9f9;
+    transform: scale(1.02);
 }
 
 /* Title style */
 .envelope-title {
     font-weight: bold;
-    color: #7a0c0c;
+    color: #7B0302;
 }
 
 /* Eye + Button group */
@@ -230,10 +254,18 @@ a.signout-button:hover {
     gap: 0.5rem;
 }
 
-.fa-eye {
-    color: #7a0c0c;
+.fa-eye,
+.fa-edit {
+    color: #7B0302;
     cursor: pointer;
     font-size: 1.25rem;
+    transition: all ease 0.2s;
+    border: none;
+}
+
+.fa-eye:hover,
+.fa-edit:hover {
+    color: #5e0909;
 }
 
 .envelope-button {
@@ -251,8 +283,227 @@ a.signout-button:hover {
     background-color: #5e0909;
 }
 
+.envelope-card.unavailable {
+    background-color: #f2f2f2;
+    border-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.envelope-card.unavailable .envelope-right {
+    opacity: 0.5;
+}
+
+.envelope-card.unavailable:hover {
+    background-color: #f2f2f2; /* no hover change */
+    box-shadow: none;
+    transform: none;
+}
+
+
+.hidden {
+  display: none !important;
+}
+
 .fa-eye:hover {
     color: #5e0909;
+}
+
+.fa-arrow-left {
+    font-size: 2vw;
+    border: none;
+    color: #7B0302;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.fa-arrow-left:hover {
+    filter: brightness(1.25);
+    transform: scale(1.05);
+    transition: filter 0.2s ease;
+    background-color: transparent;
+}
+
+.scroll-btn {
+    background: none;
+    border: 2px solid #800000;
+    color: #800000;
+    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    /* vertically center icon */
+    justify-content: center;
+    /* horizontally center icon */
+    margin: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+    width: 20rem;
+    height: 3rem;
+    text-align: center;
+    /* optional, doesn’t hurt */
+}
+
+.scroll-btn:hover {
+    background: #800000;
+    color: #fff;
+}
+
+#previewModal {
+    display: none;
+    /* visible */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+}
+
+#previewModal .modal-content {
+    background: white;
+    padding: 2vw;
+    border-radius: 1vw;
+    max-width: 600px;
+    width: 90%;
+    position: fixed;
+    /* fixed so it stays in viewport */
+    top: 50%;
+    /* vertical center */
+    left: 50%;
+    /* horizontal center */
+    transform: translate(-50%, -50%);
+    /* center exactly */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Close button */
+#previewModal #closeModal {
+    position: absolute;
+    top: 1vw;
+    right: 1vw;
+    cursor: pointer;
+    font-size: 2cqw;
+    color: #7B0302;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#previewModal #closeModal:hover {
+    color: #a10000;
+    transform: scale(1.2);
+}
+
+/* QR Code section */
+.qr-section {
+    text-align: center;
+    margin-bottom: 2vh;
+}
+
+.qr-img {
+    width: 120px;
+    height: 120px;
+}
+
+.qr-code-text {
+    font-weight: bold;
+    margin-top: 1vh;
+}
+
+/* Project details */
+.project-details p {
+    font-size: 0.85cqw;
+    margin: 0.5vh 0;
+    color: black;
+}
+
+.document-table {
+    width: 100%;
+    overflow-x: auto;
+    height: 10vw;
+    /* enables horizontal scroll on smaller screens */
+}
+
+.document-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5vh 0;
+    font-size: 0.7cqw;
+    /* smaller font */
+    table-layout: fixed;
+    /* make columns distribute evenly */
+}
+
+.document-table th,
+.document-table td {
+    border: 1px solid #ccc;
+    padding: 0.5vh 0.3vw;
+    text-align: center;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+
+.status {
+    font-weight: bold;
+    border-radius: 1vw;
+    /* smaller pill shape */
+    padding: 0.2vh 0.6vw;
+    /* reduced padding */
+    font-size: 0.65cqw;
+    /* optional: slightly smaller text */
+    text-align: center;
+    min-width: 60px;
+    /* optional: helps maintain pill look */
+}
+
+
+.status.stored {
+    background-color: #7B0302;
+    color: white;
+}
+
+.status.released {
+    background-color: #c2c2c2;
+    color: #7B0302;
+}
+
+.status.available {
+    background-color: #7B0302;
+    color: #fff;
+}
+
+/* Buttons */
+.modal-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 2vh;
+}
+
+.open-btn,
+.close-btn {
+    background-color: #7B0302;
+    color: white;
+    padding: 0.5vw 2vw;
+    border: none;
+    border-radius: 0.5vw;
+    font-size: 1cqw;
+    cursor: pointer;
+}
+
+.open-btn:hover,
+.close-btn:hover {
+    background-color: #a10000;
+}
+
+.qr-section img {
+    min-width: 250px;
+    min-height: 250px;
+}
+
+.qr-section p {
+    font-size: 1cqw;
+    font-weight: 700;
 }
 
 @media (max-width: 1080px) {

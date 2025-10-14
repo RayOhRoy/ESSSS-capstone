@@ -18,13 +18,6 @@ if ($employeeID) {
     $stmt->fetch();
     $stmt->close();
 }
-
-// === Pagination Logic ===
-$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-$page = max(1, min($page, 5)); // Limit between 1 and 5
-
-$leftStart = ($page - 1) * 10 + 1;
-$rightStart = $leftStart + 50;
 ?>
 
 <div class="user-menu-panel" id="userPanel">
@@ -66,6 +59,7 @@ $rightStart = $leftStart + 50;
 </div>
 
 <div class="topbar">
+    <button class="fa fa-arrow-left"></button>
     <span>Physical Storage</span>
     <div class="topbar-content">
         <div class="icons">
@@ -77,42 +71,122 @@ $rightStart = $leftStart + 50;
 <hr class="top-line" />
 
 <div class="card-container">
-    <div class="card">
-        <div class="card-title">HAG-01</div>
-        <button class="open-button">OPEN</button>
+  <div class="card">
+    <div class="card-title">HAG-01</div>
+    <div class="card-actions">
+      <button class="open-button" id="openEnvelopeBtn">OPEN</button>
+      <i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>
     </div>
-    <div class="card">
-        <div class="card-title">CAL-01</div>
-        <button class="open-button">OPEN</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">CAL-01</div>
+    <div class="card-actions">
+      <button class="open-button">OPEN</button>
+      <i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>
     </div>
+  </div>
 </div>
 
-<div class="envelope-columns" style="display: none;">
-    <!-- Left Column: 001–010 -->
-    <div class="envelope-container">
-        <?php for ($i = 1; $i <= 10; $i++): ?>
-            <?php $num = str_pad($i, 3, '0', STR_PAD_LEFT); ?>
-            <div class="envelope-card">
-                <div class="envelope-title">HAG-01-<?= $num ?></div>
-                <div class="envelope-right">
-                    <div class="fa fa-eye"></div>
-                    <button class="envelope-button">RETRIEVE</button>
-                </div>
-            </div>
-        <?php endfor; ?>
-    </div>
 
-    <!-- Right Column: 051–060 -->
-    <div class="envelope-container">
-        <?php for ($i = 51; $i <= 60; $i++): ?>
-            <?php $num = str_pad($i, 3, '0', STR_PAD_LEFT); ?>
-            <div class="envelope-card">
-                <div class="envelope-title">HAG-01-<?= $num ?></div>
-                <div class="envelope-right">
-                    <div class="fa fa-eye"></div>
-                    <button class="envelope-button">RETRIEVE</button>
-                </div>
+<div class="envelope-section" style="display:none; flex-direction:column; align-items:center;">
+    <button id="scrollUp" class="scroll-btn"><i class="fa fa-angle-up"></i></button>
+
+    <div class="envelope-columns"></div>
+
+    <button id="scrollDown" class="scroll-btn"><i class="fa fa-angle-down"></i></button>
+</div>
+
+<div id="previewModal" class="modal">
+    <div class="modal-content">
+        <span id="closeModal">&times;</span>
+        <div id="modalBody">
+
+            <!-- QR Code & Reference -->
+            <div class="qr-section">
+                <img src="picture/project_qr.png" alt="QR Code" class="qr-img">
+                <p class="preview-projectname">HAG-001</p>
             </div>
-        <?php endfor; ?>
+
+            <!-- Project Details -->
+            <div class="project-details">
+                <p><strong>Lot No.:</strong> LOT L - 11</p>
+                <p><strong>Address:</strong> San Miguel, Calumpit, Bulacan</p>
+                <p><strong>Survey Type:</strong> Sketch Plan</p>
+                <p><strong>Client:</strong> Juan Dela Cruz</p>
+                <p><strong>Physical Location:</strong> HAG-101</p>
+                <p><strong>Agent:</strong> Juanito Cruz</p>
+                <p><strong>Survey Period:</strong> April 3, 2025 - April 10, 2025</p>
+            </div>
+
+            <!-- Document Table -->
+            <div class="document-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th
+                                style="position: sticky; top: 0; background: white; z-index: 2; border-bottom: 2px solid #000; padding: 8px; border: 1px solid #ddd;">
+                                Document Name
+                            </th>
+                            <th
+                                style="position: sticky; top: 0; background: white; z-index: 2; border-bottom: 2px solid #000; padding: 8px; border: 1px solid #ddd;">
+                                Physical Documents
+                            </th>
+                            <th
+                                style="position: sticky; top: 0; background: white; z-index: 2; border-bottom: 2px solid #000; padding: 8px; border: 1px solid #ddd;">
+                                Digital Documents
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Original Plan</td>
+                            <td class="status stored">STORED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>Lot Title</td>
+                            <td class="status released">RELEASED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>Ref Plan/Lot Data</td>
+                            <td class="status stored">STORED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>TD</td>
+                            <td class="status stored">STORED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>Transmittal</td>
+                            <td class="status stored">STORED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>Field Notes</td>
+                            <td class="status released">RELEASED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>Deed of Sale/Transfer</td>
+                            <td class="status stored">STORED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td>Tax Declaration</td>
+                            <td class="status stored">STORED</td>
+                            <td class="status available">AVAILABLE</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Buttons -->
+            <div class="modal-buttons">
+                <button class="open-btn">OPEN</button>
+            </div>
+        </div>
     </div>
 </div>

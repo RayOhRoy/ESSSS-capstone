@@ -18,10 +18,6 @@ if ($employeeID) {
     $stmt->fetch();
     $stmt->close();
 }
-?>
-
-<?php
-include 'server/server.php';
 
 if (!isset($_GET['projectId'])) {
     die("Project ID not provided.");
@@ -68,6 +64,9 @@ foreach ($documents as $doc) {
         $groupedDocuments[$folderName][] = $doc;
     }
 }
+
+// Define previewable extensions
+$previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'dwg'];
 ?>
 
 <div class="user-menu-panel" id="userPanel">
@@ -120,21 +119,24 @@ foreach ($documents as $doc) {
 
 <hr class="top-line" />
 
+<?php
+$jobPosition = strtolower($_SESSION['jobposition'] ?? '');
+?>
+
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; width: 100%;">
     <div style="display: flex; gap: 10px; justify-content: center; flex: 1;">
         <button id="btn-digital" class="doc-tab-button active-tab">Digital Documents</button>
         <button id="btn-physical" class="doc-tab-button">Physical Documents</button>
     </div>
-    <button class="update-btn fa fa-edit" data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
-        onclick="redirectToUpdate(this)">
-    </button>
+
+    <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
+        <button class="update-btn fa fa-edit"
+            data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
+            onclick="redirectToUpdate(this)">
+        </button>
+    <?php endif; ?>
 </div>
 
-
-<?php
-// Define previewable extensions
-$previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
-?>
 
 <!-- Digital Documents Section -->
 <div id="digital-section" class="document-section">
@@ -156,10 +158,8 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
             if (is_dir($fullFolderPath)) {
                 $files = scandir($fullFolderPath);
                 foreach ($files as $file) {
-                    if ($file === '.' || $file === '..')
-                        continue;
-                    if (strpos($file, '-QR') !== false)
-                        continue;
+                    if ($file === '.' || $file === '..') continue;
+                    if (strpos($file, '-QR') !== false) continue;
 
                     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
                     if (in_array($ext, array_merge($previewableExts, ['other_extensions_if_any']))) {
@@ -167,8 +167,13 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
                     }
                 }
             }
-            ?>
 
+            // CAD Operator restriction
+            if (strtolower($jobPosition) === 'cad operator') {
+                $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
+                if (!in_array(strtolower($folder), $allowedTypes)) continue;
+            }
+        ?>
             <div class="document-folder" style="margin-bottom: 20px;">
                 <div class="folderName" style="color: #7B0302; font-weight: bold;">
                     <?= htmlspecialchars($folder) ?>
@@ -182,29 +187,33 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
                         $downloadUrl = $basePath . '/' . ltrim($relativeWebPath, '/');
                         $isPreviewable = in_array($ext, $previewableExts);
                         ?>
-                        <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                            <?php if ($isPreviewable): ?>
-                                <div class="file-name preview-doc" data-file="<?= htmlspecialchars($relativeWebPath) ?>"
-                                    title="Preview">
-                                    <?= htmlspecialchars($file) ?>
-                                </div>
-                            <?php else: ?>
-                                <a href="<?= htmlspecialchars($downloadUrl) ?>" class="file-name" title="Download"
-                                    download="<?= htmlspecialchars($file) ?>">
-                                    <?= htmlspecialchars($file) ?>
-                                </a>
-                            <?php endif; ?>
 
-                            <div style="display: flex; gap: 10px;">
-                                <?php if ($isPreviewable): ?>
-                                    <div class="fa fa-eye preview-doc" data-file="<?= htmlspecialchars($relativeWebPath) ?>"
-                                        title="Preview" style="font-size: 1.25rem; cursor: pointer; color: #000000ff;"
-                                        onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></div>
-                                <?php endif; ?>
-                                <a href="<?= htmlspecialchars($downloadUrl) ?>" class="fa fa-download" title="Download"
-                                    download="<?= htmlspecialchars($file) ?>" style="font-size: 1.25rem; color: #000000ff;"
-                                    onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></a>
+                        <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                            <div class="file-name <?= $isPreviewable ? 'preview-doc' : '' ?>"
+                                 data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+                                 title="<?= $isPreviewable ? 'Preview' : 'File' ?>">
+                                <?= htmlspecialchars($file) ?>
                             </div>
+
+                            <?php
+                            $showButtons = true;
+                            if (strtolower($jobPosition) === 'cad operator' && strtolower($folder) !== 'cad file') {
+                                $showButtons = false;
+                            }
+                            ?>
+
+                            <?php if ($showButtons): ?>
+                                <div style="display: flex; gap: 10px;">
+                                    <?php if ($isPreviewable): ?>
+                                        <div class="fa fa-eye preview-doc" data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+                                            title="Preview" style="font-size: 1.25rem; cursor: pointer; color: #000000ff;"
+                                            onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></div>
+                                    <?php endif; ?>
+                                    <a href="<?= htmlspecialchars($downloadUrl) ?>" class="fa fa-download" title="Download"
+                                        download="<?= htmlspecialchars($file) ?>" style="font-size: 1.25rem; color: #000000ff;"
+                                        onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></a>
+                                </div>
+                            <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -218,45 +227,50 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
     <h3>Physical Documents</h3>
 
     <ul>
-        <?php foreach ($documents as $doc): ?>
-            <?php
+        <?php
+        $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
+        foreach ($documents as $doc):
             $statusRaw = $doc['DocumentStatus'];
             $statusUpper = strtoupper(trim($statusRaw));
 
-            // Only show if DocumentStatus is STORED or RELEASE
-            if (in_array($statusUpper, ['STORED', 'RELEASE'])):
-                $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
-                ?>
-                <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
-                    <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
+            // Skip if not STORED/RELEASE
+            if (!in_array($statusUpper, ['STORED', 'RELEASE'])) continue;
 
+            // CAD Operator filtering
+            if (strtolower($jobPosition) === 'cad operator' &&
+                !in_array(strtolower($doc['DocumentType']), $allowedTypes)) continue;
+
+            $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
+        ?>
+            <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
+
+                <?php
+                $showButtons = true;
+                if (strtolower($jobPosition) === 'cad operator' &&
+                    strtolower($doc['DocumentType']) !== 'cad file') {
+                    $showButtons = false;
+                }
+                ?>
+
+                <?php if ($showButtons): ?>
                     <form class="qr-validate-form" data-projectid="<?= htmlspecialchars($projectId) ?>"
                         data-docname="<?= htmlspecialchars($doc['DocumentName']) ?>"
                         data-newstatus="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>"
                         style="margin: 0; display: flex; align-items: center; gap: 10px;">
 
-                        <!-- The toggle/cancel button -->
-                        <button type="button" class="toggle-qr-btn">
-                            <?= $toggleLabel ?>
-                        </button>
-
-                        <!-- Hidden input for QR scanning -->
+                        <button type="button" class="toggle-qr-btn"><?= $toggleLabel ?></button>
                         <input type="text" name="scannedQR" required autocomplete="off" autocorrect="off"
                             style="opacity: 0; position: absolute; pointer-events: none; width: 1px; height: 1px;">
-
-                        <!-- The Scan QR instruction text, hidden initially -->
                         <span class="scan-qr-text" style="display: none; font-style: italic; color: #555;">
                             Scan QR Code to proceed
                         </span>
                     </form>
-                </li>
-
-
-            <?php endif; ?>
+                <?php endif; ?>
+            </li>
         <?php endforeach; ?>
     </ul>
 </div>
-
 
 <!-- Image Preview Modal -->
 <div id="imageModal" class="image-modal">
@@ -264,6 +278,5 @@ $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'x
     <a href="#" class="fa fa-download download-image-modal" title="Download" download></a>
     <div id="modalContent"
         style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-        <!-- Preview content injected here dynamically -->
     </div>
 </div>

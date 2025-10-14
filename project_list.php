@@ -167,48 +167,64 @@ function maskName($fname, $lname)
 
 <hr class="top-line" />
 
+<?php
+$jobPosition = strtolower($_SESSION['jobposition'] ?? '');
+$hideUpdate = ($jobPosition === 'cad operator' || $jobPosition === 'compliance officer');
+?>
+
 <table class="projectlist-table" id="projectTable">
     <thead>
         <tr>
-            <th><button class="sort-btn active-sort" onclick="sortTable(0, this)">Project Name <i
-                        class="fa fa-long-arrow-down" style="margin-left:5px;"></i></button></th>
+            <th>
+                <button class="sort-btn active-sort" onclick="sortTable(0, this)">
+                    Project Name <i class="fa fa-long-arrow-down" style="margin-left:5px;"></i>
+                </button>
+            </th>
             <th><button class="sort-btn" onclick="sortTable(1, this)">Client Name</button></th>
             <th><button class="sort-btn" onclick="sortTable(2, this)">Survey Type</button></th>
             <th><button class="sort-btn">Preview</button></th>
-            <th><button class="sort-btn">Update</button></th>
+
+            <?php if (!$hideUpdate): ?>
+                <th><button class="sort-btn">Update</button></th>
+            <?php endif; ?>
         </tr>
     </thead>
     <tbody>
         <?php foreach ($projects as $project): ?>
-            <tr ondblclick="handleRowDoubleClick(this)" onclick="highlightRow(this)"
+            <tr onclick="handleRowClick(this)"
                 data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
                 data-lotno="<?= htmlspecialchars($project['LotNo'], ENT_QUOTES) ?>"
                 data-clientfullname="<?= htmlspecialchars($project['ClientFName'] . ' ' . $project['ClientLName'], ENT_QUOTES) ?>"
-                data-agent="<?= htmlspecialchars($project['Agent'] ?? 'not available', ENT_QUOTES) ?>" data-surveyperiod="<?= htmlspecialchars(
-                         date('F j, Y', strtotime($project['SurveyStartDate'])) . ' - ' . date('F j, Y', strtotime($project['SurveyEndDate'])),
-                         ENT_QUOTES
-                     ) ?>" data-address="<?= htmlspecialchars(formatAddress(
-                          $project['StreetAddress'] ?? '',
-                          $project['Barangay'] ?? '',
-                          $project['Municipality'] ?? '',
-                          $project['Province'] ?? ''
-                      ), ENT_QUOTES) ?>" data-approval="<?= htmlspecialchars($project['Approval'] ?? '', ENT_QUOTES) ?>"
-                data-requesttype="<?= htmlspecialchars($project['RequestType'] ?? '', ENT_QUOTES) ?>">
+                data-agent="<?= htmlspecialchars($project['Agent'] ?? 'not available', ENT_QUOTES) ?>"
+                data-surveyperiod="<?= htmlspecialchars(
+                    date('F j, Y', strtotime($project['SurveyStartDate'])) . ' - ' . date('F j, Y', strtotime($project['SurveyEndDate'])),
+                    ENT_QUOTES
+                ) ?>"
+                data-address="<?= htmlspecialchars(formatAddress(
+                    $project['StreetAddress'] ?? '',
+                    $project['Barangay'] ?? '',
+                    $project['Municipality'] ?? '',
+                    $project['Province'] ?? ''
+                ), ENT_QUOTES) ?>"
+                data-approval="<?= htmlspecialchars($project['Approval'] ?? '', ENT_QUOTES) ?>"
+                data-requesttype="<?= htmlspecialchars($project['RequestType'] ?? '', ENT_QUOTES) ?>"
+            >
                 <td class="row-first"><?= htmlspecialchars($project['ProjectID']) ?></td>
                 <td><?= htmlspecialchars(maskName($project['ClientFName'], $project['ClientLName'])) ?></td>
-                <!-- Municipality data cell removed -->
                 <td><?= htmlspecialchars($project['SurveyType']) ?></td>
                 <td><button class="preview-btn fa fa-eye"></button></td>
-                <td class="row-last">
-                    <button class="update-btn fa fa-edit"
-                        data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
-                        onclick="redirectToUpdate(this)">
-                    </button>
-                </td>
+
+                <?php if (!$hideUpdate): ?>
+                    <td class="row-last">
+                        <button class="update-btn fa fa-edit"
+                            data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
+                            onclick="redirectToUpdate(this)">
+                        </button>
+                    </td>
+                <?php endif; ?>
             </tr>
         <?php endforeach; ?>
     </tbody>
-
 </table>
 
 <div id="documentsData" style="display:none;"

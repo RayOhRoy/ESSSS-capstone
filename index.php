@@ -14,6 +14,7 @@ session_start();
 
 $userRole = $_SESSION['role'] ?? null;
 $userID = $_SESSION['employeeid'] ?? null;
+$userPosition = $_SESSION['JobPosition'] ?? null; 
 ?>
 
 <!DOCTYPE html>
@@ -34,6 +35,7 @@ $userID = $_SESSION['employeeid'] ?? null;
 <script>
   const SESSION_ROLE = <?= json_encode($userRole) ?>;
   const SESSION_ID = <?= json_encode($userID) ?>;
+  const SESSION_POSITION = <?= json_encode($userPosition) ?>; // ✅ Added job position for JS access
 </script>
 
 <script src="js/main.js?v=<?= filemtime('js/main.js') ?>"></script>

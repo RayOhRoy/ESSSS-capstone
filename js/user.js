@@ -9,6 +9,7 @@ function initAdminPage() {
     loadScript('js/edit_project.js');
     loadScript('js/project.js');
     loadScript('js/user_list.js');
+    loadScript('js/physical_storage.js');
   }
 
   // Universal listener for any element with data-page

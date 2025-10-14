@@ -115,13 +115,20 @@ if ($result && $result->num_rows > 0) {
 }
 $conn->close();
 ?>
-<div class="inputdate">
-    <label for="dateFrom">From:</label>
-    <input type="date" id="dateFrom" onchange="filterByDate()" />
+<div class="inputdate" style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+        <label for="dateFrom">From:</label>
+        <input type="date" id="dateFrom" onchange="filterByDate()" />
 
-    <label for="dateTo">To:</label>
-    <input type="date" id="dateTo" onchange="filterByDate()" />
+        <label for="dateTo">To:</label>
+        <input type="date" id="dateTo" onchange="filterByDate()" />
+    </div>
+
+    <button id="downloadPDF" class="download-btn" onclick="window.location.href='model/download_activity_log.php'">
+        <i class="fa fa-download" style="margin-right: 5px;"></i> Download Activity Log
+    </button>
 </div>
+
 <table class="activitylist-table" id="projectTable">
     <thead>
         <tr>

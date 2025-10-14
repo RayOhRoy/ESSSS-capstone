@@ -4,6 +4,7 @@ window.onload = () => {
 
   console.log("SESSION_ROLE:", SESSION_ROLE);
   console.log("SESSION_ID:", SESSION_ID);
+  console.log("SESSION_POSITION:", SESSION_POSITION);
   const lastPage = localStorage.getItem('lastLoadedPage');
 
   if (SESSION_ROLE === 'admin' || SESSION_ROLE === 'user') {

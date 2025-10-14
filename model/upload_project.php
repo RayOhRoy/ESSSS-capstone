@@ -1,9 +1,10 @@
 <?php
 session_start();
-include '../server/server.php'; 
+include '../server/server.php';
 include 'phpqrcode/qrlib.php';
 header('Content-Type: application/json');
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') die(json_encode(['status' => 'error', 'message' => 'POST required']));
+if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+    die(json_encode(['status' => 'error', 'message' => 'POST required']));
 
 date_default_timezone_set("Asia/Manila");
 
@@ -20,9 +21,9 @@ $prefix = ($municipality === 'Hagonoy') ? 'HAG' : (($municipality === 'Calumpit'
 // Generate new AddressID
 $sqlLast = "SELECT AddressID FROM address WHERE AddressID LIKE '$prefix-%' ORDER BY AddressID DESC LIMIT 1";
 $resLast = $conn->query($sqlLast);
-$newNum = ($resLast && $resLast->num_rows > 0) 
-          ? str_pad(intval(substr($resLast->fetch_assoc()['AddressID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-          : "001";
+$newNum = ($resLast && $resLast->num_rows > 0)
+    ? str_pad(intval(substr($resLast->fetch_assoc()['AddressID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+    : "001";
 $addressID = "$prefix-$newNum";
 
 // Insert into address
@@ -61,13 +62,14 @@ $projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $slot, $surveyCode);
 
 $uploadBase = __DIR__ . '/../uploads/';
 $projectFolder = $uploadBase . $projectID;
-if (!is_dir($projectFolder)) mkdir($projectFolder, 0777, true);
+if (!is_dir($projectFolder))
+    mkdir($projectFolder, 0777, true);
 
 $sqlProject = "INSERT INTO project 
     (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation, ProjectStatus, StorageStatus) 
     VALUES ('$projectID','$lotNo','$fname','$lname','$surveyType','$startDate','$endDate','$agent','$requestType',"
-    . ($approval !== null ? "'$approval'" : "NULL") . 
-      ",'$addressID','uploads/$projectID','$projectStatus', 'Stored')";
+    . ($approval !== null ? "'$approval'" : "NULL") .
+    ",'$addressID','uploads/$projectID','$projectStatus', 'Stored')";
 if ($conn->query($sqlProject) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error inserting project', 'error' => $conn->error]));
 }
@@ -75,9 +77,9 @@ if ($conn->query($sqlProject) !== TRUE) {
 // Log project creation
 $sqlLastActivity = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
 $resLastActivity = $conn->query($sqlLastActivity);
-$newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0) 
-                  ? str_pad(intval(substr($resLastActivity->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-                  : "001";
+$newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0)
+    ? str_pad(intval(substr($resLastActivity->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+    : "001";
 $activityLogID = "ACT-" . $newActivityNum;
 
 $timeNow = date('Y-m-d H:i:s');
@@ -104,6 +106,11 @@ foreach ($_FILES as $inputName => $fileGroup) {
 
 foreach ($documentKeys as $docKey) {
     $docName = ucwords(str_replace("_", " ", $docKey));
+
+    // Force correct capitalization for CAD folder only
+    if (strcasecmp(trim($docName), 'Cad File') === 0) {
+        $docName = 'CAD File';
+    }
     $safeDocName = str_replace(" ", "-", $docName);
 
     $physicalChecked = isset($_POST["physical_$docKey"]);
@@ -117,7 +124,8 @@ foreach ($documentKeys as $docKey) {
     if (!empty($_FILES["digital_$docKey"]['name'][0])) {
         $files = $_FILES["digital_$docKey"];
         foreach ($files['name'] as $i => $origName) {
-            if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
+            if ($files['error'][$i] !== UPLOAD_ERR_OK)
+                continue;
             $ext = pathinfo($origName, PATHINFO_EXTENSION);
             $newName = "$safeDocName-" . ($i + 1) . "." . $ext;
             $uploadedFiles[] = [
@@ -132,7 +140,8 @@ foreach ($documentKeys as $docKey) {
     }
 
     $docFolder = "$projectFolder/$safeDocName";
-    if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
+    if (!is_dir($docFolder))
+        mkdir($docFolder, 0777, true);
 
     $uploadedPaths = [];
     foreach ($uploadedFiles as $f) {
@@ -154,7 +163,7 @@ foreach ($documentKeys as $docKey) {
     // Generate DocumentID
     $sqlLastDoc = "SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1";
     $resLastDoc = $conn->query($sqlLastDoc);
-    $newDocNum = ($resLastDoc && $resLastDoc->num_rows > 0) 
+    $newDocNum = ($resLastDoc && $resLastDoc->num_rows > 0)
         ? str_pad(intval(substr($resLastDoc->fetch_assoc()['DocumentID'], 4)) + 1, 5, "0", STR_PAD_LEFT)
         : "00001";
     $documentID = "DOC-" . $newDocNum;
@@ -163,14 +172,14 @@ foreach ($documentKeys as $docKey) {
     $sqlDoc = "INSERT INTO document 
         (DocumentID, DocumentName, ProjectID, DocumentType, DigitalLocation, DocumentStatus, DocumentQR)
         VALUES ('$documentID','$documentName','$projectID','$docName'," .
-        ($filesString !== NULL ? "'".mysqli_real_escape_string($conn, $filesString)."'" : "NULL") . "," .
+        ($filesString !== NULL ? "'" . mysqli_real_escape_string($conn, $filesString) . "'" : "NULL") . "," .
         ($status !== null ? "'$status'" : "NULL") . ",'$docQRPath')";
     if ($conn->query($sqlDoc) === TRUE) {
         $sqlLastAct = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
         $resLastAct = $conn->query($sqlLastAct);
         $newActNum = ($resLastAct && $resLastAct->num_rows > 0)
-                      ? str_pad(intval(substr($resLastAct->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-                      : "001";
+            ? str_pad(intval(substr($resLastAct->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
+            : "001";
         $activityLogIDDoc = "ACT-" . $newActNum;
         $statusDoc = 'UPLOADED';
         $timeNow = date('Y-m-d H:i:s');

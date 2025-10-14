@@ -209,6 +209,21 @@ a.signout-button:hover {
     color: white;
 }
 
+.download-btn {
+    background-color: #7B0302;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s ease;
+}
+
+.download-btn:hover {
+    background-color: #a50403;
+}
+
 @media (max-width: 1080px) {
     .user-menu-panel {
         display: none;

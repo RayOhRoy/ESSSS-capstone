@@ -26,6 +26,8 @@ function loadAdminPage(page) {
         initLiveProjectSearch();
       } else if (page === 'activity_log.php') {
         filterByDate();
+      } else if (page === 'physical_storage.php') {
+        initPhysicalStorage();
       } else if (cleanPage === 'project.php') {
         initBackButton();
         initImageModal();
