@@ -202,6 +202,7 @@ function initPhysicalStorage() {
     });
 
     // 📄 Envelope click → open project
+    // 📄 Envelope click → open project
     function attachEnvelopeClickHandlers() {
         const envelopes = document.querySelectorAll(".envelope-card");
         envelopes.forEach((card) => {
@@ -209,12 +210,14 @@ function initPhysicalStorage() {
                 card.addEventListener("click", () => {
                     const projectId = card.getAttribute("data-projectid");
                     if (projectId) {
-                        loadAdminPage("project.php?projectId=" + encodeURIComponent(projectId));
+                        // add view=physical
+                        loadAdminPage("project.php?projectId=" + encodeURIComponent(projectId) + "&view=physical");
                     }
                 });
             }
         });
     }
+
 
     function attachButtonClickBlockers() {
         const buttons = document.querySelectorAll(

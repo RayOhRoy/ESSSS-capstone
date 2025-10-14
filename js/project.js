@@ -88,25 +88,36 @@ function initImageModal() {
 }
 
 function initDocumentTabSwitching() {
-  const btnDigital = document.getElementById('btn-digital');
-  const btnPhysical = document.getElementById('btn-physical');
-  const digitalSection = document.getElementById('digital-section');
-  const physicalSection = document.getElementById('physical-section');
+  const viewFlag = document.getElementById("view-flag");
+  const defaultView = viewFlag?.dataset.view || "digital";
+
+  const btnDigital = document.getElementById("btn-digital");
+  const btnPhysical = document.getElementById("btn-physical");
+  const digitalSection = document.getElementById("digital-section");
+  const physicalSection = document.getElementById("physical-section");
 
   if (!btnDigital || !btnPhysical || !digitalSection || !physicalSection) return;
 
-  btnDigital.addEventListener('click', () => {
-    digitalSection.style.display = 'block';
-    physicalSection.style.display = 'none';
-    btnDigital.classList.add('active-tab');
-    btnPhysical.classList.remove('active-tab');
+  const isPhysical = defaultView === "physical";
+
+  digitalSection.style.display = isPhysical ? "none" : "block";
+  physicalSection.style.display = isPhysical ? "block" : "none";
+  btnDigital.classList.toggle("active-tab", !isPhysical);
+  btnPhysical.classList.toggle("active-tab", isPhysical);
+
+  // Normal tab switching
+  btnDigital.addEventListener("click", () => {
+    digitalSection.style.display = "block";
+    physicalSection.style.display = "none";
+    btnDigital.classList.add("active-tab");
+    btnPhysical.classList.remove("active-tab");
   });
 
-  btnPhysical.addEventListener('click', () => {
-    digitalSection.style.display = 'none';
-    physicalSection.style.display = 'block';
-    btnPhysical.classList.add('active-tab');
-    btnDigital.classList.remove('active-tab');
+  btnPhysical.addEventListener("click", () => {
+    digitalSection.style.display = "none";
+    physicalSection.style.display = "block";
+    btnPhysical.classList.add("active-tab");
+    btnDigital.classList.remove("active-tab");
   });
 }
 

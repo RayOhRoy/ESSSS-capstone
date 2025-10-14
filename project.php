@@ -69,6 +69,12 @@ foreach ($documents as $doc) {
 $previewableExts = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'dwg'];
 ?>
 
+<?php
+$view = isset($_GET['view']) && $_GET['view'] === 'physical' ? 'physical' : 'digital';
+?>
+
+<div id="view-flag" data-view="<?= $view ?>" style="display:none;"></div>
+
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">
         <div class="user-top-info">
