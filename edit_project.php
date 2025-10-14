@@ -252,7 +252,7 @@ while ($docRow = $docResult->fetch_assoc()) {
                         <label for="surveyType"><span class="required-asterisk">* </span>Survey Type:</label>
                         <select id="surveyType" name="surveyType" disabled>
                             <?php
-              $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling/ Transfer", "Real Estate"];
+              $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling / Transfer", "Real Estate"];
               foreach ($types as $type): ?>
                             <option value="<?= $type ?>" <?= ($project['SurveyType'] === $type) ? 'selected' : '' ?>>
                                 <?= $type ?></option>

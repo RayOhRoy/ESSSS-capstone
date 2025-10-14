@@ -32,20 +32,16 @@ function initPhysicalStorage() {
         }
     }
     // ========================
-    // CONFIGURE HOSTINGER API
+    // CONFIGURE ESP32 IP HERE
     // ========================
-    const apiURL = "../model/lock_api.php"; // Replace with your actual URL
+    const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
 
-    // Toggle relay (send unlock/lock command)
-    function toggleRelay(lockNumber, action = 'unlock') {
-        fetch(apiURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lock: lockNumber, action })
-        })
-            .then(res => res.json())
-            .then(data => console.log(`Lock ${lockNumber} command sent:`, data))
-            .catch(err => console.error("Failed to send command:", err));
+    // Toggle relay (send unlock signal only)
+    function toggleRelay(lockNumber) {
+        fetch(`${espIP}/relay?lock=${lockNumber}&action=unlock`)
+            .then(response => response.text())
+            .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
+            .catch(err => console.error("ESP connection failed:", err));
     }
 
     // Initialize lock click handlers
@@ -53,29 +49,40 @@ function initPhysicalStorage() {
         const lock1 = document.getElementById("lock1");
         const lock2 = document.getElementById("lock2");
 
-        if (lock1) lock1.addEventListener("click", () => toggleRelay(1, 'unlock'));
-        if (lock2) lock2.addEventListener("click", () => toggleRelay(2, 'unlock'));
+        if (lock1) lock1.addEventListener("click", () => toggleRelay(1));
+        if (lock2) lock2.addEventListener("click", () => toggleRelay(2));
     }
 
-    // Update lock icons based on Hostinger-reported states
+    // Update lock icons based on ESP pin states (GPIO 32 & 33)
     async function updateLockIcons() {
         try {
-            const response = await fetch(`${apiURL}?action=get`);
+            const response = await fetch(`${espIP}/status`);
             if (!response.ok) throw new Error(`Status ${response.status}`);
 
             const data = await response.json();
 
+            // Lock 1 → GPIO 32
             const lock1 = document.getElementById("lock1");
-            const lock2 = document.getElementById("lock2");
-
             if (lock1) {
-                lock1.classList.toggle("fa-lock", data.lock1);
-                lock1.classList.toggle("fa-unlock-alt", !data.lock1);
+                if (data.lock1) { // HIGH = locked
+                    lock1.classList.remove("fa-unlock-alt");
+                    lock1.classList.add("fa-lock");
+                } else {
+                    lock1.classList.remove("fa-lock");
+                    lock1.classList.add("fa-unlock-alt");
+                }
             }
 
+            // Lock 2 → GPIO 33
+            const lock2 = document.getElementById("lock2");
             if (lock2) {
-                lock2.classList.toggle("fa-lock", data.lock2);
-                lock2.classList.toggle("fa-unlock-alt", !data.lock2);
+                if (data.lock2) { // HIGH = locked
+                    lock2.classList.remove("fa-unlock-alt");
+                    lock2.classList.add("fa-lock");
+                } else {
+                    lock2.classList.remove("fa-lock");
+                    lock2.classList.add("fa-unlock-alt");
+                }
             }
 
         } catch (err) {
@@ -83,11 +90,10 @@ function initPhysicalStorage() {
         }
     }
 
-    // Poll Hostinger every 500ms
+    // Poll ESP32 every 500ms
     setInterval(updateLockIcons, 500);
     updateLockIcons();
     initLockToggle();
-
 
     // 📨 Generate envelopes (20 per page, split into 2 columns)
     async function renderEnvelopes(page) {
@@ -111,6 +117,8 @@ function initPhysicalStorage() {
 
             // Find full project ID that starts with this prefix
             const fullProjectId = existingProjects.find(pid => pid.startsWith(label)) || label;
+            const userDataEl = document.getElementById('userData');
+            const jobPosition = userDataEl?.dataset.jobposition || '';
 
             return `
             <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
@@ -118,10 +126,12 @@ function initPhysicalStorage() {
                 <div class="envelope-right">
                     ${exists ? `
                         <div class="preview-modal-btn fa fa-eye"></div>
-                        <button class="fa fa-edit update-btn"
-                            data-projectid="${fullProjectId}"
-                            onclick="redirectToUpdate(this)">
-                        </button>
+                        ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
+                            <button class="fa fa-edit update-btn"
+                                data-projectid="${fullProjectId}"
+                                onclick="redirectToUpdate(this)">
+                            </button>
+                        `}
                         <button class="envelope-button">RETRIEVE</button>
                     ` : `
                         <div class="fa fa-eye" style="visibility:hidden;"></div>

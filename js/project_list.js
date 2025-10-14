@@ -1,22 +1,45 @@
-function sortTable(col, btn) {
-  const table = document.getElementById("projectTable");
-  const tbody = table.querySelector("tbody");
+// ===== GLOBAL VARIABLES =====
+let lastClickedRow = null;
+let clickTimer = null;
 
-  let rows = Array.from(tbody.rows); // only body rows
-  rows.sort((a, b) => {
-    const x = a.cells[col].innerText.trim().toLowerCase();
-    const y = b.cells[col].innerText.trim().toLowerCase();
-    return x.localeCompare(y);
-  });
+// ===== ROW CLICK HANDLER (SINGLE + DOUBLE) =====
+function handleRowClick(row) {
+  // If a click occurs before timer finishes → it's a double-click
+  if (clickTimer) {
+    clearTimeout(clickTimer);
+    clickTimer = null;
 
-  rows.forEach(row => tbody.appendChild(row)); // re-append sorted rows
+    // === DOUBLE CLICK ACTION ===
+    const projectId = row.getAttribute("data-projectid");
+    if (projectId) {
+      loadAdminPage("project.php?projectId=" + encodeURIComponent(projectId));
+    }
+  } else {
+    // === SINGLE CLICK ACTION ===
+    clickTimer = setTimeout(() => {
+      // Highlight the selected row
+      if (lastClickedRow && lastClickedRow !== row) {
+        lastClickedRow.classList.remove("highlighted-row");
+      }
 
-  document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active-sort"));
-  btn.classList.add("active-sort");
+      row.classList.toggle("highlighted-row");
+      lastClickedRow = row.classList.contains("highlighted-row") ? row : null;
+
+      // Reset timer
+      clickTimer = null;
+    }, 250); // 250ms delay to detect double-click
+  }
 }
 
-let sortDirection = {};   // store ascending/descending state per column
-let lastSortedCol = null; // track last sorted column
+// ===== BUTTON ACTIONS =====
+function redirectToUpdate(button) {
+  const projectId = button.getAttribute("data-projectid");
+  loadAdminPage("edit_project.php?projectId=" + encodeURIComponent(projectId));
+}
+
+// ===== SORTING =====
+let sortDirection = {};
+let lastSortedCol = null;
 
 function sortTable(col, btn) {
   const table = document.getElementById("projectTable");
@@ -25,9 +48,9 @@ function sortTable(col, btn) {
 
   // Toggle sort direction
   if (lastSortedCol !== col) {
-    sortDirection[col] = true; // ascending by default
+    sortDirection[col] = true;
   } else {
-    sortDirection[col] = !sortDirection[col]; // toggle
+    sortDirection[col] = !sortDirection[col];
   }
   lastSortedCol = col;
 
@@ -44,41 +67,44 @@ function sortTable(col, btn) {
   // Reset button styles
   document.querySelectorAll(".sort-btn").forEach(b => {
     b.classList.remove("active-sort");
-    b.innerHTML = b.innerHTML.replace(/<i.*<\/i>/, ''); // remove arrow
+    b.innerHTML = b.innerHTML.replace(/<i.*<\/i>/, '');
   });
 
-  // Add active arrow icon
+  // Add active arrow
   btn.classList.add("active-sort");
   const arrow = sortDirection[col]
     ? '<i class="fa fa-long-arrow-up" style="margin-left:5px;"></i>'
     : '<i class="fa fa-long-arrow-down" style="margin-left:5px;"></i>';
   btn.innerHTML = btn.textContent + arrow;
+
+  attachRowAndButtonHandlers();
 }
 
-// Default sort (optional)
-const defaultBtn = document.querySelector(".sort-btn.active-sort");
-if (defaultBtn) sortTable(0, defaultBtn);
+// ===== BUTTON CLICK BLOCKERS =====
+function attachButtonClickBlockers() {
+  const buttons = document.querySelectorAll(".update-btn, .preview-btn");
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation(); // prevent triggering row click
+      const projectId = btn.getAttribute("data-projectid");
 
-// Redirect to edit page
-function redirectToUpdate(button) {
-  const projectId = button.getAttribute('data-projectid');
-  loadAdminPage('edit_project.php?projectId=' + encodeURIComponent(projectId));
+      if (btn.classList.contains("update-btn")) {
+        redirectToUpdate(btn);
+      }
+      // .preview-btn handled by modal separately
+    });
+  });
 }
 
-let lastClickedRow = null;
+// ===== REATTACH ROW & BUTTON HANDLERS =====
+function attachRowAndButtonHandlers() {
+  const rows = document.querySelectorAll("#projectTable tbody tr");
 
-function handleRowClick(row) {
-  // highlight
-  if (lastClickedRow && lastClickedRow !== row) {
-    lastClickedRow.classList.remove('highlighted-row');
-  }
+  rows.forEach((row) => {
+    // No need to re-add onclick since it's already inline in HTML
+    // This ensures programmatic re-bind after sorting (if needed)
+    row.onclick = () => handleRowClick(row);
+  });
 
-  row.classList.toggle('highlighted-row');
-  lastClickedRow = row.classList.contains('highlighted-row') ? row : null;
-
-  // redirect
-  const projectId = row.getAttribute('data-projectid');
-  if (projectId) {
-    loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
-  }
+  attachButtonClickBlockers();
 }

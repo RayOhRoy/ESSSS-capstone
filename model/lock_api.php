@@ -1,4 +1,7 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");   
 // File-based storage (or use DB)
 $statusFile = 'lock_status.json';
 
@@ -52,4 +55,3 @@ if (isset($input['update']) && $input['update'] === 'status') {
 }
 
 ?>
-    

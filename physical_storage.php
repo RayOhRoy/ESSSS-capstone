@@ -2,6 +2,7 @@
 
 <?php
 session_start();
+$jobPosition = strtolower($_SESSION['jobposition'] ?? '');
 include 'server/server.php';
 
 $employeeID = $_SESSION['employeeid'] ?? null;
@@ -19,6 +20,10 @@ if ($employeeID) {
     $stmt->close();
 }
 ?>
+
+<div id="userData" 
+     data-jobposition="<?= htmlspecialchars(strtolower($_SESSION['jobposition'] ?? '')) ?>">
+</div>
 
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">

@@ -16,7 +16,7 @@ if (!$employeeID) {
 }
 
 // Required: project ID to update
-$projectID = $_POST['projectID'] ?? '';
+$projectID = $_POST['projectId'] ?? '';
 if (!$projectID) {
     die(json_encode(['status' => 'error', 'message' => 'Project ID missing']));
 }
