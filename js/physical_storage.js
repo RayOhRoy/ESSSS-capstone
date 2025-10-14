@@ -91,7 +91,7 @@ function initPhysicalStorage() {
     }
 
     // Poll ESP32 every 500ms
-    setInterval(updateLockIcons, 500);
+    setInterval(updateLockIcons, 1000);
     updateLockIcons();
     initLockToggle();
 

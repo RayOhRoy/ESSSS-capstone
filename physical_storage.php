@@ -2,27 +2,34 @@
 
 <?php
 session_start();
-$jobPosition = strtolower($_SESSION['jobposition'] ?? '');
 include 'server/server.php';
+
+// ✅ Get job position from session (don’t overwrite it later)
+$jobPosition = strtolower($_SESSION['jobposition'] ?? '');
 
 $employeeID = $_SESSION['employeeid'] ?? null;
 $empFName = '';
 $empLName = '';
-$jobPosition = '';
 $empEmail = '';
 
+// Fetch employee data from DB
 if ($employeeID) {
     $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
     $stmt->bind_param("s", $employeeID);
     $stmt->execute();
-    $stmt->bind_result($empFName, $empLName, $jobPosition, $empEmail);
+    $stmt->bind_result($empFName, $empLName, $dbJobPosition, $empEmail);
     $stmt->fetch();
     $stmt->close();
+
+    // ✅ Use DB job position if available, otherwise session
+    if (!empty($dbJobPosition)) {
+        $jobPosition = strtolower($dbJobPosition);
+    }
 }
 ?>
 
 <div id="userData" 
-     data-jobposition="<?= htmlspecialchars(strtolower($_SESSION['jobposition'] ?? '')) ?>">
+     data-jobposition="<?= htmlspecialchars($jobPosition) ?>">
 </div>
 
 <div class="user-menu-panel" id="userPanel">
@@ -80,7 +87,9 @@ if ($employeeID) {
     <div class="card-title">HAG-01</div>
     <div class="card-actions">
       <button class="open-button" id="openEnvelopeBtn">OPEN</button>
-      <i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>
+      <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
+        <i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -88,7 +97,9 @@ if ($employeeID) {
     <div class="card-title">CAL-01</div>
     <div class="card-actions">
       <button class="open-button">OPEN</button>
-      <i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>
+      <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
+        <i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>
+      <?php endif; ?>
     </div>
   </div>
 </div>
