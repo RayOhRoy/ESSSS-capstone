@@ -136,8 +136,7 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
     </div>
 
     <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
-        <button class="update-btn fa fa-edit"
-            data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
+        <button class="update-btn fa fa-edit" data-projectid="<?= htmlspecialchars($project['ProjectID'], ENT_QUOTES) ?>"
             onclick="redirectToUpdate(this)">
         </button>
     <?php endif; ?>
@@ -146,92 +145,45 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
 
 <!-- Digital Documents Section -->
 <div id="digital-section" class="document-section">
-    <?php if (!empty($groupedDocuments)): ?>
+    <h3>Digital Documents</h3>
+    <?php if (!empty($documents)): ?>
         <?php
         $baseDir = __DIR__ . '/uploads';
-        foreach ($groupedDocuments as $folder => $docs):
-            $firstDoc = reset($docs);
-            $folderPathRaw = $firstDoc['DigitalLocation'];
-            $folderPath = explode(';', $folderPathRaw)[0];
+        foreach ($documents as $doc):
+            if (empty($doc['DigitalLocation']) || empty($doc['DocumentName']))
+                continue;
 
-            $folderPathParts = explode('/', $folderPath);
-            array_pop($folderPathParts);
-            $cleanFolderPath = implode('/', $folderPathParts);
+            $filePathRaw = $doc['DigitalLocation'];
+            $fileParts = explode(';', $filePathRaw);
+            $filePath = $fileParts[0];
 
-            $fullFolderPath = $baseDir . '/' . $cleanFolderPath;
-            $fileList = [];
+            $fullPath = $baseDir . '/' . $filePath;
+            $fileName = basename($filePath);
 
-            if (is_dir($fullFolderPath)) {
-                $files = scandir($fullFolderPath);
-                foreach ($files as $file) {
-                    if ($file === '.' || $file === '..') continue;
-                    if (strpos($file, '-QR') !== false) continue;
+            if (!file_exists($fullPath))
+                continue;
 
-                    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                    if (in_array($ext, array_merge($previewableExts, ['other_extensions_if_any']))) {
-                        $fileList[] = $file;
-                    }
-                }
-            }
-
-            // CAD Operator restriction
-            if (strtolower($jobPosition) === 'cad operator') {
-                $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
-                if (!in_array(strtolower($folder), $allowedTypes)) continue;
-            }
-        ?>
-            <div class="document-folder" style="margin-bottom: 20px;">
-                <div class="folderName" style="color: #7B0302; font-weight: bold;">
-                    <?= htmlspecialchars($folder) ?>
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $isPreviewable = in_array($ext, $previewableExts);
+            $relativeWebPath = str_replace(['../', './'], '', $filePath);
+            ?>
+            <div class="file-row" style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div class="file-name <?= $isPreviewable ? 'preview-doc' : '' ?>"
+                    data-file="<?= htmlspecialchars($relativeWebPath) ?>" title="<?= $isPreviewable ? 'Preview' : 'File' ?>"
+                    style="cursor: pointer; flex: 1;">
+                    <?= htmlspecialchars($fileName) ?>
                 </div>
-                <ul>
-                    <?php foreach ($fileList as $file): ?>
-                        <?php
-                        $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-                        $relativeWebPath = str_replace(['../', './'], '', $cleanFolderPath . '/' . $file);
-                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                        $downloadUrl = $basePath . '/' . ltrim($relativeWebPath, '/');
-                        $isPreviewable = in_array($ext, $previewableExts);
-                        ?>
-
-                        <li style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                            <div class="file-name <?= $isPreviewable ? 'preview-doc' : '' ?>"
-                                 data-file="<?= htmlspecialchars($relativeWebPath) ?>"
-                                 title="<?= $isPreviewable ? 'Preview' : 'File' ?>">
-                                <?= htmlspecialchars($file) ?>
-                            </div>
-
-                            <?php
-                            $showButtons = true;
-                            if (strtolower($jobPosition) === 'cad operator' && strtolower($folder) !== 'cad file') {
-                                $showButtons = false;
-                            }
-                            ?>
-
-                            <?php if ($showButtons): ?>
-                                <div style="display: flex; gap: 10px;">
-                                    <?php if ($isPreviewable): ?>
-                                        <div class="fa fa-eye preview-doc" data-file="<?= htmlspecialchars($relativeWebPath) ?>"
-                                            title="Preview" style="font-size: 1.25rem; cursor: pointer; color: #000000ff;"
-                                            onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></div>
-                                    <?php endif; ?>
-                                    <a href="<?= htmlspecialchars($downloadUrl) ?>" class="fa fa-download" title="Download"
-                                        download="<?= htmlspecialchars($file) ?>" style="font-size: 1.25rem; color: #000000ff;"
-                                        onmouseover="this.style.color='#7B0302';" onmouseout="this.style.color='#000000ff';"></a>
-                                </div>
-                            <?php endif; ?>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
             </div>
         <?php endforeach; ?>
+    <?php else: ?>
+        <p style="text-align: center; color: #555;">No digital documents available.</p>
     <?php endif; ?>
 </div>
+
 
 <!-- Physical Documents Section -->
 <div id="physical-section" class="document-section" style="display: none;">
     <h3>Physical Documents</h3>
-
     <ul>
         <?php
         $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
@@ -240,21 +192,27 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
             $statusUpper = strtoupper(trim($statusRaw));
 
             // Skip if not STORED/RELEASE
-            if (!in_array($statusUpper, ['STORED', 'RELEASE'])) continue;
+            if (!in_array($statusUpper, ['STORED', 'RELEASE']))
+                continue;
 
             // CAD Operator filtering
-            if (strtolower($jobPosition) === 'cad operator' &&
-                !in_array(strtolower($doc['DocumentType']), $allowedTypes)) continue;
+            if (
+                strtolower($jobPosition) === 'cad operator' &&
+                !in_array(strtolower($doc['DocumentType']), $allowedTypes)
+            )
+                continue;
 
             $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
-        ?>
+            ?>
             <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
                 <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
 
                 <?php
                 $showButtons = true;
-                if (strtolower($jobPosition) === 'cad operator' &&
-                    strtolower($doc['DocumentType']) !== 'cad file') {
+                if (
+                    strtolower($jobPosition) === 'cad operator' &&
+                    strtolower($doc['DocumentType']) !== 'cad file'
+                ) {
                     $showButtons = false;
                 }
                 ?>
