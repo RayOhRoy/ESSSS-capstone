@@ -80,6 +80,16 @@ echo "
     justify-content: flex-end;
 }
 
+.result-item .fa-eye {
+    cursor: pointer;
+    color: #007bff;
+    transition: color 0.2s ease;
+}
+
+.result-item .fa-eye:hover {
+    color: #0056b3;
+}
+
 @media screen and (max-width: 768px) {
     .result-item {
         flex-direction: column;
@@ -193,7 +203,7 @@ if (!empty($matchedProjectIds) && ($doctype === "Project" || empty($doctype))) {
                 <div class='field'>Project</div>
                 <div class='field'>{$projectId}</div>
                 <div class='field'>Digital</div>
-                <div class='field'><i class='fa fa-eye'></i></div>
+                <div class='field'><i class='fa fa-eye' data-value='ProjectQR'></i></div>
             </li>";
 
         // Output Physical row
@@ -201,7 +211,7 @@ if (!empty($matchedProjectIds) && ($doctype === "Project" || empty($doctype))) {
                 <div class='field'>Project</div>
                 <div class='field'>{$projectId}</div>
                 <div class='field'>Physical</div>
-                <div class='field'><i class='fa fa-eye'></i></div>
+                <div class='field'><i class='fa fa-eye' data-value='ProjectQR'></i></div>
             </li>";
     }
 }
@@ -241,7 +251,7 @@ if (!empty($matchedProjectIds) && $doctype !== "Project") {
                     <div class='field'>{$docType}</div>
                     <div class='field'>{$projectId}</div>
                     <div class='field'>Digital</div>
-                    <div class='field'><i class='fa fa-eye'></i></div>
+                    <div class='field'><i class='fa fa-eye' data-value='DocumentQR'></i></div>
                 </li>";
         }
 
@@ -250,7 +260,7 @@ if (!empty($matchedProjectIds) && $doctype !== "Project") {
                     <div class='field'>{$docType}</div>
                     <div class='field'>{$projectId}</div>
                     <div class='field'>Physical</div>
-                    <div class='field'><i class='fa fa-eye'></i></div>
+                    <div class='field'><i class='fa fa-eye' data-value='DocumentQR'></i></div>
                 </li>";
         }
 

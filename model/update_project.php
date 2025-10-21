@@ -83,48 +83,46 @@ if (count($parts) === 4) {
     $newProjectID = $projectID;
 }
 
+// Remove suffix for folders, QR, and digital location
+$baseProjectID = preg_replace('/-[A-Z]{3}$/', '', $newProjectID);
+
 // — File & Folder Rename Logic —
 $basePath = '../uploads';
-$oldFolderPath = "$basePath/$projectID";
-$newFolderPath = "$basePath/$newProjectID";
+$oldFolderPath = "$basePath/$baseProjectID"; // use folder without suffix
+$newFolderPath = "$basePath/$baseProjectID"; // stays same base folder (no suffix change)
 
 if (is_dir($oldFolderPath)) {
-    // Rename main folder
-    if (!rename($oldFolderPath, $newFolderPath)) {
-        die(json_encode(['status' => 'error', 'message' => 'Failed to rename project folder']));
-    }
+    // ✅ REGENERATE NEW PROJECT QR (folder stays same)
+    $qrContent = "uploads/$baseProjectID";
+    $newQRFile = "$newFolderPath/{$baseProjectID}-QR.png";
 
-    // ✅ REGENERATE NEW PROJECT QR
-    $qrContent = "uploads/$newProjectID";
-    $newQRFile = "$newFolderPath/{$newProjectID}-QR.png";
-
-    // Remove old QR if it exists (old name)
-    $oldQRFile = "$newFolderPath/{$projectID}-QR.png";
-    if (file_exists($oldQRFile)) {
-        unlink($oldQRFile);
+    // Remove any old QR file(s)
+    foreach (glob("$newFolderPath/*-QR.png") as $oldQR) {
+        unlink($oldQR);
     }
 
     QRcode::png($qrContent, $newQRFile, QR_ECLEVEL_L, 4);
 
-    // Rename document QR codes inside subfolders
+    // Rename document QR codes inside subfolders (keep base ID only)
     $subfolders = scandir($newFolderPath);
     foreach ($subfolders as $folder) {
         if ($folder === '.' || $folder === '..') continue;
         $subfolderPath = "$newFolderPath/$folder";
         if (is_dir($subfolderPath)) {
             $formattedFolder = str_replace(' ', '-', $folder);
-            $oldSubQR = "$subfolderPath/{$projectID}-$formattedFolder-QR.png";
-            $newSubQR = "$subfolderPath/{$newProjectID}-$formattedFolder-QR.png";
-
-            if (file_exists($oldSubQR)) {
-                rename($oldSubQR, $newSubQR);
+            $oldSubQR = glob("$subfolderPath/*-QR.png");
+            foreach ($oldSubQR as $oldQRFile) {
+                unlink($oldQRFile);
             }
+            $newSubQR = "$subfolderPath/{$baseProjectID}-$formattedFolder-QR.png";
+            $subQRContent = "uploads/$baseProjectID/$formattedFolder";
+            QRcode::png($subQRContent, $newSubQR, QR_ECLEVEL_L, 4);
         }
     }
 }
 
 // — Update project record —
-$newQRPath = "uploads/$newProjectID/$newProjectID-QR.png";
+$newQRPath = "uploads/$baseProjectID/{$baseProjectID}-QR.png";
 
 $sqlUpdateProject = "UPDATE project SET 
     ProjectID = '$newProjectID',
@@ -139,7 +137,7 @@ $sqlUpdateProject = "UPDATE project SET
     Approval = " . ($approval !== null ? "'$approval'" : "NULL") . ",
     ProjectStatus = '$projectStatus',
     ProjectQR = '$newQRPath',
-    DigitalLocation = 'uploads/$newProjectID'
+    DigitalLocation = 'uploads/$baseProjectID'
     WHERE ProjectID = '$projectID'";
 
 if (!$conn->query($sqlUpdateProject)) {
@@ -147,20 +145,15 @@ if (!$conn->query($sqlUpdateProject)) {
 }
 
 // — Update document table —
-$sqlGetDocuments = "SELECT DocumentID, DocumentName FROM document WHERE ProjectID = '$projectID'";
+$sqlGetDocuments = "SELECT DocumentID, DocumentName, DocumentType FROM document WHERE ProjectID = '$projectID'";
 $resDocuments = $conn->query($sqlGetDocuments);
 
 if ($resDocuments && $resDocuments->num_rows > 0) {
     while ($doc = $resDocuments->fetch_assoc()) {
         $docID = $doc['DocumentID'];
-        $oldDocName = $doc['DocumentName'];
-
-        $docParts = explode('-', $oldDocName);
-        if (count($docParts) < 5) continue;
-
-        $folderSuffix = implode('-', array_slice($docParts, 4));
-        $newDocName = "$newProjectID-$folderSuffix";
-        $newDocQRPath = "uploads/$newProjectID/$folderSuffix/{$newDocName}-QR.png";
+        $docType = str_replace(' ', '-', $doc['DocumentType']);
+        $newDocName = "$newProjectID-$docType";
+        $newDocQRPath = "uploads/$baseProjectID/$docType/{$baseProjectID}-$docType-QR.png";
 
         $sqlUpdateDoc = "UPDATE document SET 
             ProjectID = '$newProjectID',
@@ -195,3 +188,4 @@ echo json_encode([
 ]);
 
 $conn->close();
+?>

@@ -43,7 +43,8 @@ function searchProjectByQR(scannedCode) {
   modalBody.innerHTML = '<p>Loading project info...</p>';
 
   const url = useDocumentInfo ? 'model/get_document_info.php' : 'model/get_project_info.php';
-  // Inside searchProjectByQR, after deciding which URL to fetch from:
+
+  const documentPath = path.toLowerCase();
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -282,12 +283,14 @@ function initQRSearch() {
     }
   });
 
-  // Re-focus qrInput every 100ms if active
+  // Keep QR input focused while modal is visible
   setInterval(() => {
-    if (qrActive && document.activeElement !== qrInput) {
+    const modalVisible = modal.style.display === 'flex' || modal.style.display === 'block';
+    if (modalVisible && document.activeElement !== qrInput) {
       qrInput.focus();
     }
-  }, 100);
+  }, 200);
+
 }
 
 function initLiveProjectSearch() {

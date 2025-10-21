@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->Username = 'essantossurveyingservices@gmail.com';
-        $mail->Password = 'icwndbffbxctuxpt';  // Use environment variables in production!
+        $mail->Password = 'oiomosspudurwrbm';  // Use environment variables in production!
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port = 465;
 

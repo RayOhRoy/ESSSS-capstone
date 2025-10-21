@@ -18,24 +18,32 @@ $resLastProj = $conn->query($sqlLastProj);
 
 if ($resLastProj && $resLastProj->num_rows > 0) {
     $lastProjectID = $resLastProj->fetch_assoc()['ProjectID'];
-    // Extract last 3 digits as number (e.g. HAG-01-015 -> 15)
-    $lastNum = intval(substr($lastProjectID, -3));
+    // Extract last 3 digits as number (e.g. HAG-01-015-CON -> 15)
+    preg_match('/(\d{2})-(\d{3})/', $lastProjectID, $matches);
+    $block = isset($matches[1]) ? intval($matches[1]) : 1;
+    $lastNum = isset($matches[2]) ? intval($matches[2]) : 0;
     $nextNum = $lastNum + 1;
 } else {
+    $block = 1;
     $nextNum = 1;
 }
 
-$block = intval(($nextNum - 1) / 100) + 1;
-$slot = $nextNum;
+if ($nextNum > 100) {
+    $block += 1;
+    $nextNum = 1;
+}
 
+// Survey code (still used in ProjectID only)
 $surveyType = $_POST['surveyType'] ?? 'GEN';
-$surveyCode = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $surveyType), 0, 3)); // Clean and get first 3 letters
+$surveyCode = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $surveyType), 0, 3)); // e.g. 'CON'
 
-$projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $slot, $surveyCode);  // e.g., HAG-01-001-REL
+// ✅ Project ID includes survey code
+$projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $nextNum, $surveyCode); // e.g., CAL-01-001-CON
 
 // ----------------------
-// Prepare folders
+// Folder path (without survey code)
 // ----------------------
+$folderBaseID = sprintf("%s-%02d-%03d", $prefix, $block, $nextNum); // e.g., CAL-01-001
 $rootUploadsPath = realpath(__DIR__ . '/../') . '/uploads';
 
 if (!is_dir($rootUploadsPath)) {
@@ -44,19 +52,19 @@ if (!is_dir($rootUploadsPath)) {
     }
 }
 
-$projectFolder = $rootUploadsPath . '/' . $projectID;
+$projectFolder = $rootUploadsPath . '/' . $folderBaseID;
 
 if (!is_dir($projectFolder)) {
     if (!mkdir($projectFolder, 0777, true)) {
-        die(json_encode(['success' => false, 'message' => "❌ Failed to create project folder: $projectID"]));
+        die(json_encode(['success' => false, 'message' => "❌ Failed to create project folder: $folderBaseID"]));
     }
 }
 
 // ----------------------
-// Generate Project QR
+// Generate Project QR (based on folder path only)
 // ----------------------
-$projQRFile = $projectFolder . '/' . "{$projectID}-QR.png"; // new filename
-$projQRContent = $projectID; // e.g. "HAG-01-001"
+$projQRFile = $projectFolder . '/' . "{$projectID}-QR.png";
+$projQRContent = "uploads/$folderBaseID"; // QR points to folder path only
 QRcode::png($projQRContent, $projQRFile, QR_ECLEVEL_L, 4);
 
 if (!file_exists($projQRFile)) {
@@ -66,25 +74,17 @@ if (!file_exists($projQRFile)) {
 $projQRBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($projQRFile));
 
 // ----------------------
-// Get submitted documents info from POST
-// Expect arrays of document keys where physical or digital files exist
-// e.g., physical_docs[]=Original Plan&digital_docs[]=Deed of Sale
+// Generate Document QRs (folder & QR path without survey code)
 // ----------------------
 $physicalDocs = $_POST['physical_docs'] ?? [];
 $digitalDocs = $_POST['digital_docs'] ?? [];
 
-// Merge and unique docs that require QR generation
 $docsToProcess = array_unique(array_merge($physicalDocs, $digitalDocs));
 
-// ----------------------
-// Generate Document QRs only for selected docs
-// ----------------------
 $documentQRs = [];
 
 foreach ($docsToProcess as $docName) {
-    // Sanitize docName and create folder name as before
-    $folderName = str_replace(' ', '-', $docName); 
-
+    $folderName = str_replace(' ', '-', $docName);
     $docFolder = $projectFolder . '/' . $folderName;
 
     if (!is_dir($docFolder)) {
@@ -96,7 +96,9 @@ foreach ($docsToProcess as $docName) {
     $fileSafeDocName = $folderName;
     $docQRFile = $docFolder . '/' . "{$projectID}-{$fileSafeDocName}-QR.png";
 
-    $docQRContent = "$projectID/$folderName"; 
+    // ✅ QR content uses folderBaseID (no survey code)
+    $docQRContent = "uploads/$folderBaseID/$folderName";
+
     QRcode::png($docQRContent, $docQRFile, QR_ECLEVEL_L, 4);
 
     if (!file_exists($docQRFile)) {
@@ -114,5 +116,6 @@ echo json_encode([
     'success' => true,
     'projectQR' => $projQRBase64,
     'documentQRs' => $documentQRs,
-    'projectID' => $projectID
+    'projectID' => $projectID,
+    'folderBaseID' => $folderBaseID // optional for debugging or reference
 ]);

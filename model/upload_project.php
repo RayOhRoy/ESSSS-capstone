@@ -60,16 +60,20 @@ $slot = $lastNumber;
 
 $projectID = sprintf("%s-%02d-%03d-%s", $prefix, $block, $slot, $surveyCode);
 
+// Remove -XYZ suffix for folder and digital location
+$baseProjectID = preg_replace('/-[A-Z]{3}$/', '', $projectID);
+
+// Folder creation
 $uploadBase = __DIR__ . '/../uploads/';
-$projectFolder = $uploadBase . $projectID;
+$projectFolder = $uploadBase . $baseProjectID;
 if (!is_dir($projectFolder))
     mkdir($projectFolder, 0777, true);
 
 $sqlProject = "INSERT INTO project 
     (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation, ProjectStatus, StorageStatus) 
     VALUES ('$projectID','$lotNo','$fname','$lname','$surveyType','$startDate','$endDate','$agent','$requestType',"
-    . ($approval !== null ? "'$approval'" : "NULL") .
-    ",'$addressID','uploads/$projectID','$projectStatus', 'Stored')";
+    . ($approval !== null ? "'$approval'" : "NULL") . 
+    ",'$addressID','uploads/$baseProjectID','$projectStatus', 'Stored')";
 if ($conn->query($sqlProject) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error inserting project', 'error' => $conn->error]));
 }
@@ -88,12 +92,12 @@ $sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, E
                    VALUES ('$activityLogID','$projectID','CREATED','$employeeID', '$timeNow')";
 $conn->query($sqlActivityLog);
 
-// Generate project-level QR
-$projQRFileName = "$projectID-QR.png";
+// Generate project-level QR (foldername without -XYZ)
+$projQRFileName = "$baseProjectID-QR.png";
 $projQRFile = "$projectFolder/$projQRFileName";
-$projQRContent = "uploads/$projectID";
+$projQRContent = "uploads/$baseProjectID";
 QRcode::png($projQRContent, $projQRFile, QR_ECLEVEL_L, 4);
-$projQRPath = "uploads/$projectID/$projQRFileName";
+$projQRPath = "uploads/$baseProjectID/$projQRFileName";
 $conn->query("UPDATE project SET projectqr='$projQRPath' WHERE ProjectID='$projectID'");
 
 // — Document Handling —
@@ -147,18 +151,18 @@ foreach ($documentKeys as $docKey) {
     foreach ($uploadedFiles as $f) {
         $dest = "$docFolder/" . $f['newFileName'];
         if (move_uploaded_file($f['tmp_name'], $dest)) {
-            $uploadedPaths[] = "../uploads/$projectID/$safeDocName/" . $f['newFileName'];
+            $uploadedPaths[] = "../uploads/$baseProjectID/$safeDocName/" . $f['newFileName'];
         }
     }
 
     $filesString = count($uploadedPaths) ? implode(";", $uploadedPaths) : NULL;
 
-    // Generate document QR
-    $docQRFileName = "$projectID-$safeDocName-QR.png";
+    // Generate document QR (without -XYZ)
+    $docQRFileName = "$baseProjectID-$safeDocName-QR.png";
     $docQRFile = "$docFolder/$docQRFileName";
-    $docQRContent = "uploads/$projectID/$safeDocName";
+    $docQRContent = "uploads/$baseProjectID/$safeDocName";
     QRcode::png($docQRContent, $docQRFile, QR_ECLEVEL_L, 4);
-    $docQRPath = "uploads/$projectID/$safeDocName/$docQRFileName";
+    $docQRPath = "uploads/$baseProjectID/$safeDocName/$docQRFileName";
 
     // Generate DocumentID
     $sqlLastDoc = "SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1";
