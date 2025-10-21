@@ -10,39 +10,107 @@ function initAdminPage() {
     loadScript('js/project.js');
     loadScript('js/user_list.js');
     loadScript('js/physical_storage.js');
+    loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');
   }
 
   // Universal listener for any element with data-page
-document.addEventListener('click', function (e) {
-  const target = e.target.closest('[data-page]');
-  if (!target) return;
+  document.addEventListener('click', function (e) {
+    const target = e.target.closest('[data-page]');
+    if (!target) return;
 
-  e.preventDefault();
-  const page = target.getAttribute('data-page');
+    e.preventDefault();
+    const page = target.getAttribute('data-page');
 
-  if (page) {
     if (page === 'user_dashboard.php') {
-      loadAdminPage(page, initUserMenuDropdown);
+      loadAdminPage(page, () => {
+        initUserMenuDropdown();
+        initDocumentPieChart(); // initialize pie chart
+      });
     } else {
       loadAdminPage(page);
     }
-  }
 
-  // --- Update sidebar highlight ---
-  // First remove all highlights
-  document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+    // --- Update sidebar highlight ---
+    // First remove all highlights
+    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
 
-  // Case 1: clicked element *is* a sidebar menu item
-  if (target.classList.contains('menu-item')) {
-    target.classList.add('active');
-  } 
-  // Case 2: clicked element is outside (e.g., floating btn),
-  // find the matching sidebar menu with same data-page
-  else {
-    const matchingMenu = document.querySelector(`.menu-item[data-page="${page}"]`);
-    if (matchingMenu) matchingMenu.classList.add('active');
-  }
-});
+    // Case 1: clicked element *is* a sidebar menu item
+    if (target.classList.contains('menu-item')) {
+      target.classList.add('active');
+    }
+    // Case 2: clicked element is outside (e.g., floating btn),
+    // find the matching sidebar menu with same data-page
+    else {
+      const matchingMenu = document.querySelector(`.menu-item[data-page="${page}"]`);
+      if (matchingMenu) matchingMenu.classList.add('active');
+    }
+  });
+}
+
+function initDocumentPieChart() {
+  const canvas = document.getElementById('docPieChart');
+  if (!canvas) return;
+
+  const chartData = {
+    'Sketch Completed': parseInt(canvas.dataset.sketchCompleted || 0),
+    'Sketch Pending': parseInt(canvas.dataset.sketchPending || 0),
+    'LRA Approval Completed': parseInt(canvas.dataset.lraApprovalCompleted || 0),
+    'LRA Approval Pending': parseInt(canvas.dataset.lraApprovalPending || 0),
+    'PSD Approval Completed': parseInt(canvas.dataset.psdApprovalCompleted || 0),
+    'PSD Approval Pending': parseInt(canvas.dataset.psdApprovalPending || 0),
+    'CSD Approval Completed': parseInt(canvas.dataset.csdApprovalCompleted || 0),
+    'CSD Approval Pending': parseInt(canvas.dataset.csdApprovalPending || 0)
+  };
+
+  const labels = Object.keys(chartData);
+  const values = Object.values(chartData);
+
+  // Maroon shades: lighter = completed, darker = pending
+  const backgroundColors = [
+    '#f4cccc', // Sketch Completed
+    '#990000', // Sketch Pending
+    '#e6b8af', // LRA Completed
+    '#660000', // LRA Pending
+    '#d9a6a0', // PSD Completed
+    '#660000', // PSD Pending
+    '#c99994', // CSD Completed
+    '#660000'  // CSD Pending
+  ];
+
+  const ctx = canvas.getContext('2d');
+
+  if (window.docPieChartInstance) window.docPieChartInstance.destroy();
+
+  window.docPieChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors,
+        borderColor: '#fff',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = total ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function loadAdminPage(page) {
@@ -145,7 +213,7 @@ function initUserMenuDropdown() {
   if (window.__changePasswordSetup) return;
   window.__changePasswordSetup = true;
 
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const changeBtn = e.target.closest('#changepassword-button');
     const cancelBtn = e.target.closest('#cancelchangepassword-button');
     const userBottomInfo = document.querySelector('.user-bottom-info');

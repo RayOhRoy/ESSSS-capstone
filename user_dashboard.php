@@ -112,26 +112,22 @@ $total_documents_query = "SELECT COUNT(*) as total FROM document WHERE documents
 $total_documents_result = $conn->query($total_documents_query);
 $total_documents = $total_documents_result->fetch_assoc()['total'];
 
-// Fetch stored documents
-$stored_documents_query = "SELECT COUNT(*) as total FROM document WHERE documentstatus='stored'";
-$stored_documents_result = $conn->query($stored_documents_query);
-$stored_documents = $stored_documents_result->fetch_assoc()['total'];
+// Fetch total digital documents (DigitalLocation not null)
+$total_digital_query = "SELECT COUNT(*) as total FROM document WHERE DigitalLocation IS NOT NULL";
+$total_digital_result = $conn->query($total_digital_query);
+$total_digital = $total_digital_result->fetch_assoc()['total'];
 
-// Fetch released documents
-$released_documents_query = "SELECT COUNT(*) as total FROM document WHERE documentstatus='released'";
+// Fetch released documents (case-insensitive 'release')
+$released_documents_query = "SELECT COUNT(*) as total FROM document WHERE LOWER(documentstatus) LIKE '%release%'";
 $released_documents_result = $conn->query($released_documents_query);
 $released_documents = $released_documents_result->fetch_assoc()['total'];
 
-// Calculate percentages safely
-$percentage_stored = $total_documents > 0 ? round(($stored_documents / $total_documents) * 100) : 0;
-$percentage_released = $total_documents > 0 ? round(($released_documents / $total_documents) * 100) : 0;
-
 // Prepare stats array
 $stats = [
-    ["label" => "TOTAL OF PROJECTS", "value" => $total_projects, "icon" => "folder.png", "text" => "PROJECTS"],
-    ["label" => "TOTAL OF DOCUMENTS", "value" => $total_documents, "icon" => "File text.png", "text" => "DOCUMENTS"],
-    ["label" => "MY STORED DOCUMENTS", "value" => $stored_documents, "percent" => $percentage_stored, "icon" => "Database.png", "text" => "STORED DOCUMENTS"],
-    ["label" => "MY RELEASED DOCUMENTS", "value" => $released_documents, "percent" => $percentage_released, "icon" => "Box.png", "text" => "RELEASED DOCUMENTS"]
+    ["label" => "TOTAL PROJECTS", "value" => $total_projects, "icon" => "folder.png", "text" => "PROJECTS"],
+    ["label" => "TOTAL PHYSICAL DOCUMENTS", "value" => $total_documents, "icon" => "File text.png", "text" => "PHYSICAL DOCUMENTS"],
+    ["label" => "TOTAL DIGITAL DOCUMENTS", "value" => $total_digital, "icon" => "Database.png", "text" => "DIGITAL DOCUMENTS"],
+    ["label" => "TOTAL RELEASED DOCUMENTS", "value" => $released_documents, "icon" => "Box.png", "text" => "RELEASED DOCUMENTS"]
 ];
 
 $conn->close();
@@ -142,9 +138,6 @@ $conn->close();
         <div class="stat-box">
             <div class="stat-top">
                 <p><?= $stat["label"] ?></p>
-                <?php if (isset($stat["percent"])): ?>
-                    <span class="percent"><?= $stat["percent"] ?>%</span>
-                <?php endif; ?>
             </div>
             <div class="stat-bottom">
                 <div class="stat-info">
@@ -159,39 +152,59 @@ $conn->close();
     <?php endforeach; ?>
 </div>
 
+<?php
+include 'server/server.php';
+
+// Initialize counters
+$chart_data = [
+    'Sketch Completed' => 0,
+    'Sketch Pending' => 0,
+    'LRA Approval Completed' => 0,
+    'LRA Approval Pending' => 0,
+    'PSD Approval Completed' => 0,
+    'PSD Approval Pending' => 0,
+    'CSD Approval Completed' => 0,
+    'CSD Approval Pending' => 0
+];
+
+// Fetch projects
+$sql = "SELECT Approval, ProjectStatus FROM project";
+$result = $conn->query($sql);
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $approval = strtoupper(trim($row['Approval'] ?? ''));
+        $status = strtoupper(trim($row['ProjectStatus'] ?? ''));
+
+        $completed = ($status === 'COMPLETED') ? 'Completed' : 'Pending';
+
+        if (empty($approval)) {
+            // Sketch Plan
+            $chart_data["Sketch $completed"]++;
+        } else {
+            // Approval types with "Approval" in legend
+            if (in_array($approval, ['LRA', 'PSD', 'CSD'])) {
+                $chart_data["$approval Approval $completed"]++;
+            }
+        }
+    }
+}
+
+$conn->close();
+?>
+
 <div class="mid-section">
-
     <div class="chart-section">
-        <h3>DOCUMENT MOVEMENT OVER TIME</h3>
-        <div class="graph-box">
-            <div class="y-labels">
-                <div>200</div>
-                <div>150</div>
-                <div>100</div>
-                <div>50</div>
-                <div>0</div>
-            </div>
-            <div class="graph-area">
-                <div class="graph-grid"></div>
-                <div class="x-labels">
-                    <span>January</span><span>March</span><span>May</span>
-                    <span>July</span><span>September</span><span>November</span>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="breakdown-section">
-            <h3>DOCUMENT TYPE BREAKDOWN</h3>
-            <div class="legend">
-                <span><span class="dot" style="background:#8B5E5E"></span>Tax Declaration</span>
-                <span><span class="dot" style="background:#C27C7C"></span>Lot Title</span>
-                <span><span class="dot" style="background:#D88F8F"></span>Survey Plan</span>
-                <span><span class="dot" style="background:#B25454"></span>CAD File</span>
-                <span><span class="dot" style="background:#E0BABA"></span>Lot Data</span>
-                <span><span class="dot" style="background:#F2DCDC"></span>Others</span>
-            </div>
-        </div>
+        <h3>DOCUMENT TYPE BREAKDOWN</h3>
+        <canvas class="piechart" id="docPieChart" data-sketch-completed="<?= $chart_data['Sketch Completed'] ?>"
+            data-sketch-pending="<?= $chart_data['Sketch Pending'] ?>"
+            data-lra-approval-completed="<?= $chart_data['LRA Approval Completed'] ?>"
+            data-lra-approval-pending="<?= $chart_data['LRA Approval Pending'] ?>"
+            data-psd-approval-completed="<?= $chart_data['PSD Approval Completed'] ?>"
+            data-psd-approval-pending="<?= $chart_data['PSD Approval Pending'] ?>"
+            data-csd-approval-completed="<?= $chart_data['CSD Approval Completed'] ?>"
+            data-csd-approval-pending="<?= $chart_data['CSD Approval Pending'] ?>">
+        </canvas>
     </div>
 
     <?php
@@ -285,10 +298,6 @@ $conn->close();
         <?php else: ?>
             <?php foreach ($recent_activities as $activity): ?>
                 <div class="recent-item">
-                    <div class="employee-info">
-                        <strong><?= htmlspecialchars($activity['masked_employee_name']) ?></strong>
-                        <span class="employee-role"><?= htmlspecialchars($activity['JobPosition']) ?></span>
-                    </div>
                     <div class="status">
                         <?= htmlspecialchars(strtoupper($activity['status'])) ?>
                     </div>

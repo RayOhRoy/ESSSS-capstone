@@ -9,8 +9,8 @@ if (!isset($_SESSION['employeeid'])) {
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$projectId = $input['projectId'] ?? '';
-$documentPath = $input['documentPath'] ?? '';
+$projectId = strtolower(trim($input['projectId'] ?? ''));
+$documentPath = strtolower(trim($input['documentPath'] ?? ''));
 
 if (!$projectId) {
     echo json_encode(['success' => false, 'message' => 'Project ID is required']);

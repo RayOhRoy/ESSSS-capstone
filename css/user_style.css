@@ -302,7 +302,6 @@ a.menu-item.active {
 .chart-section {
     flex: 1;
     display: flex;
-    flex-direction: column;
 }
 
 .recent {
@@ -338,7 +337,6 @@ a.menu-item.active {
 .graph-area {
     flex: 1;
     display: flex;
-    flex-direction: column;
 }
 
 .graph-grid {

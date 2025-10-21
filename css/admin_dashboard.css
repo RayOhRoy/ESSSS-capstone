@@ -160,12 +160,7 @@ a.signout-button:hover {
 
 .recent-list {
     min-width: 40%;
-    margin: 20px auto;
     font-family: Arial, sans-serif;
-}
-
-.recent-list h3 {
-    color: #7B0302;
 }
 
 .recent-item {
@@ -173,6 +168,14 @@ a.signout-button:hover {
     align-items: center;
     padding: 15px 0;
     border-bottom: 1px solid #ddd;
+}
+
+.recent-list h3 {
+    font-size: 16px;
+    color: #7B0302;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
 }
 
 .employee-info {
@@ -210,6 +213,12 @@ a.signout-button:hover {
     text-align: right;
     margin-right: 2%;
     font-size: 0.9rem;
+}
+
+.piechart {
+    width: 100%;
+    max-width: 35rem;
+    align-items: center;
 }
 
 @media (max-width: 1080px) {

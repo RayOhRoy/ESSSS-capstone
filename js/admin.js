@@ -10,6 +10,8 @@ function initAdminPage() {
     loadScript('js/project.js');
     loadScript('js/physical_storage.js');
     loadScript('js/user_list.js');
+    loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');
   }
 
   // Universal listener for any element with data-page
@@ -20,13 +22,15 @@ function initAdminPage() {
     e.preventDefault();
     const page = target.getAttribute('data-page');
 
-    if (page) {
-      if (page === 'admin_dashboard.php') {
-        loadAdminPage(page, initUserMenuDropdown);
-      } else {
-        loadAdminPage(page);
-      }
+    if (page === 'admin_dashboard.php') {
+      loadAdminPage(page, () => {
+        initUserMenuDropdown();
+        initDocumentPieChart(); // initialize pie chart
+      });
+    } else {
+      loadAdminPage(page);
     }
+
 
     // --- Update sidebar highlight ---
     // First remove all highlights
@@ -77,6 +81,71 @@ function loadScript(src, initFunctionName) {
     }
   };
   document.body.appendChild(script);
+}
+
+function initDocumentPieChart() {
+  const canvas = document.getElementById('docPieChart');
+  if (!canvas) return;
+
+  const chartData = {
+    'Sketch Completed': parseInt(canvas.dataset.sketchCompleted || 0),
+    'Sketch Pending': parseInt(canvas.dataset.sketchPending || 0),
+    'LRA Approval Completed': parseInt(canvas.dataset.lraApprovalCompleted || 0),
+    'LRA Approval Pending': parseInt(canvas.dataset.lraApprovalPending || 0),
+    'PSD Approval Completed': parseInt(canvas.dataset.psdApprovalCompleted || 0),
+    'PSD Approval Pending': parseInt(canvas.dataset.psdApprovalPending || 0),
+    'CSD Approval Completed': parseInt(canvas.dataset.csdApprovalCompleted || 0),
+    'CSD Approval Pending': parseInt(canvas.dataset.csdApprovalPending || 0)
+  };
+
+  const labels = Object.keys(chartData);
+  const values = Object.values(chartData);
+
+  // Maroon shades: lighter = completed, darker = pending
+  const backgroundColors = [
+    '#f4cccc', // Sketch Completed
+    '#990000', // Sketch Pending
+    '#e6b8af', // LRA Completed
+    '#660000', // LRA Pending
+    '#d9a6a0', // PSD Completed
+    '#660000', // PSD Pending
+    '#c99994', // CSD Completed
+    '#660000'  // CSD Pending
+  ];
+
+  const ctx = canvas.getContext('2d');
+
+  if (window.docPieChartInstance) window.docPieChartInstance.destroy();
+
+  window.docPieChartInstance = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors,
+        borderColor: '#fff',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce((a,b)=>a+b,0);
+              const percentage = total ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function initUserMenuDropdown() {
