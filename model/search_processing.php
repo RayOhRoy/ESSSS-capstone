@@ -1,5 +1,4 @@
 <?php
-
 include '../server/server.php';
 
 // Get inputs from GET
@@ -36,7 +35,6 @@ echo "
     max-height: 20rem;
     overflow-y: auto; 
 }
-
 .result-item {
     display: flex;
     flex-wrap: nowrap;
@@ -51,7 +49,6 @@ echo "
     justify-content: space-between;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
 .result-item .field {
     flex-basis: 25%;
     flex-grow: 0;
@@ -61,23 +58,21 @@ echo "
     display: flex;
     align-items: center;
 }
-
 .result-item:hover {
     filter: brightness(0.85);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
+.result-item .field:nth-child(1) { justify-content: flex-start; }
+.result-item .field:nth-child(2) { justify-content: center; }
+.result-item .field:nth-child(3) { justify-content: center; }
+.result-item .field:nth-child(4) { justify-content: flex-end; }
 
-.result-item .field:nth-child(1) {
-    justify-content: flex-start;
+.result-item .fa-eye {
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
-.result-item .field:nth-child(2) {
-    justify-content: center;
-}
-.result-item .field:nth-child(3) {
-    justify-content: center;
-}
-.result-item .field:nth-child(4) {
-    justify-content: flex-end;
+.result-item .fa-eye:hover {
+    transform: scale(1.1);
 }
 
 @media screen and (max-width: 768px) {
@@ -100,8 +95,7 @@ echo "
 // ---------------------
 // 1. Fetch matching projects
 // ---------------------
-
-$sqlProject = "SELECT project.ProjectID
+$sqlProject = "SELECT project.ProjectID, project.ProjectQR
                FROM project
                JOIN address ON project.AddressID = address.AddressID
                WHERE 1=1";
@@ -151,25 +145,23 @@ if ($barangay) {
 }
 
 $stmt1 = $conn->prepare($sqlProject);
-if (!empty($params)) {
+if (!empty($params))
     $stmt1->bind_param($types, ...$params);
-}
 $stmt1->execute();
 $result1 = $stmt1->get_result();
 
-$matchedProjectIds = [];
+$matchedProjects = [];
 $hasResults = false;
 
 while ($row = $result1->fetch_assoc()) {
-    $matchedProjectIds[] = $row['ProjectID'];
+    $matchedProjects[$row['ProjectID']] = $row['ProjectQR'];
 }
 
 // ---------------------
-// 2. Show Project Document Type - Always 2 rows (Digital + Physical)
+// 2. Show Project Document Type (Digital + Physical)
 // ---------------------
-
-if (!empty($matchedProjectIds) && ($doctype === "Project" || empty($doctype))) {
-    foreach ($matchedProjectIds as $projectId) {
+if (!empty($matchedProjects) && ($doctype === "Project" || empty($doctype))) {
+    foreach ($matchedProjects as $projectId => $projectQR) {
         $hasResults = true;
 
         // Fetch Digital version
@@ -188,43 +180,42 @@ if (!empty($matchedProjectIds) && ($doctype === "Project" || empty($doctype))) {
         $stmtPhysical->store_result();
         $hasPhysical = $stmtPhysical->num_rows > 0;
 
-        // Output Digital row
+        // Output Digital
         echo "<li class='result-item' data-projectid='{$projectId}'>
                 <div class='field'>Project</div>
                 <div class='field'>{$projectId}</div>
                 <div class='field'>Digital</div>
-                <div class='field'><i class='fa fa-eye'></i></div>
-            </li>";
+                <div class='field'><i class='fa fa-eye' data-value='{$projectQR}'></i></div>
+              </li>";
 
-        // Output Physical row
+        // Output Physical
         echo "<li class='result-item' data-projectid='{$projectId}'>
                 <div class='field'>Project</div>
                 <div class='field'>{$projectId}</div>
                 <div class='field'>Physical</div>
-                <div class='field'><i class='fa fa-eye'></i></div>
-            </li>";
+                <div class='field'><i class='fa fa-eye' data-value='{$projectQR}'></i></div>
+              </li>";
     }
 }
 
 // ---------------------
-// 3. Other Document Types (e.g. TaxDec, SurveyPlan...)
+// 3. Other Document Types (TaxDec, SurveyPlan, etc.)
 // ---------------------
-
-if (!empty($matchedProjectIds) && $doctype !== "Project") {
-    $placeholders = implode(',', array_fill(0, count($matchedProjectIds), '?'));
-    $sqlDocs = "SELECT ProjectID, DocumentType, DigitalLocation, DocumentStatus 
+if (!empty($matchedProjects) && $doctype !== "Project") {
+    $placeholders = implode(',', array_fill(0, count($matchedProjects), '?'));
+    $sqlDocs = "SELECT ProjectID, DocumentType, DigitalLocation, DocumentStatus, DocumentQR 
                 FROM document 
                 WHERE ProjectID IN ($placeholders)";
     if ($doctype) {
         $sqlDocs .= " AND DocumentType = ?";
         $stmtDocs = $conn->prepare($sqlDocs);
-        $typesDoc = str_repeat('s', count($matchedProjectIds)) . 's';
-        $params = array_merge($matchedProjectIds, [$doctype]);
+        $typesDoc = str_repeat('s', count($matchedProjects)) . 's';
+        $params = array_merge(array_keys($matchedProjects), [$doctype]);
         $stmtDocs->bind_param($typesDoc, ...$params);
     } else {
         $stmtDocs = $conn->prepare($sqlDocs);
-        $typesDoc = str_repeat('s', count($matchedProjectIds));
-        $stmtDocs->bind_param($typesDoc, ...$matchedProjectIds);
+        $typesDoc = str_repeat('s', count($matchedProjects));
+        $stmtDocs->bind_param($typesDoc, ...array_keys($matchedProjects));
     }
 
     $stmtDocs->execute();
@@ -235,30 +226,38 @@ if (!empty($matchedProjectIds) && $doctype !== "Project") {
         $docType = htmlspecialchars($doc['DocumentType']);
         $isDigital = !empty($doc['DigitalLocation']);
         $isPhysical = !empty($doc['DocumentStatus']);
+        $documentQR = htmlspecialchars($doc['DocumentQR'] ?? '');
 
         if ($isDigital) {
-            echo "<li class='result-item' data-projectid='{$projectId}'>
-                    <div class='field'>{$docType}</div>
-                    <div class='field'>{$projectId}</div>
-                    <div class='field'>Digital</div>
-                    <div class='field'><i class='fa fa-eye'></i></div>
-                </li>";
+            echo "<li class='result-item' 
+            data-projectid='{$projectId}' 
+            data-documentpath='{$docType}_Digital'>
+            <div class='field'>{$docType}</div>
+            <div class='field'>{$projectId}</div>
+            <div class='field'>Digital</div>
+            <div class='field'><i class='fa fa-eye' data-value='{$documentQR}'></i></div>
+          </li>";
         }
 
         if ($isPhysical) {
-            echo "<li class='result-item' data-projectid='{$projectId}'>
-                    <div class='field'>{$docType}</div>
-                    <div class='field'>{$projectId}</div>
-                    <div class='field'>Physical</div>
-                    <div class='field'><i class='fa fa-eye'></i></div>
-                </li>";
+            echo "<li class='result-item' 
+            data-projectid='{$projectId}' 
+            data-documentpath='{$docType}_Physical'>
+            <div class='field'>{$docType}</div>
+            <div class='field'>{$projectId}</div>
+            <div class='field'>Physical</div>
+            <div class='field'><i class='fa fa-eye' data-value='{$documentQR}'></i></div>
+          </li>";
         }
+
 
         $hasResults = true;
     }
 }
 
-// If no results at all
+// ---------------------
+// No results found
+// ---------------------
 if (!$hasResults) {
     echo "<p>No matching results found.</p>";
 }

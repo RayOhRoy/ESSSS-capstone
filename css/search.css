@@ -181,18 +181,17 @@ a.signout-button:hover {
 
 .newmodal {
     display: none;
-    /* visible */
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 9999;
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .newmodal .new-modal-content {
-    border: 1px solid #EC221F;
-    background: #FEE9E7;
+    background: white;
     padding: 2vw;
     border-radius: 1vw;
     max-width: 600px;
@@ -209,8 +208,7 @@ a.signout-button:hover {
 }
 
 .oldmodal .old-modal-content {
-    border: 1px solid #EC221F;
-    background: #FEE9E7;
+    background: white;
     padding: 2vw;
     border-radius: 1vw;
     max-width: 600px;

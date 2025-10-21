@@ -363,6 +363,75 @@ function initLiveProjectSearch() {
   const resultContainer = document.getElementById(resultContainerId);
   if (resultContainer) {
     resultContainer.addEventListener('click', (e) => {
+      // 👁️ If user clicked the eye icon
+      if (e.target.classList.contains('fa-eye')) {
+        e.stopPropagation();
+
+        const item = e.target.closest('.result-item');
+        if (!item) return;
+
+        const projectId = item.dataset.projectid;
+        const qrValue = e.target.dataset.value || ''; // 👈 use ProjectQR / DocumentQR
+        const documentPath = item.dataset.documentpath || '';
+
+        // Show modal (reuse QR modal)
+        const modal = document.getElementById('qrsearchModal');
+        const modalBody = document.getElementById('modalBody');
+        if (!modal || !modalBody) {
+          console.error("Modal elements not found.");
+          return;
+        }
+
+        modal.style.display = 'flex';
+        modalBody.innerHTML = '<p>Loading info...</p>';
+        // disableAllInputs();
+
+        // Determine if this is a project or document
+        const isDocument = documentPath && documentPath.trim() !== '';
+        const url = isDocument ? 'model/get_document_info.php' : 'model/get_project_info.php';
+        const payload = isDocument
+          ? { qr: qrValue, projectId }
+          : { qr: qrValue, projectId };
+
+
+        console.log('🌐 Fetching from:', url);
+        console.log('📤 Payload:', payload);
+
+        // Fetch info
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              if (isDocument && data.document) {
+                modalBody.innerHTML = generateDocumentHTML(data.document);
+              } else if (data.project) {
+                modalBody.innerHTML = generateProjectHTML(data.project);
+              }
+
+              // Attach OPEN button
+              const openBtn = modalBody.querySelector('.open-btn');
+              if (openBtn) {
+                openBtn.addEventListener('click', () => {
+                  loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
+                });
+              }
+            } else {
+              modalBody.innerHTML = `<p style="color:red;">${data.message || "Not found."}</p>`;
+            }
+          })
+          .catch(err => {
+            console.error("Error loading info:", err);
+            modalBody.innerHTML = `<p style="color:red;">Network error. Please try again.</p>`;
+          });
+
+        return;
+      }
+
+      // 🖱️ Otherwise, handle normal row click
       const row = e.target.closest('.result-item');
       if (row && row.dataset.projectid) {
         const projectId = row.dataset.projectid;
@@ -370,6 +439,7 @@ function initLiveProjectSearch() {
       }
     });
   }
+
 
   // Initial fetch on load (optional)
   fetchResults();
