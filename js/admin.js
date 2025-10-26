@@ -2,6 +2,8 @@ function initAdminPage() {
   const contentArea = document.getElementById('content-area');
   if (contentArea) {
     loadAdminPage('admin_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
+    loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');    
     loadScript('js/upload.js');
     loadScript('js/documents.js');
     loadScript('js/project_list.js');
@@ -10,8 +12,6 @@ function initAdminPage() {
     loadScript('js/project.js');
     loadScript('js/physical_storage.js');
     loadScript('js/user_list.js');
-    loadScript('https://cdn.jsdelivr.net/npm/chart.js');
-    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');
   }
 
   // Universal listener for any element with data-page

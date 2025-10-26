@@ -19,45 +19,61 @@ function loadAdminPage(page) {
 }
 
 function searchProjectByQR(scannedCode) {
+  console.log("🔍 QR Scanned Code:", scannedCode);
+
   const prefix = "uploads/";
   let path = scannedCode;
 
   if (scannedCode.startsWith(prefix)) {
     path = scannedCode.substring(prefix.length);
+    console.log("📁 Prefix removed, new path:", path);
   }
 
   // Split the remaining path by '/'
   const parts = path.split('/');
+  console.log("📂 Path parts:", parts);
 
   // The first part is projectId
   const projectId = parts[0];
+  console.log("🏗️ Project ID:", projectId);
 
-  // Decide which PHP to call:
-  // If there's more after projectId (parts.length > 1), call get_document_info.php
-  // else call get_project_info.php
+  // Decide which PHP to call
   const useDocumentInfo = parts.length > 1;
+  console.log("📄 Using Document Info?", useDocumentInfo);
 
   const modalBody = document.getElementById('modalBody');
-  if (!modalBody) return;
+  if (!modalBody) {
+    console.warn("⚠️ modalBody element not found.");
+    return;
+  }
 
   modalBody.innerHTML = '<p>Loading project info...</p>';
 
   const url = useDocumentInfo ? 'model/get_document_info.php' : 'model/get_project_info.php';
+  console.log("🌐 Fetch URL:", url);
 
-  const documentPath = path.toLowerCase();
+  const payload = useDocumentInfo ? { projectId, documentPath: path } : { projectId };
+  console.log("📦 Payload being sent:", payload);
+
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(useDocumentInfo ? { projectId, documentPath: path } : { projectId })
+    body: JSON.stringify(payload)
   })
-    .then(res => res.json())
+    .then(res => {
+      console.log("✅ Response status:", res.status);
+      return res.json();
+    })
     .then(data => {
+      console.log("📬 Response data:", data);
+
       if (data.success) {
         if (useDocumentInfo) {
+          console.log("📘 Document data received for Project ID:", data.document.ProjectID);
           selectedProjectIdFromQR = data.document.ProjectID;
           modalBody.innerHTML = generateDocumentHTML(data.document);
         } else {
-          // For project info
+          console.log("🏗️ Project data received for Project ID:", data.project.ProjectID);
           selectedProjectIdFromQR = data.project.ProjectID;
           modalBody.innerHTML = generateProjectHTML(data.project);
         }
@@ -65,23 +81,30 @@ function searchProjectByQR(scannedCode) {
         // Attach open button event
         const openBtn = modalBody.querySelector('.open-btn');
         if (openBtn) {
+          console.log("🔗 Open button found, adding click listener.");
           openBtn.addEventListener('click', () => {
+            console.log("🖱️ Open button clicked, loading project:", selectedProjectIdFromQR);
             if (selectedProjectIdFromQR) {
               loadAdminPage('project.php?projectId=' + encodeURIComponent(selectedProjectIdFromQR));
             } else {
+              console.warn("⚠️ No project loaded from QR.");
               alert("No project loaded from QR.");
             }
           });
+        } else {
+          console.warn("⚠️ No open button found in modalBody.");
         }
       } else {
+        console.warn("❌ Data not found:", data.message);
         modalBody.innerHTML = `<p style="color:red;">${data.message || "Not found."}</p>`;
       }
     })
     .catch(err => {
-      console.error("Error fetching info:", err);
+      console.error("💥 Error fetching info:", err);
       modalBody.innerHTML = `<p style="color:red;">Network error. Please try again.</p>`;
     });
 }
+
 
 function generateProjectHTML(project) {
   return `

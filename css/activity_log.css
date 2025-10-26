@@ -225,6 +225,13 @@ a.signout-button:hover {
 }
 
 @media (max-width: 1080px) {
+    .download-btn {
+        margin-left:300%;
+        font-size:3cqw;
+        height: 90px;
+        width: 110%;
+        margin-top: -100px;
+}
     .user-menu-panel {
         display: none;
         position: absolute;

@@ -534,6 +534,7 @@ a.menu-item.active {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 85%;
 }
 
 
@@ -553,7 +554,7 @@ select {
 .approval-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 50px;
     margin-left: 140px;
 }
 

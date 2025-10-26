@@ -38,8 +38,6 @@ $userPosition = $_SESSION['JobPosition'] ?? null;
   const SESSION_POSITION = <?= json_encode($userPosition) ?>; // ✅ Added job position for JS access
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="js/main.js?v=<?= filemtime('js/main.js') ?>"></script>
 
 </body>

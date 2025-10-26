@@ -44,6 +44,7 @@ function loadAdminPage(page) {
         }, 0);
       } else {
         initUserMenuDropdown();
+        initDocumentPieChart();
       }
     })
     .catch(err => {

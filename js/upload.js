@@ -317,7 +317,6 @@ function submitForm() {
 function generateQR() {
   const projectForm = document.getElementById("projectForm");
 
-  // Step 1: Validate required fields
   const requiredFields = [
     { id: "lotNumber", name: "Lot Number" },
     { id: "clientName", name: "Client First Name" },
@@ -331,26 +330,59 @@ function generateQR() {
 
   const missingFields = [];
 
+  // Reset any old borders
   requiredFields.forEach(f => {
     const el = document.getElementById(f.id);
-    if (!el || el.value.trim() === "") missingFields.push(f.name);
+    if (el) el.style.border = "";
+  });
+
+  // Validate required fields
+  requiredFields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (!el || el.value.trim() === "") {
+      missingFields.push(f.name);
+      if (el) {
+        el.style.border = "2px solid red";
+        addAutoBorderReset(el);
+      }
+    }
   });
 
   const surveyType = document.getElementById("surveyType")?.value;
   const requestTypeEl = document.getElementById("requestType");
 
+  if (requestTypeEl) requestTypeEl.style.border = "";
+
   // Conditionally require Request Type
   if (surveyType !== "Sketch Plan") {
     if (!requestTypeEl || requestTypeEl.value.trim() === "") {
       missingFields.push("Request Type");
+      if (requestTypeEl) {
+        requestTypeEl.style.border = "2px solid red";
+        addAutoBorderReset(requestTypeEl);
+      }
     }
   }
 
-  // If Sketch Plan, require approval radio
+  // Approval radio requirement for Sketch Plan
+  const approvalRadios = document.querySelectorAll("input[name='approval']");
+  const approvalContainer = document.getElementById("approvalContainer");
+  if (approvalContainer) approvalContainer.style.outline = "";
+
   if (surveyType === "Sketch Plan") {
-    const approvalRadios = document.querySelectorAll("input[name='approval']");
     if (![...approvalRadios].some(r => r.checked)) {
       missingFields.push("Approval (select one)");
+      if (approvalContainer) {
+        approvalContainer.style.outline = "2px solid red";
+        approvalContainer.style.outlineOffset = "4px";
+      }
+
+      // remove red once a radio is chosen
+      approvalRadios.forEach(radio => {
+        radio.addEventListener("change", () => {
+          if (approvalContainer) approvalContainer.style.outline = "";
+        });
+      });
     }
   }
 
@@ -368,6 +400,7 @@ function generateQR() {
     missingFields.push("At least one document selected or file uploaded");
   }
 
+  // If there are missing fields, alert user and stop
   if (missingFields.length > 0) {
     alert("Please complete the following before generating QR Code:\n- " + missingFields.join("\n- "));
     return false;
@@ -380,7 +413,11 @@ function generateQR() {
     const endDate = new Date(endDateEl.value);
     if (startDate > endDate) {
       alert("Start date cannot be later than end date.");
+      endDateEl.style.border = "2px solid red";
+      addAutoBorderReset(endDateEl);
       return false;
+    } else {
+      endDateEl.style.border = "";
     }
   }
 
@@ -399,7 +436,7 @@ function generateQR() {
 
     if (hasPhysical) {
       physicalDocs.push(docName);
-      formData.append(`status_${docKey}`, "Stored"); // auto-store status
+      formData.append(`status_${docKey}`, "Stored");
     }
 
     if (hasDigital) {
@@ -408,12 +445,10 @@ function generateQR() {
         formData.append(`digital_${docKey}[]`, file);
       });
     } else if (hasPhysical) {
-      // If physical-only, send placeholder file
       formData.append(`digital_${docKey}[]`, new Blob(), "");
     }
   });
 
-  // Add doc name arrays
   physicalDocs.forEach(doc => formData.append("physical_docs[]", doc));
   digitalDocs.forEach(doc => formData.append("digital_docs[]", doc));
 
@@ -477,8 +512,21 @@ function generateQR() {
       alert("Network error while generating QR. Check console.");
       return false;
     });
-}
 
+  // 🔧 Helper to remove red when user fixes the field
+  function addAutoBorderReset(el) {
+    if (!el._borderResetAttached) {
+      const resetHandler = () => {
+        if (el.value.trim() !== "") {
+          el.style.border = "";
+        }
+      };
+      el.addEventListener("input", resetHandler);
+      el.addEventListener("change", resetHandler);
+      el._borderResetAttached = true;
+    }
+  }
+}
 
 function showQRPopup(path) {
   const modal = document.getElementById("qrModal");
@@ -749,8 +797,7 @@ function updateDocumentTableBasedOnSelection() {
       "Fieldnotes",
       "Tax Declaration",
       "Blueprint",
-      "CAD File",
-      "Others"
+      "CAD File"
     ];
   } else if (requestType === "For Approval" && approvalType === "CSD") {
     docsToRender = [
@@ -764,8 +811,7 @@ function updateDocumentTableBasedOnSelection() {
       "Tax Declaration",
       "Survey Authority",
       "Blueprint",
-      "CAD File",
-      "Others"
+      "CAD File"
     ];
   } else if (requestType === "For Approval" && approvalType === "LRA") {
     docsToRender = [
@@ -776,8 +822,7 @@ function updateDocumentTableBasedOnSelection() {
       "Technical Description",
       "Fieldnotes",
       "Blueprint",
-      "CAD File",
-      "Others"
+      "CAD File"
     ];
   } else if (requestType === "Sketch Plan") {
     docsToRender = [
@@ -787,19 +832,17 @@ function updateDocumentTableBasedOnSelection() {
       "Lot Data",
       "Tax Declaration",
       "Blueprint",
-      "CAD File",
-      "Others"
+      "CAD File"
     ];
   } else {
-    docsToRender = [
-      "Failed to load, refresh page.",
-    ];
+    docsToRender = ["Failed to load, refresh page."];
   }
 
   docsToRender.forEach(doc => {
     const id = doc.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    const row = document.createElement("tr");
+    const acceptTypes = doc === "CAD File" ? ".dwg" : "application/pdf";
 
+    const row = document.createElement("tr");
     row.innerHTML = `
       <td>${doc}</td>
       <td>
@@ -809,8 +852,10 @@ function updateDocumentTableBasedOnSelection() {
         <div class="upload-form">
           <div class="file-list"></div>
           <label class="attach-icon" style="cursor:pointer;">📎
-            <input type="file" name="digital_${id}" class="hidden-file" multiple
-                   accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
+            <input type="file" 
+                   name="digital_${id}" 
+                   class="hidden-file" 
+                   accept="${acceptTypes}"
                    onchange="uploadFile(this, '${doc}')">
           </label>
         </div>
@@ -820,4 +865,3 @@ function updateDocumentTableBasedOnSelection() {
     tbody.appendChild(row);
   });
 }
-
