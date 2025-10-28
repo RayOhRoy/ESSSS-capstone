@@ -3,11 +3,16 @@ function handleFileUpload(input) {
   const fileListDiv = row.querySelector(".file-list");
   const attachIcon = row.querySelector(".attach-icon");
 
-  if (!row.filesArray) row.filesArray = [];
-  const newFiles = Array.from(input.files);
-  row.filesArray.push(...newFiles);
+  // Take only the first selected file
+  const newFile = input.files[0];
+  if (!newFile) return;
 
+  // Overwrite any existing file
+  row.filesArray = [newFile];
+
+  // Clear input to allow re-selecting same file
   input.value = "";
+
   renderFileList(row);
 }
 
@@ -15,22 +20,28 @@ function renderFileList(row) {
   const fileListDiv = row.querySelector(".file-list");
   fileListDiv.innerHTML = "";
 
-  row.filesArray.forEach((file, index) => {
-    const item = document.createElement("div");
-    item.classList.add("file-preview");
+  if (!row.filesArray || row.filesArray.length === 0) {
+    // If no file, keep attach icon visible
+    row.querySelector(".attach-icon").style.display = "inline-block";
+    return;
+  }
 
-    item.innerHTML = `
-      <span class="file-label">${file.name}</span>
-      <span class="remove-file">✖</span>
-    `;
+  const file = row.filesArray[0]; // Only one file
+  const item = document.createElement("div");
+  item.classList.add("file-preview");
 
-    item.querySelector(".remove-file").onclick = () => {
-      row.filesArray.splice(index, 1);
-      renderFileList(row);
-    };
+  item.innerHTML = `
+    <span class="file-label">${file.name}</span>
+    <span class="remove-file">✖</span>
+  `;
 
-    fileListDiv.appendChild(item);
-  });
+  item.querySelector(".remove-file").onclick = () => {
+    // Remove file completely
+    row.filesArray = [];
+    renderFileList(row);
+  };
+
+  fileListDiv.appendChild(item);
 
   // Keep attach icon visible
   row.querySelector(".attach-icon").style.display = "inline-block";
@@ -38,14 +49,17 @@ function renderFileList(row) {
 
 function uploadFile(input, docName) {
   const row = input.closest("tr");
-  if (!row.filesArray) row.filesArray = [];
 
-  const newFiles = Array.from(input.files);
-  row.filesArray.push(...newFiles);
+  // Take only one file, overwrite old one
+  const newFile = input.files[0];
+  if (!newFile) return;
+
+  row.filesArray = [newFile];
 
   input.value = "";
   renderFileList(row);
 }
+
 
 function submitForm() {
   const form = document.getElementById("projectForm");
@@ -225,13 +239,8 @@ function submitForm() {
         okBtn.addEventListener("click", () => {
           document.body.removeChild(modal);
 
-          // Build Digital Storage Path
-          let digitalStorage = `${municipality}-${projectId}`;
-          if (projectId.startsWith("CAL")) {
-            digitalStorage = `Calumpit/${projectId}`;
-          } else if (projectId.startsWith("HAG")) {
-            digitalStorage = `Hagonoy/${projectId}`;
-          }
+          let digitalStorage = `${municipality}/${projectId}`;
+
 
           // Clean up Physical Storage ID (remove from 3rd dash onwards)
           let physicalStorage = projectId;
@@ -325,6 +334,7 @@ function generateQR() {
     { id: "municipality", name: "Municipality" },
     { id: "barangay", name: "Barangay" },
     { id: "surveyType", name: "Survey Type" },
+    { id: "projectStatus", name: "Project Status" },
     { id: "startDate", name: "Survey Start Date" },
   ];
 
@@ -727,8 +737,15 @@ function loadMunicipalities() {
   barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
   barangaySelect.disabled = true;
 
+  let municipalities = [];
+
   if (province === "Bulacan") {
-    const municipalities = ["Hagonoy", "Calumpit"];
+    municipalities = ["Hagonoy", "Calumpit", "Malolos City", "Baliuag"];
+  } else if (province === "Pampanga") {
+    municipalities = ["Angeles City", "Apalit", "Guagua", "Lubao"];
+  }
+
+  if (municipalities.length > 0) {
     municipalities.forEach(m => {
       const option = document.createElement("option");
       option.value = m;
@@ -750,20 +767,62 @@ function loadBarangays() {
   barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
   let barangays = [];
 
+  // 🏙️ Bulacan
   if (municipality === "Hagonoy") {
     barangays = [
       "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
       "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
       "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
-      "Santa Cruz", "Santa Elena", "Santa Monica", "Santa Niño", "Santa Rosario",
-      "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
+      "Santa Cruz", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario",
+      "Tampok", "Tibaguin"
     ];
   } else if (municipality === "Calumpit") {
     barangays = [
       "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
-      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos",
-      "Meyto", "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose",
-      "Santo Niño", "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos", "Meyto",
+      "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose", "Santo Niño",
+      "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+    ];
+  } else if (municipality === "Malolos City") {
+    barangays = [
+      "Anilao", "Atlag", "Bagna", "Balayong", "Bangkong Malapad", "Barihan",
+      "Bulihan", "Caingin", "Canalate", "Caniogan", "Catmon", "Cofradia",
+      "Dakila", "Guinhawa", "Ligas", "Longos", "Mojon", "Pamarawan",
+      "Santiago", "Santo Cristo", "Sumapang Bata", "Tikay"
+    ];
+  } else if (municipality === "Baliuag") {
+    barangays = [
+      "Bagong Nayon", "Barangca", "Calantipay", "Catulinan", "Concepcion",
+      "Hinukay", "Makinabang", "Matangtubig", "Pagala", "Paitan", "Pinagbarilan",
+      "Sabang", "San Jose", "Santa Barbara", "Subic", "Tangos", "Tiaong", "Tarcan"
+    ];
+  }
+
+  // 🏙️ Pampanga
+  else if (municipality === "Angeles City") {
+    barangays = [
+      "Anunas", "Balibago", "Capaya", "Cuayan", "Cutcut", "Cutud",
+      "Lourdes North West", "Lourdes Sur", "Malabanias", "Margot",
+      "Mining", "Pampang", "Pandan", "Pulungbulu", "San Jose",
+      "Santo Rosario", "Sapangbato"
+    ];
+  } else if (municipality === "Apalit") {
+    barangays = [
+      "Balucuc", "Calantipe", "Cansinala", "Capalangan", "Colgante",
+      "Paligui", "Sampaloc", "San Juan", "San Vicente", "Sucad",
+      "Sulipan", "Tabuyuc"
+    ];
+  } else if (municipality === "Guagua") {
+    barangays = [
+      "Ascomo", "Bancal", "Betis", "Lambac", "Magsaysay", "Maquiapo",
+      "Natividad", "Poblacion", "San Agustin", "San Antonio", "San Jose",
+      "San Juan", "San Marcos", "San Matias", "Santa Filomena", "Santo Niño"
+    ];
+  } else if (municipality === "Lubao") {
+    barangays = [
+      "Bancal", "Balantacan", "Calangain", "Del Carmen", "Don Ignacio Dimson",
+      "Prado Siongco", "Remedios", "San Antonio", "San Matias", "Santa Barbara",
+      "Santa Catalina", "Santa Cruz", "Santo Domingo", "Santo Niño", "Santo Tomas"
     ];
   }
 
@@ -774,8 +833,9 @@ function loadBarangays() {
     barangaySelect.appendChild(option);
   });
 
-  barangaySelect.disabled = false;
+  barangaySelect.disabled = barangays.length === 0;
 }
+
 
 function updateDocumentTableBasedOnSelection() {
   const requestType = document.getElementById("requestType")?.value;

@@ -7,50 +7,49 @@ function initializeEditForm() {
     disableFormUI();
     updateApprovalSectionVisibility();
 
-    // Attach save button listener here
     const saveBtn = document.getElementById('update-save-btn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', saveChanges);
-    }
+    if (saveBtn) saveBtn.addEventListener('click', saveChanges);
 }
 
-
-// 🧠 Store current values, fix radio group handling
+// 🧠 Store current values (inputs, selects, radios, checkboxes, document table)
 function storeOriginalValues() {
     const form = document.getElementById('update_projectForm');
     const inputs = form.querySelectorAll('input:not([type="hidden"])');
     const selects = form.querySelectorAll('select');
 
     originalValues = {};
-
-    // Store checked radio button values per group
     const radioGroups = {};
 
     inputs.forEach(input => {
         if (!input.name) return;
 
         if (input.type === 'radio') {
-            if (input.checked) {
-                radioGroups[input.name] = input.value;
-            }
+            if (input.checked) radioGroups[input.name] = input.value;
+        } else if (input.type === 'checkbox') {
+            originalValues[input.name] = input.checked;
         } else {
             originalValues[input.name] = input.value;
         }
     });
 
-    // Save radio group checked values
     for (const name in radioGroups) {
         originalValues[name] = radioGroups[name];
     }
 
     selects.forEach(select => {
-        if (select.name) {
-            originalValues[select.name] = select.value;
-        }
+        if (select.name) originalValues[select.name] = select.value;
     });
+
+    // Store document table checkbox states
+    const table = document.querySelector('.document-table');
+    if (table) {
+        table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            originalValues[cb.name] = cb.checked;
+        });
+    }
 }
 
-// 🚫 Disable inputs, selects, buttons initially
+// 🚫 Disable all UI initially
 function disableFormUI() {
     const form = document.getElementById('update_projectForm');
     const inputs = form.querySelectorAll('input:not([type="hidden"])');
@@ -60,7 +59,7 @@ function disableFormUI() {
 
     inputs.forEach(input => {
         if (input.type !== 'file') input.readOnly = true;
-        if (input.type === 'radio') input.disabled = true;
+        if (['radio', 'checkbox'].includes(input.type)) input.disabled = true;
     });
 
     selects.forEach(select => select.disabled = true);
@@ -81,16 +80,18 @@ function toggleEditSave() {
     isEditing = !isEditing;
 
     if (isEditing) {
-        // Enable edit mode
+        // ✅ Enable edit mode
+        toggleDocumentTableEditable(true);
+
         inputs.forEach(input => {
             if (input.type !== 'file') input.readOnly = false;
-            if (input.type === 'radio') input.disabled = false;
+            if (['radio', 'checkbox'].includes(input.type)) input.disabled = false;
         });
 
         selects.forEach(select => select.disabled = false);
         attachIcons.forEach(icon => icon.style.display = 'inline-block');
-
         if (saveBtn) saveBtn.style.display = 'inline-block';
+
         if (editBtn) {
             editBtn.textContent = 'Cancel';
             editBtn.classList.remove('btn-red');
@@ -101,47 +102,69 @@ function toggleEditSave() {
         repopulateBarangaySelect();
         updateApprovalSectionVisibility();
 
-        // ✅ Add live listener for request type
         if (requestTypeField) {
             requestTypeField.addEventListener('change', updateApprovalSectionVisibility);
         }
 
         const startInput = document.getElementById('surveyStartDate');
-        const endInput = document.getElementById('surveyEndDate');
-
-        if (startInput && endInput) {
-            updateSurveyEndDateMin();  // Set initial min value
-            startInput.addEventListener('change', updateSurveyEndDateMin);
-        }
-
+        if (startInput) startInput.addEventListener('change', updateSurveyEndDateMin);
+        updateSurveyEndDateMin();
     } else {
+        // 🚫 Cancel: restore all original values
+        toggleDocumentTableEditable(false);
 
         const startInput = document.getElementById('surveyStartDate');
-        if (startInput) {
-            startInput.removeEventListener('change', updateSurveyEndDateMin);
-        }
-        // Cancel: revert to original values (fix radio groups)
+        if (startInput) startInput.removeEventListener('change', updateSurveyEndDateMin);
+
+        // Restore all inputs
         inputs.forEach(input => {
             if (!input.name) return;
 
             if (input.type === 'radio') {
                 input.checked = (originalValues[input.name] === input.value);
-            } else {
+            } else if (input.type === 'checkbox') {
+                input.checked = !!originalValues[input.name];
+            } else if (input.type !== 'file') {
                 input.value = originalValues[input.name] || '';
             }
+
+            if (input.type !== 'file') input.readOnly = true;
+            if (['radio', 'checkbox'].includes(input.type)) input.disabled = true;
         });
 
         selects.forEach(select => {
-            if (select.name && originalValues[select.name] !== undefined) {
+            if (originalValues[select.name] !== undefined)
                 select.value = originalValues[select.name];
-            }
             select.disabled = true;
         });
 
-        inputs.forEach(input => {
-            if (input.type !== 'file') input.readOnly = true;
-            if (input.type === 'radio') input.disabled = true;
-        });
+        // 🧹 Clear file uploads
+        form.querySelectorAll('input[type="file"]').forEach(file => file.value = '');
+
+        // 🧹 Restore document table UI
+        const table = document.querySelector('.document-table');
+        if (table) {
+            table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.name && originalValues[cb.name] !== undefined) {
+                    cb.checked = !!originalValues[cb.name];
+                }
+                cb.disabled = true;
+            });
+
+            table.querySelectorAll('.digital-cell').forEach(cell => {
+                const fileSpan = cell.querySelector('.existing-file');
+                const noFile = cell.querySelector('.no-file');
+                if (fileSpan && fileSpan.textContent.trim() === '') {
+                    if (noFile) {
+                        noFile.style.display = 'inline';
+                        fileSpan.style.display = 'none';
+                    }
+                } else {
+                    if (fileSpan) fileSpan.style.display = 'inline';
+                    if (noFile) noFile.style.display = 'none';
+                }
+            });
+        }
 
         attachIcons.forEach(icon => icon.style.display = 'none');
         if (saveBtn) saveBtn.style.display = 'none';
@@ -154,29 +177,57 @@ function toggleEditSave() {
 
         updateApprovalSectionVisibility();
 
-        // ✅ Remove change listener to avoid duplicate calls
         if (requestTypeField) {
             requestTypeField.removeEventListener('change', updateApprovalSectionVisibility);
         }
     }
 }
 
-function updateSurveyEndDateMin() {
-    const startInput = document.getElementById('surveyStartDate');
-    const endInput = document.getElementById('surveyEndDate');
-    if (!startInput || !endInput) return;
+// 🧩 Document table editable toggle
+function toggleDocumentTableEditable(isEditable) {
+    const table = document.querySelector('.document-table');
+    if (!table) return;
 
-    if (startInput.value) {
-        endInput.min = startInput.value;
-        // If end date is before start date, reset it
-        if (endInput.value && endInput.value < startInput.value) {
-            endInput.value = startInput.value;
+    table.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = !isEditable);
+    table.querySelectorAll('.attach-icon').forEach(icon => icon.style.display = isEditable ? 'inline-block' : 'none');
+    table.querySelectorAll('.hidden-file').forEach(f => f.disabled = !isEditable);
+
+    table.querySelectorAll('.digital-cell').forEach(cell => {
+        const fileSpan = cell.querySelector('.existing-file');
+        const noFile = cell.querySelector('.no-file');
+        if (isEditable) {
+            if (fileSpan && fileSpan.textContent.trim() === '') {
+                noFile.style.display = 'inline';
+                fileSpan.style.display = 'none';
+            } else {
+                noFile.style.display = 'none';
+                fileSpan.style.display = 'inline';
+            }
+        } else {
+            if (fileSpan && fileSpan.textContent.trim() === '') {
+                noFile.style.display = 'inline';
+                fileSpan.style.display = 'none';
+            } else {
+                fileSpan.style.display = 'inline';
+                noFile.style.display = 'none';
+            }
         }
-    } else {
-        endInput.min = ''; // Remove min if no start date
-    }
+    });
 }
 
+// 📅 Date validation
+function updateSurveyEndDateMin() {
+    const start = document.getElementById('surveyStartDate');
+    const end = document.getElementById('surveyEndDate');
+    if (!start || !end) return;
+
+    if (start.value) {
+        end.min = start.value;
+        if (end.value && end.value < start.value) end.value = start.value;
+    } else end.min = '';
+}
+
+// 👁️ Approval visibility
 function updateApprovalSectionVisibility() {
     const requestType = document.getElementById('requestType')?.value;
     const toBeApprovedBy = document.getElementById('toBeApprovedBy');
@@ -184,40 +235,29 @@ function updateApprovalSectionVisibility() {
 
     if (requestType === 'Sketch Plan') {
         toBeApprovedBy.style.display = 'none';
-
-        // Auto-check PSD when hidden
         const psdRadio = toBeApprovedBy.querySelector('input[name="approval"][value="PSD"]');
-        if (psdRadio) {
-            psdRadio.checked = true;
-        }
+        if (psdRadio) psdRadio.checked = true;
     } else {
         toBeApprovedBy.style.display = 'block';
-
-        // Instead of clearing all radios, restore checked from originalValues (if available)
         const approvalRadios = toBeApprovedBy.querySelectorAll('input[name="approval"]');
-
-        // Use saved original value or keep current checked
         const originalApproval = originalValues['approval'] || null;
-
-        approvalRadios.forEach(radio => {
-            radio.checked = (radio.value === originalApproval);
-        });
+        approvalRadios.forEach(r => r.checked = (r.value === originalApproval));
     }
 }
 
-
-// 🔁 Reload Municipality dropdown while keeping selected value
+// 📍 Municipality dropdown
 function repopulateMunicipalitySelect() {
     const province = document.getElementById("province").value;
     const municipalitySelect = document.getElementById("municipality");
     const currentValue = municipalitySelect.value;
-
     municipalitySelect.innerHTML = "";
 
     let municipalities = [];
 
     if (province === "Bulacan") {
-        municipalities = ["Hagonoy", "Calumpit"];
+        municipalities = ["Hagonoy", "Calumpit", "Malolos City", "Baliuag"];
+    } else if (province === "Pampanga") {
+        municipalities = ["Angeles City", "Apalit", "Guagua", "Lubao"];
     }
 
     municipalities.forEach(m => {
@@ -231,30 +271,70 @@ function repopulateMunicipalitySelect() {
     municipalitySelect.disabled = false;
 }
 
-// 🔁 Reload Barangay dropdown while keeping selected value
+// 📍 Barangay dropdown
 function repopulateBarangaySelect() {
     const municipality = document.getElementById("municipality").value;
     const barangaySelect = document.getElementById("barangay");
     const currentValue = barangaySelect.value;
-
     barangaySelect.innerHTML = "";
 
     let barangays = [];
 
+    // Bulacan
     if (municipality === "Hagonoy") {
         barangays = [
             "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
             "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
             "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
-            "Santa Cruz", "Santa Elena", "Santa Monica", "Santa Niño", "Santa Rosario",
-            "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
+            "Santa Cruz", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario",
+            "Tampok", "Tibaguin"
         ];
     } else if (municipality === "Calumpit") {
         barangays = [
             "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
-            "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos",
-            "Meyto", "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose",
-            "Santo Niño", "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+            "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos", "Meyto",
+            "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose", "Santo Niño",
+            "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+        ];
+    } else if (municipality === "Malolos City") {
+        barangays = [
+            "Anilao", "Atlag", "Bagna", "Balayong", "Bangkong Malapad", "Barihan",
+            "Bulihan", "Caingin", "Canalate", "Caniogan", "Catmon", "Cofradia",
+            "Dakila", "Guinhawa", "Ligas", "Longos", "Mojon", "Pamarawan",
+            "Santiago", "Santo Cristo", "Sumapang Bata", "Tikay"
+        ];
+    } else if (municipality === "Baliuag") {
+        barangays = [
+            "Bagong Nayon", "Barangca", "Calantipay", "Catulinan", "Concepcion",
+            "Hinukay", "Makinabang", "Matangtubig", "Pagala", "Paitan", "Pinagbarilan",
+            "Sabang", "San Jose", "Santa Barbara", "Subic", "Tangos", "Tiaong", "Tarcan"
+        ];
+    }
+    // Pampanga
+    else if (municipality === "Angeles City") {
+        barangays = [
+            "Anunas", "Balibago", "Capaya", "Cuayan", "Cutcut", "Cutud",
+            "Lourdes North West", "Lourdes Sur", "Malabanias", "Margot",
+            "Mining", "Pampang", "Pandan", "Pulungbulu", "San Jose",
+            "Santo Rosario", "Sapangbato"
+        ];
+    } else if (municipality === "Apalit") {
+        barangays = [
+            "Balucuc", "Calantipe", "Cansinala", "Capalangan", "Colgante",
+            "Paligui", "Sampaloc", "San Juan", "San Vicente", "Sucad",
+            "Sulipan", "Tabuyuc"
+        ];
+    } else if (municipality === "Guagua") {
+        barangays = [
+            "Ascomo", "Bancal", "Betis", "Lambac", "Magsaysay", "Maquiapo",
+            "Natividad", "Poblacion", "San Agustin", "San Antonio", "San Jose",
+            "San Juan", "San Marcos", "San Matias", "Santa Filomena", "Santo Niño"
+        ];
+    } else if (municipality === "Lubao") {
+        barangays = [
+            "Bancal", "Balantacan", "Calangain", "Del Carmen", "Don Ignacio Dimson",
+            "Prado Siongco", "Remedios", "San Antonio", "San Matias", "Santa Barbara",
+            "Santa Catalina", "Santa Cruz", "Santo Domingo", "Santo Niño", "Santo Tomas"
         ];
     }
 
@@ -269,109 +349,184 @@ function repopulateBarangaySelect() {
     barangaySelect.disabled = false;
 }
 
+// 💾 Save changes
 async function saveChanges() {
     const form = document.getElementById('update_projectForm');
-    if (!form) {
-        alert('Form not found!');
-        return;
-    }
+    if (!form) return alert('Form not found!');
 
-    // Required fields to check
     const requiredFields = [
-        'lotNumber',
-        'clientFirstName',
-        'clientLastName',
-        'province',
-        'municipality',
-        'barangay',
-        'surveyType',
-        'projectStatus',        // Assuming 'status' field's name is 'projectStatus'
-        'surveyStartDate',
-        'requestType'
+        'lotNumber', 'clientFirstName', 'clientLastName',
+        'province', 'municipality', 'barangay',
+        'surveyType', 'projectStatus', 'surveyStartDate', 'requestType'
     ];
 
-    // Validate required fields are not empty
-    for (const fieldName of requiredFields) {
-        const field = form.querySelector(`[name="${fieldName}"]`);
+    for (const f of requiredFields) {
+        const field = form.querySelector(`[name="${f}"]`);
         if (!field || !field.value.trim()) {
             alert('Please fill in all required fields.');
             field?.focus();
-            return;  // Stop saving
+            return;
         }
     }
 
-    // Collect form data
     const formData = new FormData(form);
-
-    // Check if projectId is present
     if (!formData.has('projectId')) {
-        const projectIdInput = document.getElementById('projectId');
-        if (!projectIdInput || !projectIdInput.value) {
-            alert('Project ID is missing!');
-            return;
-        }
-        formData.append('projectId', projectIdInput.value);
+        const id = document.getElementById('projectId')?.value;
+        if (!id) return alert('Project ID missing!');
+        formData.append('projectId', id);
     }
 
     try {
-        const response = await fetch('model/update_project.php', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            alert(`Network error: ${response.statusText}`);
-            return;
-        }
-
-        const data = await response.json();
+        const res = await fetch('model/update_project.php', { method: 'POST', body: formData });
+        if (!res.ok) return alert(`Network error: ${res.statusText}`);
+        const data = await res.json();
 
         if (data.status === 'success') {
             alert('Changes saved successfully!');
-            // Update originalValues with current form values to prevent revert to old data
             storeCurrentValues();
-
-            // Switch back to view mode (disabled inputs, etc.)
             toggleEditSave();
-
         } else {
             alert('Error: ' + (data.message || 'Unknown error'));
         }
-    } catch (error) {
-        alert('Error: ' + error.message);
+    } catch (err) {
+        alert('Error: ' + err.message);
     }
 }
 
-
-// Helper: Store current form values into originalValues (similar to storeOriginalValues)
+// 🧠 Store new values after saving
 function storeCurrentValues() {
     const form = document.getElementById('update_projectForm');
     const inputs = form.querySelectorAll('input:not([type="hidden"])');
     const selects = form.querySelectorAll('select');
-
-    // Store checked radio buttons per group
     const radioGroups = {};
 
     inputs.forEach(input => {
         if (!input.name) return;
-
         if (input.type === 'radio') {
-            if (input.checked) {
-                radioGroups[input.name] = input.value;
-            }
+            if (input.checked) radioGroups[input.name] = input.value;
+        } else if (input.type === 'checkbox') {
+            originalValues[input.name] = input.checked;
         } else {
             originalValues[input.name] = input.value;
         }
     });
 
-    // Save radio group checked values
-    for (const name in radioGroups) {
-        originalValues[name] = radioGroups[name];
-    }
+    for (const name in radioGroups) originalValues[name] = radioGroups[name];
+    selects.forEach(select => { if (select.name) originalValues[select.name] = select.value; });
 
-    selects.forEach(select => {
-        if (select.name) {
-            originalValues[select.name] = select.value;
-        }
+    const table = document.querySelector('.document-table');
+    if (table) {
+        table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            originalValues[cb.name] = cb.checked;
+        });
+    }
+}
+
+// ✅ Load municipalities based on selected province
+function loadMunicipalities() {
+  const province = document.getElementById("province").value;
+  const municipalitySelect = document.getElementById("municipality");
+  const barangaySelect = document.getElementById("barangay");
+
+  municipalitySelect.innerHTML = '<option value="">Select Municipality</option>';
+  barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+  barangaySelect.disabled = true;
+
+  let municipalities = [];
+
+  if (province === "Bulacan") {
+    municipalities = ["Hagonoy", "Calumpit", "Malolos City", "Baliuag"];
+  } else if (province === "Pampanga") {
+    municipalities = ["Angeles City", "Apalit", "Guagua", "Lubao"];
+  }
+
+  if (municipalities.length > 0) {
+    municipalities.forEach(m => {
+      const option = document.createElement("option");
+      option.value = m;
+      option.textContent = m;
+      municipalitySelect.appendChild(option);
     });
+    municipalitySelect.disabled = false;
+  } else {
+    municipalitySelect.disabled = true;
+    barangaySelect.disabled = true;
+  }
+}
+
+// ✅ Load barangays based on selected municipality
+function loadBarangays() {
+  const municipality = document.getElementById("municipality").value;
+  const barangaySelect = document.getElementById("barangay");
+
+  barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+  let barangays = [];
+
+  // 🏙️ Bulacan
+  if (municipality === "Hagonoy") {
+    barangays = [
+      "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
+      "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
+      "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
+      "Santa Cruz", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario",
+      "Tampok", "Tibaguin"
+    ];
+  } else if (municipality === "Calumpit") {
+    barangays = [
+      "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
+      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos", "Meyto",
+      "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose", "Santo Niño",
+      "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+    ];
+  } else if (municipality === "Malolos City") {
+    barangays = [
+      "Anilao", "Atlag", "Bagna", "Balayong", "Bangkong Malapad", "Barihan",
+      "Bulihan", "Caingin", "Canalate", "Caniogan", "Catmon", "Cofradia",
+      "Dakila", "Guinhawa", "Ligas", "Longos", "Mojon", "Pamarawan",
+      "Santiago", "Santo Cristo", "Sumapang Bata", "Tikay"
+    ];
+  } else if (municipality === "Baliuag") {
+    barangays = [
+      "Bagong Nayon", "Barangca", "Calantipay", "Catulinan", "Concepcion",
+      "Hinukay", "Makinabang", "Matangtubig", "Pagala", "Paitan", "Pinagbarilan",
+      "Sabang", "San Jose", "Santa Barbara", "Subic", "Tangos", "Tiaong", "Tarcan"
+    ];
+  }
+
+  // 🏙️ Pampanga
+  else if (municipality === "Angeles City") {
+    barangays = [
+      "Anunas", "Balibago", "Capaya", "Cuayan", "Cutcut", "Cutud",
+      "Lourdes North West", "Lourdes Sur", "Malabanias", "Margot",
+      "Mining", "Pampang", "Pandan", "Pulungbulu", "San Jose",
+      "Santo Rosario", "Sapangbato"
+    ];
+  } else if (municipality === "Apalit") {
+    barangays = [
+      "Balucuc", "Calantipe", "Cansinala", "Capalangan", "Colgante",
+      "Paligui", "Sampaloc", "San Juan", "San Vicente", "Sucad",
+      "Sulipan", "Tabuyuc"
+    ];
+  } else if (municipality === "Guagua") {
+    barangays = [
+      "Ascomo", "Bancal", "Betis", "Lambac", "Magsaysay", "Maquiapo",
+      "Natividad", "Poblacion", "San Agustin", "San Antonio", "San Jose",
+      "San Juan", "San Marcos", "San Matias", "Santa Filomena", "Santo Niño"
+    ];
+  } else if (municipality === "Lubao") {
+    barangays = [
+      "Bancal", "Balantacan", "Calangain", "Del Carmen", "Don Ignacio Dimson",
+      "Prado Siongco", "Remedios", "San Antonio", "San Matias", "Santa Barbara",
+      "Santa Catalina", "Santa Cruz", "Santo Domingo", "Santo Niño", "Santo Tomas"
+    ];
+  }
+
+  barangays.forEach(b => {
+    const option = document.createElement("option");
+    option.value = b;
+    option.textContent = b;
+    barangaySelect.appendChild(option);
+  });
+
+  barangaySelect.disabled = barangays.length === 0;
 }

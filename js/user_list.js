@@ -36,11 +36,8 @@ function loadAdminPage(page) {
         initQRFormToggles();
       } else if (cleanPage === 'edit_project.php') {
         setTimeout(() => {
-          initializeEditForm();     // ✅ Set initial state (view mode, fields disabled)
-          initeditBackButton();     // ✅ If you have a back button, call its initializer
-
-          // ❌ DO NOT call toggleEditSave() here
-          // ❗ Only call toggleEditSave() on actual button click ("Edit")
+          initializeEditForm(); 
+          initeditBackButton();  
         }, 0);
       } else {
         initUserMenuDropdown();

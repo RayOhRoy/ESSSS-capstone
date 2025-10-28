@@ -383,21 +383,22 @@ function initLiveProjectSearch() {
   }
 
   // Click event delegation on liveResults for selecting a project
+  // Click event delegation on liveResults for selecting a project or viewing via eye icon
   const resultContainer = document.getElementById(resultContainerId);
   if (resultContainer) {
     resultContainer.addEventListener('click', (e) => {
-      // 👁️ If user clicked the eye icon
+      const item = e.target.closest('.result-item');
+      if (!item) return;
+
+      const projectId = item.dataset.projectid;
+      const qrValue = e.target.dataset.value || '';
+      const documentPath = item.dataset.documentpath || '';
+      const thirdField = item.querySelector('.field:nth-child(3)')?.textContent.trim().toLowerCase() || '';
+
+      // 👁️ If user clicked the eye icon — show modal
       if (e.target.classList.contains('fa-eye')) {
         e.stopPropagation();
 
-        const item = e.target.closest('.result-item');
-        if (!item) return;
-
-        const projectId = item.dataset.projectid;
-        const qrValue = e.target.dataset.value || ''; // 👈 use ProjectQR / DocumentQR
-        const documentPath = item.dataset.documentpath || '';
-
-        // Show modal (reuse QR modal)
         const modal = document.getElementById('qrsearchModal');
         const modalBody = document.getElementById('modalBody');
         if (!modal || !modalBody) {
@@ -407,20 +408,15 @@ function initLiveProjectSearch() {
 
         modal.style.display = 'flex';
         modalBody.innerHTML = '<p>Loading info...</p>';
-        // disableAllInputs();
 
-        // Determine if this is a project or document
+        // Determine if this is a document or project
         const isDocument = documentPath && documentPath.trim() !== '';
         const url = isDocument ? 'model/get_document_info.php' : 'model/get_project_info.php';
-        const payload = isDocument
-          ? { qr: qrValue, projectId }
-          : { qr: qrValue, projectId };
-
+        const payload = { qr: qrValue, projectId };
 
         console.log('🌐 Fetching from:', url);
         console.log('📤 Payload:', payload);
 
-        // Fetch info
         fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -435,11 +431,15 @@ function initLiveProjectSearch() {
                 modalBody.innerHTML = generateProjectHTML(data.project);
               }
 
-              // Attach OPEN button
+              // 🧠 Attach OPEN button behavior — respect "Physical" type
               const openBtn = modalBody.querySelector('.open-btn');
               if (openBtn) {
                 openBtn.addEventListener('click', () => {
-                  loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
+                  const baseUrl = 'project.php?projectId=' + encodeURIComponent(projectId);
+                  const finalUrl = thirdField === 'physical'
+                    ? baseUrl + '&view=physical'
+                    : baseUrl;
+                  loadAdminPage(finalUrl);
                 });
               }
             } else {
@@ -454,16 +454,16 @@ function initLiveProjectSearch() {
         return;
       }
 
-      // 🖱️ Otherwise, handle normal row click
-      const row = e.target.closest('.result-item');
-      if (row && row.dataset.projectid) {
-        const projectId = row.dataset.projectid;
-        loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
+      // 🖱️ Otherwise, handle normal row click — open directly
+      if (projectId) {
+        const baseUrl = 'project.php?projectId=' + encodeURIComponent(projectId);
+        const finalUrl = thirdField === 'physical'
+          ? baseUrl + '&view=physical'
+          : baseUrl;
+        loadAdminPage(finalUrl);
       }
     });
   }
-
-
   // Initial fetch on load (optional)
   fetchResults();
 }

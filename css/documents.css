@@ -144,7 +144,7 @@ a.signout-button:hover {
     color: white;
 }
 
-button {
+.btns {
     width: 100%;
     height: 10%;
     margin-bottom: 1%;
@@ -159,7 +159,7 @@ button {
     transition: all 0.3s;
 }
 
-button:hover {
+.btns:hover {
     background-color: #7B0302;
     color: white;
 }
@@ -169,6 +169,28 @@ button:hover {
     color: #7B0302;
     font-weight: 700;
 }
+
+.province-buttons,
+.municipality-buttons {
+    height: 70%;
+}
+
+#backBtn {
+    display: none;
+    font-size: 2vw;
+    border: none;
+    color: #7B0302;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+#backBtn:hover {
+    filter: brightness(1.25);
+    transform: scale(1.05);
+    transition: filter 0.2s ease;
+    background-color: transparent;
+}
+
 
 @media (max-width: 1080px) {
     .user-menu-panel {
@@ -197,9 +219,15 @@ button:hover {
         padding: 20px 0px 20px 0px;
     }
 
-    button {
+    .btns {
         padding-left: 21.5rem;
         font-weight: 700;
         font-size: 60px;
+    }
+
+    
+    #backBtn {
+        font-size: 7vw;
+        margin-top: 30px;
     }
 }

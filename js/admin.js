@@ -131,18 +131,34 @@ function initDocumentPieChart() {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'right' },
+        legend: {
+          position: 'right',
+          align: 'center', // aligns legend from top to bottom
+          labels: {
+            boxWidth: 20,
+            boxHeight: 20,
+            padding: 20, // spacing between items
+            font: {
+              size: 15, // larger font for readability
+              weight: 'bold'
+            },
+            color: 'black'
+          }
+        },
         tooltip: {
           callbacks: {
             label: function(context) {
               const label = context.label || '';
               const value = context.raw || 0;
-              const total = context.dataset.data.reduce((a,b)=>a+b,0);
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
               const percentage = total ? ((value / total) * 100).toFixed(1) : 0;
               return `${label}: ${value} (${percentage}%)`;
             }
           }
         }
+      },
+      layout: {
+        padding: 10
       }
     }
   });

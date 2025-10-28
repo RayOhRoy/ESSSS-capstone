@@ -59,15 +59,26 @@ if ($employeeID) {
 </div>
 
 <div class="topbar">
-    <span class="document">Documents</span>
-    <div class="topbar-content">
-        <div class="icons">
-            <span id="user-circle-icon" class="fa fa-user-circle"></span>
-        </div>
+  <button id="backBtn" onclick="showProvinces()" class="fa fa-arrow-left"></button>
+
+  <span class="document">Documents</span>
+
+  <div class="topbar-content">
+    <div class="icons">
+      <span id="user-circle-icon" class="fa fa-user-circle"></span>
     </div>
+  </div>
 </div>
 
 <hr class="top-line" />
 
-<button data-municipality="Calumpit" onclick="redirectToProjectList(this)">Calumpit</button>
-<button data-municipality="Hagonoy" onclick="redirectToProjectList(this)">Hagonoy</button>
+<!-- Province Buttons -->
+<div id="provinceButtons" class="province-buttons">
+  <button class="btns" data-province="Bulacan" onclick="showMunicipalities(this)">Bulacan</button>
+  <button class="btns" data-province="Pampanga" onclick="showMunicipalities(this)">Pampanga</button>
+</div>
+
+<!-- Municipality Buttons -->
+<div id="municipalityButtons" class="municipality-buttons">
+  <!-- Municipalities will appear here -->
+</div>

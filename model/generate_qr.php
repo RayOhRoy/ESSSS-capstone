@@ -9,8 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // ----------------------
 // Determine next Project ID (Physical Location style)
 // ----------------------
-$municipality = $_POST['municipality'] ?? 'OTH';
-$prefix = ($municipality === 'Hagonoy') ? 'HAG' : (($municipality === 'Calumpit') ? 'CAL' : 'OTH');
+$municipality = trim($_POST['municipality'] ?? 'OTH');
+
+// Use first 3 alphabetic characters (uppercase) as prefix, default to "OTH"
+if (!empty($municipality)) {
+    $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $municipality), 0, 3));
+} else {
+    $prefix = 'OTH';
+}
+
 
 // Get last project number by searching ProjectID with prefix
 $sqlLastProj = "SELECT ProjectID FROM project WHERE ProjectID LIKE '$prefix-%' ORDER BY ProjectID DESC LIMIT 1";

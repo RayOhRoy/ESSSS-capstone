@@ -506,6 +506,12 @@ a.signout-button:hover {
     font-weight: 700;
 }
 
+#lock1:hover,
+#lock2:hover {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
 @media (max-width: 1080px) {
     .envelope-columns {
 

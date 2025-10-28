@@ -16,7 +16,14 @@ $municipality = mysqli_real_escape_string($conn, $_POST['municipality']);
 $barangay = mysqli_real_escape_string($conn, $_POST['barangay']);
 $street = mysqli_real_escape_string($conn, $_POST['street']);
 
-$prefix = ($municipality === 'Hagonoy') ? 'HAG' : (($municipality === 'Calumpit') ? 'CAL' : 'OTH');
+// Automatically derive prefix from municipality
+$cleanMunicipality = preg_replace('/[^a-zA-Z]/', '', $municipality); // remove non-letters
+if (!empty($cleanMunicipality)) {
+    $prefix = strtoupper(substr($cleanMunicipality, 0, 3)); // first 3 letters, uppercase
+} else {
+    $prefix = 'OTH'; // fallback if empty or invalid
+}
+
 
 // Generate new AddressID
 $sqlLast = "SELECT AddressID FROM address WHERE AddressID LIKE '$prefix-%' ORDER BY AddressID DESC LIMIT 1";
@@ -193,6 +200,22 @@ foreach ($documentKeys as $docKey) {
     }
 }
 
-echo json_encode(['status' => 'success', 'message' => 'Project uploaded successfully.', 'projectID' => $projectID]);
+// Lookup municipality name from address table before returning response
+$municipalityName = '';
+$sqlMunicipality = "SELECT Municipality FROM address WHERE AddressID = '$addressID' LIMIT 1";
+$resMunicipality = $conn->query($sqlMunicipality);
+if ($resMunicipality && $resMunicipality->num_rows > 0) {
+    $municipalityName = $resMunicipality->fetch_assoc()['Municipality'];
+}
+
+// Return JSON including municipality name
+echo json_encode([
+    'status' => 'success',
+    'message' => 'Project uploaded successfully.',
+    'projectID' => $projectID,
+    'municipality' => $municipalityName
+]);
+
 $conn->close();
+
 ?>

@@ -31,69 +31,67 @@ function initPhysicalStorage() {
             console.error("Error fetching project IDs:", err);
         }
     }
-    // ========================
-    // CONFIGURE ESP32 IP HERE
-    // ========================
-    const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
 
-    // Toggle relay (send unlock signal only)
-    function toggleRelay(lockNumber) {
-        fetch(`${espIP}/relay?lock=${lockNumber}&action=unlock`)
-            .then(response => response.text())
-            .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
-            .catch(err => console.error("ESP connection failed:", err));
-    }
+    // const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
 
-    // Initialize lock click handlers
-    function initLockToggle() {
-        const lock1 = document.getElementById("lock1");
-        const lock2 = document.getElementById("lock2");
+    // // Toggle relay (send unlock signal only)
+    // function toggleRelay(lockNumber) {
+    //     fetch(`${espIP}/relay?lock=${lockNumber}&action=unlock`)
+    //         .then(response => response.text())
+    //         .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
+    //         .catch(err => console.error("ESP connection failed:", err));
+    // }
 
-        if (lock1) lock1.addEventListener("click", () => toggleRelay(1));
-        if (lock2) lock2.addEventListener("click", () => toggleRelay(2));
-    }
+    // // Initialize lock click handlers
+    // function initLockToggle() {
+    //     const lock1 = document.getElementById("lock1");
+    //     const lock2 = document.getElementById("lock2");
 
-    // Update lock icons based on ESP pin states (GPIO 32 & 33)
-    async function updateLockIcons() {
-        try {
-            const response = await fetch(`${espIP}/status`);
-            if (!response.ok) throw new Error(`Status ${response.status}`);
+    //     if (lock1) lock1.addEventListener("click", () => toggleRelay(1));
+    //     if (lock2) lock2.addEventListener("click", () => toggleRelay(2));
+    // }
 
-            const data = await response.json();
+    // // Update lock icons based on ESP pin states (GPIO 32 & 33)
+    // async function updateLockIcons() {
+    //     try {
+    //         const response = await fetch(`${espIP}/status`);
+    //         if (!response.ok) throw new Error(`Status ${response.status}`);
 
-            // Lock 1 → GPIO 32
-            const lock1 = document.getElementById("lock1");
-            if (lock1) {
-                if (data.lock1) { // HIGH = locked
-                    lock1.classList.remove("fa-unlock-alt");
-                    lock1.classList.add("fa-lock");
-                } else {
-                    lock1.classList.remove("fa-lock");
-                    lock1.classList.add("fa-unlock-alt");
-                }
-            }
+    //         const data = await response.json();
 
-            // Lock 2 → GPIO 33
-            const lock2 = document.getElementById("lock2");
-            if (lock2) {
-                if (data.lock2) { // HIGH = locked
-                    lock2.classList.remove("fa-unlock-alt");
-                    lock2.classList.add("fa-lock");
-                } else {
-                    lock2.classList.remove("fa-lock");
-                    lock2.classList.add("fa-unlock-alt");
-                }
-            }
+    //         // Lock 1 → GPIO 32
+    //         const lock1 = document.getElementById("lock1");
+    //         if (lock1) {
+    //             if (data.lock1) { // HIGH = locked
+    //                 lock1.classList.remove("fa-unlock-alt");
+    //                 lock1.classList.add("fa-lock");
+    //             } else {
+    //                 lock1.classList.remove("fa-lock");
+    //                 lock1.classList.add("fa-unlock-alt");
+    //             }
+    //         }
 
-        } catch (err) {
-            console.error("Failed to update lock icons:", err);
-        }
-    }
+    //         // Lock 2 → GPIO 33
+    //         const lock2 = document.getElementById("lock2");
+    //         if (lock2) {
+    //             if (data.lock2) { // HIGH = locked
+    //                 lock2.classList.remove("fa-unlock-alt");
+    //                 lock2.classList.add("fa-lock");
+    //             } else {
+    //                 lock2.classList.remove("fa-lock");
+    //                 lock2.classList.add("fa-unlock-alt");
+    //             }
+    //         }
 
-    // Poll ESP32 every 500ms
-    setInterval(updateLockIcons, 1000);
-    updateLockIcons();
-    initLockToggle();
+    //     } catch (err) {
+    //         console.error("Failed to update lock icons:", err);
+    //     }
+    // }
+
+    // // Poll ESP32 every 500ms
+    // setInterval(updateLockIcons, 1000);
+    // updateLockIcons();
+    // initLockToggle();
 
     // 📨 Generate envelopes (20 per page, split into 2 columns)
     async function renderEnvelopes(page) {

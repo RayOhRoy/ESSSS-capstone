@@ -96,6 +96,7 @@ if ($employeeID) {
                         <select name="province" id="province" onchange="loadMunicipalities()">
                             <option value="">Select Province</option>
                             <option value="Bulacan">Bulacan</option>
+                            <option value="Pampanga">Pampanga</option>
                         </select>
                     </div>
 
@@ -143,17 +144,8 @@ if ($employeeID) {
                             Status:</label>
                         <select id="projectStatus" name="projectStatus">
                             <option value="">Select Project Status</option>
-                            <option value="FOR PRINT">FOR PRINT</option>
-                            <option value="FOR DELIVER">FOR DELIVER</option>
-                            <option value="FOR SIGN">FOR SIGN</option>
-                            <option value="FOR ENTRY (PSD)">FOR ENTRY (PSD)</option>
-                            <option value="FOR ENTRY (CSD)">FOR ENTRY (CSD)</option>
-                            <option value="FOR ENTRY (LRA)">FOR ENTRY (LRA)</option>
-                            <option value="FOR RESEARCH">FOR RESEARCH</option>
-                            <option value="FOR FINAL">FOR FINAL</option>
-                            <option value="CANCELED">CANCELED</option>
-                            <option value="APPROVED">APPROVED</option>
-                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="COMPLETED">Completed</option>
                         </select>
                     </div>
 

@@ -72,8 +72,7 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Fieldnotes",
         "Tax Declaration",
         "Blueprint",
-        "CAD File",
-        "Others"
+        "CAD File"
     ];
 } else if ($requestType === "For Approval" && $approvalType === "CSD") {
     $docsToRender = [
@@ -87,8 +86,7 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Tax Declaration",
         "Survey Authority",
         "Blueprint",
-        "CAD File",
-        "Others"
+        "CAD File"
     ];
 } else if ($requestType === "For Approval" && $approvalType === "LRA") {
     $docsToRender = [
@@ -99,8 +97,7 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Technical Description",
         "Fieldnotes",
         "Blueprint",
-        "CAD File",
-        "Others"
+        "CAD File"
     ];
 } else if ($requestType === "Sketch Plan") {
     $docsToRender = [
@@ -110,8 +107,7 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Lot Data",
         "Tax Declaration",
         "Blueprint",
-        "CAD File",
-        "Others"
+        "CAD File"
     ];
 } else {
     $docsToRender = [
@@ -217,16 +213,17 @@ while ($docRow = $docResult->fetch_assoc()) {
 
                     <div class="form-row">
                         <label for="province"><span class="required-asterisk">* </span>Province:</label>
-                        <select id="province" name="province" disabled onchange="handleProvinceChange()">
+                        <select id="province" name="province" disabled onchange="loadMunicipalities()">
                             <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>
                                 Bulacan</option>
-                            <!-- Add more provinces here if needed -->
+                            <option value="Pampanga" <?= ($project['Province'] === 'Pampanga') ? 'selected' : '' ?>>
+                                Pampanga</option>
                         </select>
                     </div>
 
                     <div class="form-row">
                         <label for="municipality"><span class="required-asterisk">* </span>Municipality:</label>
-                        <select id="municipality" name="municipality" disabled onchange="handleMunicipalityChange()">
+                        <select id="municipality" name="municipality" disabled onchange="loadBarangays()">
                             <option selected><?= htmlspecialchars($project['Municipality']) ?></option>
                         </select>
                     </div>
@@ -252,10 +249,11 @@ while ($docRow = $docResult->fetch_assoc()) {
                         <label for="surveyType"><span class="required-asterisk">* </span>Survey Type:</label>
                         <select id="surveyType" name="surveyType" disabled>
                             <?php
-              $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling / Transfer", "Real Estate"];
-              foreach ($types as $type): ?>
-                            <option value="<?= $type ?>" <?= ($project['SurveyType'] === $type) ? 'selected' : '' ?>>
-                                <?= $type ?></option>
+                            $types = ["Relocation Survey", "Verification Survey", "Subdivision Survey", "Consolidation Survey", "Topographic Survey", "AS-Built Survey", "Sketch Plan / Vicinity Map", "Land Titling / Transfer", "Real Estate"];
+                            foreach ($types as $type): ?>
+                                <option value="<?= $type ?>" <?= ($project['SurveyType'] === $type) ? 'selected' : '' ?>>
+                                    <?= $type ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -271,17 +269,15 @@ while ($docRow = $docResult->fetch_assoc()) {
                         <label for="projectStatus"><span class="required-asterisk">* </span>Project Status:</label>
                         <select id="projectStatus" name="projectStatus" disabled>
                             <?php
-              $statusOptions = [
-                "FOR PRINT", "FOR DELIVER", "FOR SIGN",
-                "FOR ENTRY (PSD)", "FOR ENTRY (CSD)", "FOR ENTRY (LRA)",
-                "FOR RESEARCH", "FOR FINAL", "CANCELED",
-                "APPROVED", "COMPLETED"
-              ];
-              foreach ($statusOptions as $status):
-                $selected = ($project['ProjectStatus'] === $status) ? 'selected' : '';
-                echo "<option value=\"$status\" $selected>$status</option>";
-              endforeach;
-              ?>
+                            $statusOptions = [
+                                "Pending",
+                                "Completed"
+                            ];
+                            foreach ($statusOptions as $status):
+                                $selected = ($project['ProjectStatus'] === $status) ? 'selected' : '';
+                                echo "<option value=\"$status\" $selected>$status</option>";
+                            endforeach;
+                            ?>
                         </select>
                     </div>
 
@@ -309,17 +305,17 @@ while ($docRow = $docResult->fetch_assoc()) {
                         <label>To be approved by:</label>
                         <div class="approval-group">
                             <?php
-              $approvals = [
-                'PSD' => 'PSD (BUREAU)',
-                'CSD' => 'CSD (CENRO)',
-                'LRA' => 'LRA'
-              ];
-              foreach ($approvals as $value => $label): ?>
-                            <label for="approval_<?= strtolower($value) ?>">
-                                <input type="radio" id="approval_<?= strtolower($value) ?>" name="approval"
-                                    value="<?= $value ?>" disabled <?= ($approvalType === $value) ? 'checked' : '' ?> />
-                                <?= $label ?>
-                            </label>
+                            $approvals = [
+                                'PSD' => 'PSD (BUREAU)',
+                                'CSD' => 'CSD (CENRO)',
+                                'LRA' => 'LRA'
+                            ];
+                            foreach ($approvals as $value => $label): ?>
+                                <label for="approval_<?= strtolower($value) ?>">
+                                    <input type="radio" id="approval_<?= strtolower($value) ?>" name="approval"
+                                        value="<?= $value ?>" disabled <?= ($approvalType === $value) ? 'checked' : '' ?> />
+                                    <?= $label ?>
+                                </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -330,9 +326,9 @@ while ($docRow = $docResult->fetch_assoc()) {
                 <h4>PROJECT QR CODE</h4>
                 <div class="qr-box">
                     <?php if (!empty($project['ProjectQR'])): ?>
-                    <img src="<?= htmlspecialchars($project['ProjectQR']) ?>" alt="QR Code" />
+                        <img src="<?= htmlspecialchars($project['ProjectQR']) ?>" alt="QR Code" />
                     <?php else: ?>
-                    <span style="color:white;">No QR Code</span>
+                        <span style="color:white;">No QR Code</span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -353,57 +349,60 @@ while ($docRow = $docResult->fetch_assoc()) {
                 </thead>
                 <tbody>
                     <?php
-          foreach ($docsToRender as $docLabel):
-            $key = strtolower(str_replace([' ', '/'], ['_', ''], $docLabel));
-            $doc = $documents[$key] ?? null;
+                    foreach ($docsToRender as $docLabel):
+                        $key = strtolower(str_replace([' ', '/'], ['_', ''], $docLabel));
+                        $doc = $documents[$key] ?? null;
 
-            $isChecked = $doc ? 'checked' : '';
-            $status = $doc['DocumentStatus'] ?? '';
-            $qr = $doc['DocumentQR'] ?? '';
-            $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
-          ?>
-                    <tr>
-                        <td><?= htmlspecialchars($docLabel) ?></td>
+                        $isChecked = $doc ? 'checked' : '';
+                        $status = $doc['DocumentStatus'] ?? '';
+                        $qr = $doc['DocumentQR'] ?? '';
+                        $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
+                        ?>
+                        <tr>
+                            <td><?= htmlspecialchars($docLabel) ?></td>
 
-                        <td>
-                            <input type="checkbox" disabled <?= $isChecked ?> />
-                        </td>
+                            <td>
+                                <input type="checkbox" disabled <?= $isChecked ?> />
+                            </td>
 
-                        <td>
-                            <div class="digital-cell">
-                                <div class="file-list">
-                                    <?php if ($fileName): ?>
-                                    <span class="existing-file">
-                                        <?= htmlspecialchars($fileName) ?>
-                                    </span>
-                                    <i class="no-file" style="display:none;">No file</i>
-                                    <?php else: ?>
-                                    <span class="existing-file" style="display:none;"></span>
-                                    <i class="no-file">No file</i>
-                                    <?php endif; ?>
+                            <td>
+                                <div class="digital-cell">
+                                    <div class="file-list">
+                                        <?php if ($fileName): ?>
+                                            <span class="existing-file">
+                                                <?= htmlspecialchars($fileName) ?>
+                                            </span>
+                                            <i class="no-file" style="display:none;">No file</i>
+                                        <?php else: ?>
+                                            <span class="existing-file" style="display:none;"></span>
+                                            <i class="no-file">No file</i>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <label class="attach-icon" title="Attach file"
+                                        style="display:none; cursor:pointer; font-size:15px;">
+                                        📎
+                                        <input type="file" name="digital_<?= $key ?>" class="hidden-file" accept="<?php
+                                          if (stripos($key, 'cad') !== false)
+                                              echo '.dwg';
+                                          else
+                                              echo 'application/pdf';
+                                          ?>" onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
+                                    </label>
                                 </div>
-                                <label class="attach-icon" title="Attach file"
-                                    style="display:none; cursor:pointer; font-size: 15px;">
-                                    📎
-                                    <input type="file" name="digital_<?= $key ?>" class="hidden-file" multiple
-                                        accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.dwg"
-                                        onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
-                                </label>
-                            </div>
-                        </td>
+                            </td>
 
-
-                        <td class="qr-code">
-                            <?php if (!empty($qr)): ?>
-                            <span class="view-qr-text" style="cursor:pointer;color:#7B0302;text-decoration:underline;"
-                                onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
-                                View
-                            </span>
-                            <?php else: ?>
-                            <span style="color:gray; font-style: italic;"></span>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
+                            <td class="qr-code">
+                                <?php if (!empty($qr)): ?>
+                                    <span class="view-qr-text" style="cursor:pointer;color:#7B0302;text-decoration:underline;"
+                                        onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
+                                        View
+                                    </span>
+                                <?php else: ?>
+                                    <span style="color:gray; font-style: italic;"></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
