@@ -107,37 +107,44 @@ function initPhysicalStorage() {
         leftCol.classList.add("envelope-container");
         const rightCol = document.createElement("div");
         rightCol.classList.add("envelope-container");
-
+        
         const makeCard = (i) => {
             const num = String(i).padStart(3, "0");
             const label = `${prefix}-${num}`;
             const exists = existingPrefixes.has(label);
-
-            // Find full project ID that starts with this prefix
             const fullProjectId = existingProjects.find(pid => pid.startsWith(label)) || label;
             const userDataEl = document.getElementById('userData');
             const jobPosition = userDataEl?.dataset.jobposition || '';
 
+            // Determine relay number based on prefix
+            let relayNumber = null;
+            if (prefix === "HAGONOY") relayNumber = 1;
+            else if (prefix === "CALUMPIT") relayNumber = 2;
+
             return `
-            <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
-                <div class="envelope-title">${label}</div>
-                <div class="envelope-right">
-                    ${exists ? `
-                        <div class="preview-modal-btn fa fa-eye"></div>
-                        ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
-                            <button class="fa fa-edit update-btn"
-                                data-projectid="${fullProjectId}"
-                                onclick="redirectToUpdate(this)">
-                            </button>
-                        `}
-                        <button class="envelope-button">RETRIEVE</button>
-                    ` : `
-                        <div class="fa fa-eye" style="visibility:hidden;"></div>
-                        <button class="envelope-button" style="visibility:hidden;">RETRIEVE</button>
-                    `}
-                </div>
-            </div>`;
+    <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
+        <div class="envelope-title">${label}</div>
+        <div class="envelope-right">
+            ${exists ? `
+                <div class="preview-modal-btn fa fa-eye"></div>
+                ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
+                    <button class="fa fa-edit update-btn"
+                        data-projectid="${fullProjectId}"
+                        onclick="redirectToUpdate(this)">
+                    </button>
+                `}
+                <button class="envelope-button"
+                    ${relayNumber ? `onclick="toggleRelay(${relayNumber}, this)"` : ""}>
+                    RETRIEVE
+                </button>
+            ` : `
+                <div class="fa fa-eye" style="visibility:hidden;"></div>
+                <button class="envelope-button" style="visibility:hidden;">RETRIEVE</button>
+            `}
+        </div>
+    </div>`;
         };
+
 
         for (let i = leftStart; i <= leftEnd; i++) leftCol.innerHTML += makeCard(i);
         for (let i = rightStart; i <= rightEnd; i++) rightCol.innerHTML += makeCard(i);

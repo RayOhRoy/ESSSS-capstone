@@ -7,7 +7,7 @@
         <span></span>
     </div>
     <div class="sidebar">
-        <img class="side-logo" src="picture/logoOutlined.png" alt="Logo">
+        <img class="side-logo" src="picture/logoOutlined.png" alt="Logo" data-page="admin_dashboard.php">>
         <div class="menu-icons">
             <a href="#" class="menu-item active" data-page="admin_dashboard.php">
                 <span class="fa fa-home" alt="Dashboard"></span>
