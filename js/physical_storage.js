@@ -43,12 +43,20 @@ function initPhysicalStorage() {
     }
 
     // Initialize lock click handlers
+    // Initialize lock click handlers — idempotent guard
     function initLockToggle() {
         const lock1 = document.getElementById("lock1");
         const lock2 = document.getElementById("lock2");
 
-        if (lock1) lock1.addEventListener("click", () => toggleRelay(1));
-        if (lock2) lock2.addEventListener("click", () => toggleRelay(2));
+        if (lock1 && !lock1.dataset.listenerAttached) {
+            lock1.addEventListener("click", () => toggleRelay(1));
+            lock1.dataset.listenerAttached = "true";
+        }
+
+        if (lock2 && !lock2.dataset.listenerAttached) {
+            lock2.addEventListener("click", () => toggleRelay(2));
+            lock2.dataset.listenerAttached = "true";
+        }
     }
 
     // Update lock icons based on ESP pin states (GPIO 32 & 33)
@@ -116,41 +124,48 @@ function initPhysicalStorage() {
             const userDataEl = document.getElementById('userData');
             const jobPosition = userDataEl?.dataset.jobposition || '';
 
-            // Determine relay number based on prefix
+            // Determine relay number
             let relayNumber = null;
-            if (prefix === "HAGONOY") relayNumber = 1;
-            else if (prefix === "CALUMPIT") relayNumber = 2;
+            if (prefix === "HAG-01") relayNumber = 1;
+            else if (prefix === "CAL-01") relayNumber = 2;
 
             return `
-    <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
-        <div class="envelope-title">${label}</div>
-        <div class="envelope-right">
-            ${exists ? `
-                <div class="preview-modal-btn fa fa-eye"></div>
-                ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
-                    <button class="fa fa-edit update-btn"
-                        data-projectid="${fullProjectId}"
-                        onclick="redirectToUpdate(this)">
+        <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
+            <div class="envelope-title">${label}</div>
+            <div class="envelope-right">
+                ${exists ? `
+                    <div class="preview-modal-btn fa fa-eye"></div>
+                    ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
+                        <button class="fa fa-edit update-btn"
+                            data-projectid="${fullProjectId}">
+                        </button>
+                    `}
+                    <button class="envelope-button" data-relay="${relayNumber || ""}">
+                        RETRIEVE
                     </button>
+                ` : `
+                    <div class="fa fa-eye" style="visibility:hidden;"></div>
+                    <button class="envelope-button" style="visibility:hidden;">RETRIEVE</button>
                 `}
-                <button class="envelope-button"
-                    ${relayNumber ? `onclick="toggleRelay(${relayNumber}, this)"` : ""}>
-                    RETRIEVE
-                </button>
-            ` : `
-                <div class="fa fa-eye" style="visibility:hidden;"></div>
-                <button class="envelope-button" style="visibility:hidden;">RETRIEVE</button>
-            `}
-        </div>
-    </div>`;
+            </div>
+        </div>`;
         };
-
 
         for (let i = leftStart; i <= leftEnd; i++) leftCol.innerHTML += makeCard(i);
         for (let i = rightStart; i <= rightEnd; i++) rightCol.innerHTML += makeCard(i);
 
         columnsContainer.appendChild(leftCol);
         columnsContainer.appendChild(rightCol);
+
+        // ✅ Attach retrieve button click handlers dynamically
+        document.querySelectorAll(".envelope-button[data-relay]").forEach(btn => {
+            const relay = parseInt(btn.getAttribute("data-relay"));
+            if (!relay) return;
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation(); // prevent opening project
+                toggleRelay(relay);
+            });
+        });
 
         attachEnvelopeClickHandlers();
         attachButtonClickBlockers();
@@ -159,6 +174,7 @@ function initPhysicalStorage() {
         scrollUpBtn.style.visibility = page === maxPages ? "hidden" : "visible";
         scrollDownBtn.style.visibility = page === 1 ? "hidden" : "visible";
     }
+
 
     // 📦 Open cabinet
     async function openCabinet(cabinetName) {

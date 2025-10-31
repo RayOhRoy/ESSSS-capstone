@@ -8,7 +8,7 @@
   </div>
 
   <div class="sidebar">
-      <img class="side-logo" src="picture/logoOutlined.png" alt="Logo"  data-page="user_dashboard.php">>
+      <img class="side-logo" src="picture/logoOutlined.png" alt="Logo"  data-page="user_dashboard.php">
 
       <div class="menu-icons">
           <?php
