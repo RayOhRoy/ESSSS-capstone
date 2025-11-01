@@ -361,15 +361,9 @@ input[type="checkbox"]:checked::after {
     left: 2px;
 }
 
-.btn-grey {
-    background-color: gray;
-    pointer-events: none;
-}
-
 .btn-cancel {
     background-color: #6c757d;
 }
-
 
 /* Modal background */
 .qr-modal {
@@ -463,7 +457,8 @@ input[type="checkbox"]:checked::after {
 }
 
 #update-edit-btn,
-#update-save-btn {
+#update-save-btn,
+#update-printqr-btn {
     width: 50%;
     padding: 1.11vh 0.83vw;
     background-color: #7B0302;
@@ -472,6 +467,10 @@ input[type="checkbox"]:checked::after {
     border-radius: 0.26vw;
     cursor: pointer;
     margin-top: 2vh;
+}
+
+.btn-gray {
+    background-color: gray !important;
 }
 
 #update-save-btn {

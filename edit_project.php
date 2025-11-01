@@ -102,7 +102,7 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
 } else if ($requestType === "Sketch Plan") {
     $docsToRender = [
         "Original Plan",
-        "Xerox Title",
+        "Title",
         "Reference Plan",
         "Lot Data",
         "Tax Declaration",
@@ -115,9 +115,8 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
     ];
 }
 
-// --- Fetch Related Documents ---
 $documents = [];
-$docSql = "SELECT DocumentType, DocumentStatus, DocumentQR, DigitalLocation 
+$docSql = "SELECT DocumentID, DocumentType, DocumentStatus, DocumentQR, DigitalLocation 
            FROM document 
            WHERE ProjectID = ?";
 $docStmt = $conn->prepare($docSql);
@@ -126,8 +125,8 @@ $docStmt->execute();
 $docResult = $docStmt->get_result();
 
 while ($docRow = $docResult->fetch_assoc()) {
-    $typeKey = strtolower(str_replace(' ', '_', $docRow['DocumentType']));
-    $documents[$typeKey] = $docRow;
+    $typeKey = strtolower(str_replace([' ', '/'], ['_', ''], $docRow['DocumentType']));
+    $documents[$typeKey] = $docRow; // now contains DocumentID
 }
 ?>
 
@@ -334,7 +333,6 @@ while ($docRow = $docResult->fetch_assoc()) {
 
         <div class="note">Attached documents:</div>
 
-        <!-- Document Table -->
         <div class="table-container">
             <table class="document-table">
                 <thead>
@@ -346,30 +344,27 @@ while ($docRow = $docResult->fetch_assoc()) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    foreach ($docsToRender as $docLabel):
+                    <?php foreach ($docsToRender as $docLabel):
                         $key = strtolower(str_replace([' ', '/'], ['_', ''], $docLabel));
                         $doc = $documents[$key] ?? null;
 
+                        $docID = $doc['DocumentID'] ?? ''; // ✅ Now correctly fetched
                         $isChecked = $doc ? 'checked' : '';
-                        $status = $doc['DocumentStatus'] ?? '';
                         $qr = $doc['DocumentQR'] ?? '';
                         $fileName = $doc && $doc['DigitalLocation'] ? basename($doc['DigitalLocation']) : null;
                         ?>
-                        <tr>
+                        <tr data-docid="<?= htmlspecialchars($docID) ?>"> <!-- ✅ Correct DocumentID -->
                             <td><?= htmlspecialchars($docLabel) ?></td>
 
                             <td>
-                                <input type="checkbox" disabled <?= $isChecked ?> />
+                                <input type="checkbox" name="physical_<?= $key ?>" disabled <?= $isChecked ?> />
                             </td>
 
                             <td>
                                 <div class="digital-cell">
                                     <div class="file-list">
                                         <?php if ($fileName): ?>
-                                            <span class="existing-file">
-                                                <?= htmlspecialchars($fileName) ?>
-                                            </span>
+                                            <span class="existing-file"><?= htmlspecialchars($fileName) ?></span>
                                             <i class="no-file" style="display:none;">No file</i>
                                         <?php else: ?>
                                             <span class="existing-file" style="display:none;"></span>
@@ -380,12 +375,9 @@ while ($docRow = $docResult->fetch_assoc()) {
                                     <label class="attach-icon" title="Attach file"
                                         style="display:none; cursor:pointer; font-size:15px;">
                                         📎
-                                        <input type="file" name="digital_<?= $key ?>" class="hidden-file" accept="<?php
-                                          if (stripos($key, 'cad') !== false)
-                                              echo '.dwg';
-                                          else
-                                              echo 'application/pdf';
-                                          ?>" onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
+                                        <input type="file" name="digital_<?= $key ?>" class="hidden-file"
+                                            accept="<?php echo (stripos($key, 'cad') !== false) ? '.dwg' : 'application/pdf'; ?>"
+                                            onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
                                     </label>
                                 </div>
                             </td>
@@ -393,9 +385,7 @@ while ($docRow = $docResult->fetch_assoc()) {
                             <td class="qr-code">
                                 <?php if (!empty($qr)): ?>
                                     <span class="view-qr-text" style="cursor:pointer;color:#7B0302;text-decoration:underline;"
-                                        onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">
-                                        View
-                                    </span>
+                                        onclick="showQRPopup('<?= htmlspecialchars($qr) ?>')">View</span>
                                 <?php else: ?>
                                     <span style="color:gray; font-style: italic;"></span>
                                 <?php endif; ?>
@@ -407,6 +397,8 @@ while ($docRow = $docResult->fetch_assoc()) {
         </div>
 
         <div class="footer-buttons">
+            <button type="button" id="update-printqr-btn" class="btn-red"
+                onclick="printProjectQRCodes('<?= $projectId ?>')">Print QR</button>
             <button type="button" id="update-save-btn" class="btn-red" style="display:none;">Save Changes</button>
             <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
         </div>

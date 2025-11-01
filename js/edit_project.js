@@ -3,247 +3,331 @@ let originalValues = {}; // Store original field values
 
 // Call this after the HTML is injected (e.g. via fetch in SPA)
 function initializeEditForm() {
-    storeOriginalValues();
-    disableFormUI();
-    updateApprovalSectionVisibility();
+  storeOriginalValues();
+  disableFormUI();
+  updateApprovalSectionVisibility();
 
-    const saveBtn = document.getElementById('update-save-btn');
-    if (saveBtn) saveBtn.addEventListener('click', saveChanges);
+  const saveBtn = document.getElementById('update-save-btn');
+  if (saveBtn) saveBtn.addEventListener('click', saveChanges);
 }
 
-// 🧠 Store current values (inputs, selects, radios, checkboxes, document table)
 function storeOriginalValues() {
-    const form = document.getElementById('update_projectForm');
-    const inputs = form.querySelectorAll('input:not([type="hidden"])');
-    const selects = form.querySelectorAll('select');
+  const form = document.getElementById('update_projectForm');
+  originalValues = {};
+  const radioGroups = {};
 
-    originalValues = {};
-    const radioGroups = {};
+  // --- Handle all inputs (excluding hidden) ---
+  const inputs = form.querySelectorAll('input:not([type="hidden"])');
+  inputs.forEach(input => {
+    if (!input.name) return; // must have a name
 
-    inputs.forEach(input => {
-        if (!input.name) return;
-
-        if (input.type === 'radio') {
-            if (input.checked) radioGroups[input.name] = input.value;
-        } else if (input.type === 'checkbox') {
-            originalValues[input.name] = input.checked;
-        } else {
-            originalValues[input.name] = input.value;
-        }
-    });
-
-    for (const name in radioGroups) {
-        originalValues[name] = radioGroups[name];
+    if (input.type === 'radio') {
+      if (input.checked) radioGroups[input.name] = input.value;
+    } else if (input.type === 'checkbox') {
+      // ✅ Save true/false using checkbox name
+      originalValues[input.name] = input.checked;
+    } else {
+      originalValues[input.name] = input.value;
     }
+  });
 
-    selects.forEach(select => {
-        if (select.name) originalValues[select.name] = select.value;
+  // --- Add grouped radio values ---
+  for (const name in radioGroups) {
+    originalValues[name] = radioGroups[name];
+  }
+
+  // --- Handle selects ---
+  const selects = form.querySelectorAll('select');
+  selects.forEach(select => {
+    if (select.name) originalValues[select.name] = select.value;
+  });
+
+  // --- Handle document-table checkboxes (by name) ---
+  const table = document.querySelector('.document-table');
+  if (table) {
+    table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      if (cb.name) {
+        // ✅ Use name directly (like physical_barangay_clearance)
+        originalValues[cb.name] = cb.checked;
+      }
     });
+  }
 
-    // Store document table checkbox states
-    const table = document.querySelector('.document-table');
-    if (table) {
-        table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            originalValues[cb.name] = cb.checked;
-        });
-    }
+  // Optional: debug check
+  // console.log("✅ Stored initial values:", originalValues);
 }
+
+
 
 // 🚫 Disable all UI initially
 function disableFormUI() {
-    const form = document.getElementById('update_projectForm');
-    const inputs = form.querySelectorAll('input:not([type="hidden"])');
-    const selects = form.querySelectorAll('select');
-    const attachIcons = form.querySelectorAll('.attach-icon');
-    const saveBtn = document.getElementById('update-save-btn');
+  const form = document.getElementById('update_projectForm');
+  const inputs = form.querySelectorAll('input:not([type="hidden"])');
+  const selects = form.querySelectorAll('select');
+  const attachIcons = form.querySelectorAll('.attach-icon');
+  const saveBtn = document.getElementById('update-save-btn');
 
-    inputs.forEach(input => {
-        if (input.type !== 'file') input.readOnly = true;
-        if (['radio', 'checkbox'].includes(input.type)) input.disabled = true;
-    });
+  inputs.forEach(input => {
+    if (input.type !== 'file') input.readOnly = true;
+    if (['radio', 'checkbox'].includes(input.type)) input.disabled = true;
+  });
 
-    selects.forEach(select => select.disabled = true);
-    attachIcons.forEach(icon => icon.style.display = 'none');
-    if (saveBtn) saveBtn.style.display = 'none';
+  selects.forEach(select => select.disabled = true);
+  attachIcons.forEach(icon => icon.style.display = 'none');
+  if (saveBtn) saveBtn.style.display = 'none';
 }
 
 // 🟢 Toggle Edit <-> Cancel
 function toggleEditSave() {
-    const form = document.getElementById('update_projectForm');
-    const inputs = form.querySelectorAll('input:not([type="hidden"])');
-    const selects = form.querySelectorAll('select');
-    const attachIcons = form.querySelectorAll('.attach-icon');
-    const saveBtn = document.getElementById('update-save-btn');
-    const editBtn = document.getElementById('update-edit-btn');
-    const requestTypeField = document.getElementById('requestType');
+  const form = document.getElementById('update_projectForm');
+  const inputs = form.querySelectorAll('input:not([type="hidden"])');
+  const selects = form.querySelectorAll('select');
+  const attachIcons = form.querySelectorAll('.attach-icon');
+  const saveBtn = document.getElementById('update-save-btn');
+  const editBtn = document.getElementById('update-edit-btn');
+  const requestTypeField = document.getElementById('requestType');
 
-    isEditing = !isEditing;
+  isEditing = !isEditing;
 
-    if (isEditing) {
-        // ✅ Enable edit mode
-        toggleDocumentTableEditable(true);
+  if (isEditing) {
+    // ✅ Enable edit mode
+    toggleDocumentTableEditable(true);
 
-        inputs.forEach(input => {
-            if (input.type !== 'file') input.readOnly = false;
-            if (['radio', 'checkbox'].includes(input.type)) input.disabled = false;
-        });
+    inputs.forEach(input => {
+      if (input.type !== 'file') input.readOnly = false;
+      if (['radio', 'checkbox'].includes(input.type)) input.disabled = false;
+    });
 
-        selects.forEach(select => select.disabled = false);
-        attachIcons.forEach(icon => icon.style.display = 'inline-block');
-        if (saveBtn) saveBtn.style.display = 'inline-block';
+    selects.forEach(select => select.disabled = false);
+    attachIcons.forEach(icon => icon.style.display = 'inline-block');
+    if (saveBtn) saveBtn.style.display = 'inline-block';
 
-        if (editBtn) {
-            editBtn.textContent = 'Cancel';
-            editBtn.classList.remove('btn-red');
-            editBtn.classList.add('btn-gray');
-        }
-
-        repopulateMunicipalitySelect();
-        repopulateBarangaySelect();
-        updateApprovalSectionVisibility();
-
-        if (requestTypeField) {
-            requestTypeField.addEventListener('change', updateApprovalSectionVisibility);
-        }
-
-        const startInput = document.getElementById('surveyStartDate');
-        if (startInput) startInput.addEventListener('change', updateSurveyEndDateMin);
-        updateSurveyEndDateMin();
-    } else {
-        // 🚫 Cancel: restore all original values
-        toggleDocumentTableEditable(false);
-
-        const startInput = document.getElementById('surveyStartDate');
-        if (startInput) startInput.removeEventListener('change', updateSurveyEndDateMin);
-
-        // Restore all inputs
-        inputs.forEach(input => {
-            if (!input.name) return;
-
-            if (input.type === 'radio') {
-                input.checked = (originalValues[input.name] === input.value);
-            } else if (input.type === 'checkbox') {
-                input.checked = !!originalValues[input.name];
-            } else if (input.type !== 'file') {
-                input.value = originalValues[input.name] || '';
-            }
-
-            if (input.type !== 'file') input.readOnly = true;
-            if (['radio', 'checkbox'].includes(input.type)) input.disabled = true;
-        });
-
-        selects.forEach(select => {
-            if (originalValues[select.name] !== undefined)
-                select.value = originalValues[select.name];
-            select.disabled = true;
-        });
-
-        // 🧹 Clear file uploads
-        form.querySelectorAll('input[type="file"]').forEach(file => file.value = '');
-
-        // 🧹 Restore document table UI
-        const table = document.querySelector('.document-table');
-        if (table) {
-            table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                if (cb.name && originalValues[cb.name] !== undefined) {
-                    cb.checked = !!originalValues[cb.name];
-                }
-                cb.disabled = true;
-            });
-
-            table.querySelectorAll('.digital-cell').forEach(cell => {
-                const fileSpan = cell.querySelector('.existing-file');
-                const noFile = cell.querySelector('.no-file');
-                if (fileSpan && fileSpan.textContent.trim() === '') {
-                    if (noFile) {
-                        noFile.style.display = 'inline';
-                        fileSpan.style.display = 'none';
-                    }
-                } else {
-                    if (fileSpan) fileSpan.style.display = 'inline';
-                    if (noFile) noFile.style.display = 'none';
-                }
-            });
-        }
-
-        attachIcons.forEach(icon => icon.style.display = 'none');
-        if (saveBtn) saveBtn.style.display = 'none';
-
-        if (editBtn) {
-            editBtn.textContent = 'Edit';
-            editBtn.classList.remove('btn-gray');
-            editBtn.classList.add('btn-red');
-        }
-
-        updateApprovalSectionVisibility();
-
-        if (requestTypeField) {
-            requestTypeField.removeEventListener('change', updateApprovalSectionVisibility);
-        }
+    if (editBtn) {
+      editBtn.textContent = 'Cancel';
+      editBtn.classList.remove('btn-red');
+      editBtn.classList.add('btn-gray');
     }
+
+    repopulateMunicipalitySelect();
+    repopulateBarangaySelect();
+    updateApprovalSectionVisibility();
+
+    if (requestTypeField) {
+      requestTypeField.addEventListener('change', updateApprovalSectionVisibility);
+    }
+
+    const startInput = document.getElementById('surveyStartDate');
+    if (startInput) startInput.addEventListener('change', updateSurveyEndDateMin);
+    updateSurveyEndDateMin();
+  } else {
+    // 🚫 Cancel: restore all original values
+    toggleDocumentTableEditable(false);
+
+    const startInput = document.getElementById('surveyStartDate');
+    if (startInput) startInput.removeEventListener('change', updateSurveyEndDateMin);
+
+    // Restore all inputs
+    inputs.forEach(input => {
+      if (!input.name) return;
+
+      if (input.type === 'radio') {
+        input.checked = (originalValues[input.name] === input.value);
+      } else if (input.type === 'checkbox') {
+        input.checked = !!originalValues[input.name];
+      } else if (input.type !== 'file') {
+        input.value = originalValues[input.name] || '';
+      }
+
+      if (input.type !== 'file') input.readOnly = true;
+      if (['radio', 'checkbox'].includes(input.type)) input.disabled = true;
+    });
+
+    selects.forEach(select => {
+      if (originalValues[select.name] !== undefined)
+        select.value = originalValues[select.name];
+      select.disabled = true;
+    });
+
+    // 🧹 Clear file uploads
+    form.querySelectorAll('input[type="file"]').forEach(file => file.value = '');
+
+    // 🧹 Restore document table UI
+    const table = document.querySelector('.document-table');
+    if (table) {
+      table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (cb.name && originalValues[cb.name] !== undefined) {
+          cb.checked = !!originalValues[cb.name];
+        }
+        cb.disabled = true;
+      });
+
+      table.querySelectorAll('.digital-cell').forEach(cell => {
+        const fileSpan = cell.querySelector('.existing-file');
+        const noFile = cell.querySelector('.no-file');
+        if (fileSpan && fileSpan.textContent.trim() === '') {
+          if (noFile) {
+            noFile.style.display = 'inline';
+            fileSpan.style.display = 'none';
+          }
+        } else {
+          if (fileSpan) fileSpan.style.display = 'inline';
+          if (noFile) noFile.style.display = 'none';
+        }
+      });
+    }
+
+    attachIcons.forEach(icon => icon.style.display = 'none');
+    if (saveBtn) saveBtn.style.display = 'none';
+
+    if (editBtn) {
+      editBtn.textContent = 'Edit';
+      editBtn.classList.remove('btn-gray');
+      editBtn.classList.add('btn-red');
+    }
+
+    updateApprovalSectionVisibility();
+
+    if (requestTypeField) {
+      requestTypeField.removeEventListener('change', updateApprovalSectionVisibility);
+    }
+  }
 }
 
 // 🧩 Document table editable toggle
 function toggleDocumentTableEditable(isEditable) {
-    const table = document.querySelector('.document-table');
-    if (!table) return;
+  const table = document.querySelector('.document-table');
+  if (!table) return;
 
-    table.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = !isEditable);
-    table.querySelectorAll('.attach-icon').forEach(icon => icon.style.display = isEditable ? 'inline-block' : 'none');
-    table.querySelectorAll('.hidden-file').forEach(f => f.disabled = !isEditable);
+  table.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = !isEditable);
+  table.querySelectorAll('.attach-icon').forEach(icon => icon.style.display = isEditable ? 'inline-block' : 'none');
+  table.querySelectorAll('.hidden-file').forEach(f => f.disabled = !isEditable);
 
-    table.querySelectorAll('.digital-cell').forEach(cell => {
-        const fileSpan = cell.querySelector('.existing-file');
-        const noFile = cell.querySelector('.no-file');
-        if (isEditable) {
-            if (fileSpan && fileSpan.textContent.trim() === '') {
-                noFile.style.display = 'inline';
-                fileSpan.style.display = 'none';
-            } else {
-                noFile.style.display = 'none';
-                fileSpan.style.display = 'inline';
-            }
-        } else {
-            if (fileSpan && fileSpan.textContent.trim() === '') {
-                noFile.style.display = 'inline';
-                fileSpan.style.display = 'none';
-            } else {
-                fileSpan.style.display = 'inline';
-                noFile.style.display = 'none';
-            }
-        }
-    });
+  table.querySelectorAll('.digital-cell').forEach(cell => {
+    const fileSpan = cell.querySelector('.existing-file');
+    const noFile = cell.querySelector('.no-file');
+    if (isEditable) {
+      if (fileSpan && fileSpan.textContent.trim() === '') {
+        noFile.style.display = 'inline';
+        fileSpan.style.display = 'none';
+      } else {
+        noFile.style.display = 'none';
+        fileSpan.style.display = 'inline';
+      }
+    } else {
+      if (fileSpan && fileSpan.textContent.trim() === '') {
+        noFile.style.display = 'inline';
+        fileSpan.style.display = 'none';
+      } else {
+        fileSpan.style.display = 'inline';
+        noFile.style.display = 'none';
+      }
+    }
+  });
 }
 
 // 📅 Date validation
 function updateSurveyEndDateMin() {
-    const start = document.getElementById('surveyStartDate');
-    const end = document.getElementById('surveyEndDate');
-    if (!start || !end) return;
+  const start = document.getElementById('surveyStartDate');
+  const end = document.getElementById('surveyEndDate');
+  if (!start || !end) return;
 
-    if (start.value) {
-        end.min = start.value;
-        if (end.value && end.value < start.value) end.value = start.value;
-    } else end.min = '';
+  if (start.value) {
+    end.min = start.value;
+    if (end.value && end.value < start.value) end.value = start.value;
+  } else end.min = '';
 }
 
 // 👁️ Approval visibility
 function updateApprovalSectionVisibility() {
-    const requestType = document.getElementById('requestType')?.value;
-    const toBeApprovedBy = document.getElementById('toBeApprovedBy');
-    if (!toBeApprovedBy) return;
+  const requestType = document.getElementById('requestType')?.value;
+  const toBeApprovedBy = document.getElementById('toBeApprovedBy');
+  if (!toBeApprovedBy) return;
 
-    if (requestType === 'Sketch Plan') {
-        toBeApprovedBy.style.display = 'none';
-        const psdRadio = toBeApprovedBy.querySelector('input[name="approval"][value="PSD"]');
-        if (psdRadio) psdRadio.checked = true;
-    } else {
-        toBeApprovedBy.style.display = 'block';
-        const approvalRadios = toBeApprovedBy.querySelectorAll('input[name="approval"]');
-        const originalApproval = originalValues['approval'] || null;
-        approvalRadios.forEach(r => r.checked = (r.value === originalApproval));
-    }
+  if (requestType === 'Sketch Plan') {
+    toBeApprovedBy.style.display = 'none';
+    const psdRadio = toBeApprovedBy.querySelector('input[name="approval"][value="PSD"]');
+    if (psdRadio) psdRadio.checked = true;
+  } else {
+    toBeApprovedBy.style.display = 'block';
+    const approvalRadios = toBeApprovedBy.querySelectorAll('input[name="approval"]');
+    const originalApproval = originalValues['approval'] || null;
+    approvalRadios.forEach(r => r.checked = (r.value === originalApproval));
+  }
 }
+
+// 💾 Save changes
+async function saveChanges() {
+  const form = document.getElementById('update_projectForm');
+  if (!form) return alert('Form not found!');
+
+  const requiredFields = [
+    'lotNumber', 'clientFirstName', 'clientLastName',
+    'province', 'municipality', 'barangay',
+    'surveyType', 'projectStatus', 'surveyStartDate', 'requestType'
+  ];
+
+  for (const f of requiredFields) {
+    const field = form.querySelector(`[name="${f}"]`);
+    if (!field || !field.value.trim()) {
+      alert('Please fill in all required fields.');
+      field?.focus();
+      return;
+    }
+  }
+
+  const formData = new FormData(form);
+  if (!formData.has('projectId')) {
+    const id = document.getElementById('projectId')?.value;
+    if (!id) return alert('Project ID missing!');
+    formData.append('projectId', id);
+  }
+
+  try {
+    const res = await fetch('model/update_project.php', { method: 'POST', body: formData });
+    if (!res.ok) return alert(`Network error: ${res.statusText}`);
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      alert('Changes saved successfully!');
+      storeCurrentValues();
+      toggleEditSave();
+    } else {
+      alert('Error: ' + (data.message || 'Unknown error'));
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// 🧠 Store new values after saving
+function storeCurrentValues() {
+  const form = document.getElementById('update_projectForm');
+  const inputs = form.querySelectorAll('input:not([type="hidden"])');
+  const selects = form.querySelectorAll('select');
+  const radioGroups = {};
+
+  inputs.forEach(input => {
+    if (!input.name) return;
+    if (input.type === 'radio') {
+      if (input.checked) radioGroups[input.name] = input.value;
+    } else if (input.type === 'checkbox') {
+      originalValues[input.name] = input.checked;
+    } else {
+      originalValues[input.name] = input.value;
+    }
+  });
+
+  for (const name in radioGroups) originalValues[name] = radioGroups[name];
+  selects.forEach(select => { if (select.name) originalValues[select.name] = select.value; });
+
+  const table = document.querySelector('.document-table');
+  if (table) {
+    table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      originalValues[cb.name] = cb.checked;
+    });
+  }
+}
+
 
 // 📍 Municipality dropdown
 function repopulateMunicipalitySelect() {
@@ -287,18 +371,18 @@ function repopulateBarangaySelect() {
   // 🏙️ Full barangay lists for first 4
   if (municipality === "Hagonoy") {
     barangays = [
-      "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
-      "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
-      "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
-      "Santa Cruz", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario",
-      "Tampok", "Tibaguin"
+      "Abulalas", "Carillo", "Iba", "Iba‑Ibayo", "Mercado", "Palapat", "Pugad",
+      "Sagrada Familia", "San Agustin", "San Isidro", "San Jose", "San Juan",
+      "San Miguel", "San Nicolas", "San Pablo", "San Pascual", "San Pedro",
+      "San Roque", "San Sebastian", "Santa Cross", "Santa Elena", "Santa Monica",
+      "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
     ];
   } else if (municipality === "Calumpit") {
     barangays = [
-      "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
-      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos", "Meyto",
-      "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose", "Santo Niño",
-      "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+      "Balite", "Balungao", "Buguion", "Bulusan", "Calizon", "Calumpang", "Caniogan", "Corazon", "Frances",
+      "Gatbuca", "Gugo", "Iba Este", "Iba O’este", "Longos", "Meysulao", "Meyto",
+      "Palimbang", "Panducot", "Pio Cruzcosa", "Poblacion", "Pungo", "San Jose", "San Marcos",
+      "San Miguel", "Santa Lucia", "Santo Niño", "Sapang Bayan", "Sergio Bayan", "Sucol"
     ];
   } else if (municipality === "Malolos City") {
     barangays = [
@@ -369,79 +453,6 @@ function repopulateBarangaySelect() {
   barangaySelect.disabled = false;
 }
 
-// 💾 Save changes
-async function saveChanges() {
-    const form = document.getElementById('update_projectForm');
-    if (!form) return alert('Form not found!');
-
-    const requiredFields = [
-        'lotNumber', 'clientFirstName', 'clientLastName',
-        'province', 'municipality', 'barangay',
-        'surveyType', 'projectStatus', 'surveyStartDate', 'requestType'
-    ];
-
-    for (const f of requiredFields) {
-        const field = form.querySelector(`[name="${f}"]`);
-        if (!field || !field.value.trim()) {
-            alert('Please fill in all required fields.');
-            field?.focus();
-            return;
-        }
-    }
-
-    const formData = new FormData(form);
-    if (!formData.has('projectId')) {
-        const id = document.getElementById('projectId')?.value;
-        if (!id) return alert('Project ID missing!');
-        formData.append('projectId', id);
-    }
-
-    try {
-        const res = await fetch('model/update_project.php', { method: 'POST', body: formData });
-        if (!res.ok) return alert(`Network error: ${res.statusText}`);
-        const data = await res.json();
-
-        if (data.status === 'success') {
-            alert('Changes saved successfully!');
-            storeCurrentValues();
-            toggleEditSave();
-        } else {
-            alert('Error: ' + (data.message || 'Unknown error'));
-        }
-    } catch (err) {
-        alert('Error: ' + err.message);
-    }
-}
-
-// 🧠 Store new values after saving
-function storeCurrentValues() {
-    const form = document.getElementById('update_projectForm');
-    const inputs = form.querySelectorAll('input:not([type="hidden"])');
-    const selects = form.querySelectorAll('select');
-    const radioGroups = {};
-
-    inputs.forEach(input => {
-        if (!input.name) return;
-        if (input.type === 'radio') {
-            if (input.checked) radioGroups[input.name] = input.value;
-        } else if (input.type === 'checkbox') {
-            originalValues[input.name] = input.checked;
-        } else {
-            originalValues[input.name] = input.value;
-        }
-    });
-
-    for (const name in radioGroups) originalValues[name] = radioGroups[name];
-    selects.forEach(select => { if (select.name) originalValues[select.name] = select.value; });
-
-    const table = document.querySelector('.document-table');
-    if (table) {
-        table.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            originalValues[cb.name] = cb.checked;
-        });
-    }
-}
-
 function loadMunicipalities() {
   const province = document.getElementById("province").value;
   const municipalitySelect = document.getElementById("municipality");
@@ -485,21 +496,20 @@ function loadBarangays() {
   barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
   let barangays = [];
 
-  // 🏙️ Full barangay lists for first 4
   if (municipality === "Hagonoy") {
     barangays = [
-      "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
-      "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
-      "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
-      "Santa Cruz", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario",
-      "Tampok", "Tibaguin"
+      "Abulalas", "Carillo", "Iba", "Iba‑Ibayo", "Mercado", "Palapat", "Pugad",
+      "Sagrada Familia", "San Agustin", "San Isidro", "San Jose", "San Juan",
+      "San Miguel", "San Nicolas", "San Pablo", "San Pascual", "San Pedro",
+      "San Roque", "San Sebastian", "Santa Cross", "Santa Elena", "Santa Monica",
+      "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
     ];
   } else if (municipality === "Calumpit") {
     barangays = [
-      "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
-      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos", "Meyto",
-      "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose", "Santo Niño",
-      "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+      "Balite", "Balungao", "Buguion", "Bulusan", "Calizon", "Calumpang", "Caniogan", "Corazon", "Frances",
+      "Gatbuca", "Gugo", "Iba Este", "Iba O’este", "Longos", "Meysulao", "Meyto",
+      "Palimbang", "Panducot", "Pio Cruzcosa", "Poblacion", "Pungo", "San Jose", "San Marcos",
+      "San Miguel", "Santa Lucia", "Santo Niño", "Sapang Bayan", "Sergio Bayan", "Sucol"
     ];
   } else if (municipality === "Malolos City") {
     barangays = [
@@ -568,4 +578,103 @@ function loadBarangays() {
   });
 
   barangaySelect.disabled = barangays.length === 0;
+}
+
+function printProjectQRCodes(projectId, projectQR = null) {
+  if (!projectId) {
+    console.error("Project ID is required.");
+    return;
+  }
+
+  // Fetch documents (including Project QR) for the project
+  fetch(`model/get_project_docs.php?projectId=${encodeURIComponent(projectId)}`)
+    .then(res => res.json())
+    .then(docs => {
+      const qrImages = [];
+
+      // Include Project QR at the top with label "Project QR"
+      if (projectQR) {
+        qrImages.push({ src: projectQR, label: "Project QR" });
+      }
+
+      // Add QR codes for documents
+      docs.forEach(doc => {
+        if (doc.DocumentQR) {
+          qrImages.push({
+            src: doc.DocumentQR,
+            label: doc.DocumentType // label for individual documents
+          });
+        }
+      });
+
+      if (qrImages.length === 0) {
+        console.warn("No QR codes to print.");
+        return;
+      }
+
+      // Build QR grid HTML
+      let qrGridHTML = "";
+      qrImages.forEach(qr => {
+        qrGridHTML += `
+          <div class="qr-block">
+            <img src="${qr.src}" alt="QR Code">
+            <div class="label">${qr.label}</div>
+          </div>
+        `;
+      });
+
+      const printHTML = `
+        <html>
+          <head>
+            <title>Print QR Codes</title>
+            <style>
+              @page { size: A4 portrait; margin: 5mm; }
+              body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+              .print-wrapper { display: flex; flex-direction: column; align-items: center; }
+              .project-id-header { font-size: 14px; font-weight: bold; text-align: center; margin: 5mm 0 3mm 0; }
+              .qr-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 48mm);
+                grid-auto-rows: 55mm;
+                gap: 2mm;
+                padding: 5mm;
+              }
+              .qr-block {
+                width: 48mm; height: 55mm; border: 1px solid #000;
+                display: flex; flex-direction: column;
+                align-items: center; justify-content: center;
+                box-sizing: border-box; padding: 2mm;
+              }
+              .qr-block img { width: 44mm; height: 36mm; }
+              .label { margin-top: 1.5mm; font-size: 11px; }
+            </style>
+          </head>
+          <body>
+            <div class="print-wrapper">
+              <div class="project-id-header">${projectId}</div>
+              <div class="qr-grid">${qrGridHTML}</div>
+            </div>
+            <script>
+              window.onload = () => {
+                window.print();
+                window.onafterprint = () => window.close();
+              }
+            </script>
+          </body>
+        </html>
+      `;
+
+      // Create iframe and print
+      const iframe = document.createElement("iframe");
+      iframe.style = "position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0;";
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(printHTML);
+      doc.close();
+    })
+    .catch(err => {
+      console.error("Failed to fetch document QR codes.", err);
+    });
 }

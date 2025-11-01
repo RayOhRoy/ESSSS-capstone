@@ -68,7 +68,8 @@ $approval = isset($_POST['approval']) ? mysqli_real_escape_string($conn, $_POST[
 function getSurveyCode($type)
 {
     $typeClean = strtoupper(str_replace([' ', '/', '-'], '', trim($type)));
-    if (strpos($typeClean, 'ASBUILTSURVEY') !== false) return 'ASB';
+    if (strpos($typeClean, 'ASBUILTSURVEY') !== false)
+        return 'ASB';
     return substr($typeClean, 0, 3);
 }
 
@@ -86,44 +87,19 @@ if (count($parts) === 4) {
 // Remove suffix for folders, QR, and digital location
 $baseProjectID = preg_replace('/-[A-Z]{3}$/', '', $newProjectID);
 
-// — File & Folder Rename Logic —
+// — File & Folder Logic —
 $basePath = '../uploads';
-$oldFolderPath = "$basePath/$baseProjectID"; // use folder without suffix
-$newFolderPath = "$basePath/$baseProjectID"; // stays same base folder (no suffix change)
+$newFolderPath = "$basePath/$baseProjectID";
+if (!is_dir($newFolderPath)) mkdir($newFolderPath, 0777, true);
 
-if (is_dir($oldFolderPath)) {
-    // ✅ REGENERATE NEW PROJECT QR (folder stays same)
-    $qrContent = "uploads/$baseProjectID";
-    $newQRFile = "$newFolderPath/{$baseProjectID}-QR.png";
+// Generate Project QR
+$qrContent = "uploads/$baseProjectID";
+$newQRFile = "$newFolderPath/{$baseProjectID}-QR.png";
+foreach (glob("$newFolderPath/*-QR.png") as $oldQR) unlink($oldQR);
+QRcode::png($qrContent, $newQRFile, QR_ECLEVEL_L, 4);
 
-    // Remove any old QR file(s)
-    foreach (glob("$newFolderPath/*-QR.png") as $oldQR) {
-        unlink($oldQR);
-    }
-
-    QRcode::png($qrContent, $newQRFile, QR_ECLEVEL_L, 4);
-
-    // Rename document QR codes inside subfolders (keep base ID only)
-    $subfolders = scandir($newFolderPath);
-    foreach ($subfolders as $folder) {
-        if ($folder === '.' || $folder === '..') continue;
-        $subfolderPath = "$newFolderPath/$folder";
-        if (is_dir($subfolderPath)) {
-            $formattedFolder = str_replace(' ', '-', $folder);
-            $oldSubQR = glob("$subfolderPath/*-QR.png");
-            foreach ($oldSubQR as $oldQRFile) {
-                unlink($oldQRFile);
-            }
-            $newSubQR = "$subfolderPath/{$baseProjectID}-$formattedFolder-QR.png";
-            $subQRContent = "uploads/$baseProjectID/$formattedFolder";
-            QRcode::png($subQRContent, $newSubQR, QR_ECLEVEL_L, 4);
-        }
-    }
-}
-
-// — Update project record —
+// Update project record
 $newQRPath = "uploads/$baseProjectID/{$baseProjectID}-QR.png";
-
 $sqlUpdateProject = "UPDATE project SET 
     ProjectID = '$newProjectID',
     LotNo = '$lotNo',
@@ -139,19 +115,131 @@ $sqlUpdateProject = "UPDATE project SET
     ProjectQR = '$newQRPath',
     DigitalLocation = 'uploads/$baseProjectID'
     WHERE ProjectID = '$projectID'";
-
 if (!$conn->query($sqlUpdateProject)) {
     die(json_encode(['status' => 'error', 'message' => 'Error updating project', 'error' => $conn->error]));
 }
 
-// — Update document table —
+// — Handle document table —
+
+// 1️⃣ Handle deletions
+$deleteDocIDs = $_POST['delete_rows'] ?? [];
+if (!empty($deleteDocIDs) && is_array($deleteDocIDs)) {
+    foreach ($deleteDocIDs as $docIDToDelete) {
+        $docIDToDelete = mysqli_real_escape_string($conn, $docIDToDelete);
+
+        $resDoc = $conn->query("SELECT DocumentQR, DocumentName FROM document WHERE DocumentID = '$docIDToDelete'");
+        $docName = '';
+        if ($resDoc && $resDoc->num_rows > 0) {
+            $docData = $resDoc->fetch_assoc();
+            $docName = $docData['DocumentName'];
+            $qrPath = $docData['DocumentQR'];
+            if (file_exists("../$qrPath")) unlink("../$qrPath");
+        }
+
+        $conn->query("DELETE FROM document WHERE DocumentID = '$docIDToDelete'");
+
+        $sqlActivityLog = "INSERT INTO activity_log 
+            (ActivityLogID, ProjectID, Status, EmployeeID, Time, DocumentName) 
+            VALUES (
+                'ACT-" . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT) . "',
+                '$newProjectID',
+                'DELETED',
+                '$employeeID',
+                '" . date('Y-m-d H:i:s') . "',
+                '" . mysqli_real_escape_string($conn, $docName) . "'
+            )";
+        $conn->query($sqlActivityLog);
+    }
+}
+
+// 2️⃣ Handle new rows (physical or digital)
+$newRows = $_POST['new_rows'] ?? [];
+if (!empty($newRows) && is_array($newRows)) {
+    foreach ($newRows as $rowJSON) {
+        $rowData = json_decode($rowJSON, true);
+        if (!$rowData) continue;
+
+        $physical = !empty($rowData['physical']) ? 1 : 0;
+        $digitalName = $rowData['digital'] ?? '';
+        $docLabel = $rowData['label'] ?? 'Unknown';
+        $docTypeSafe = $docLabel; // Keep spaces
+
+        // Folder for this document type
+        $docFolder = "../uploads/$baseProjectID/$docTypeSafe";
+        if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
+
+        // Handle uploaded digital file
+        $digitalLocation = null;
+        if (!empty($digitalName)) {
+            foreach ($_FILES as $fileInput => $fileGroup) {
+                if (!empty($fileGroup['name'])) {
+                    foreach ($fileGroup['name'] as $i => $fname) {
+                        if ($fname === $digitalName) {
+                            $tmpName = $fileGroup['tmp_name'][$i];
+                            $extension = pathinfo($digitalName, PATHINFO_EXTENSION);
+                            $newFileName = "$docTypeSafe.$extension";
+                            $dest = "$docFolder/$newFileName";
+
+                            if (move_uploaded_file($tmpName, $dest)) {
+                                $digitalLocation = "../uploads/$baseProjectID/$docTypeSafe/$newFileName";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate document QR
+        $docQR = "uploads/$baseProjectID/$docTypeSafe/{$baseProjectID}-$docTypeSafe-QR.png";
+        QRcode::png("uploads/$baseProjectID/$docTypeSafe", "../$docQR", QR_ECLEVEL_L, 4);
+
+        // Generate new DocumentID
+        $resLastDoc = $conn->query("SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1");
+        $newDocNum = ($resLastDoc && $resLastDoc->num_rows > 0)
+            ? str_pad(intval(substr($resLastDoc->fetch_assoc()['DocumentID'], 4)) + 1, 5, "0", STR_PAD_LEFT)
+            : "00001";
+        $documentID = "DOC-" . $newDocNum;
+
+        $documentName = "$newProjectID-$docTypeSafe";
+        $documentStatus = $physical ? 'Stored' : null;
+
+        // Insert document record
+        $sqlInsertDoc = "INSERT INTO document 
+            (DocumentID, ProjectID, DocumentName, DocumentType, DigitalLocation, DocumentStatus, DocumentQR) 
+            VALUES (
+                '$documentID',
+                '$newProjectID',
+                '$documentName',
+                '$docTypeSafe',
+                " . ($digitalLocation ? "'$digitalLocation'" : "NULL") . ",
+                " . ($documentStatus ? "'$documentStatus'" : "NULL") . ",
+                '$docQR'
+            )";
+        $conn->query($sqlInsertDoc);
+
+        // Log upload
+        $sqlActivityLog = "INSERT INTO activity_log 
+            (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time, DocumentName)
+            VALUES (
+                'ACT-" . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT) . "',
+                '$newProjectID',
+                '$documentID',
+                'UPLOADED',
+                '$employeeID',
+                '" . date('Y-m-d H:i:s') . "',
+                '$documentName'
+            )";
+        $conn->query($sqlActivityLog);
+    }
+}
+
+// 3️⃣ Update existing documents
 $sqlGetDocuments = "SELECT DocumentID, DocumentName, DocumentType FROM document WHERE ProjectID = '$projectID'";
 $resDocuments = $conn->query($sqlGetDocuments);
-
 if ($resDocuments && $resDocuments->num_rows > 0) {
     while ($doc = $resDocuments->fetch_assoc()) {
         $docID = $doc['DocumentID'];
-        $docType = str_replace(' ', '-', $doc['DocumentType']);
+        $docType = $doc['DocumentType'];
         $newDocName = "$newProjectID-$docType";
         $newDocQRPath = "uploads/$baseProjectID/$docType/{$baseProjectID}-$docType-QR.png";
 
@@ -160,14 +248,11 @@ if ($resDocuments && $resDocuments->num_rows > 0) {
             DocumentName = '$newDocName',
             DocumentQR = '$newDocQRPath'
             WHERE DocumentID = '$docID'";
-
-        if (!$conn->query($sqlUpdateDoc)) {
-            die(json_encode(['status' => 'error', 'message' => 'Error updating document', 'error' => $conn->error]));
-        }
+        $conn->query($sqlUpdateDoc);
     }
 }
 
-// Log modification
+// Log project modification
 $sqlLastActivity = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
 $resLastActivity = $conn->query($sqlLastActivity);
 $newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0)
@@ -180,7 +265,7 @@ $sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, E
     VALUES ('$activityLogID','$newProjectID','MODIFIED','$employeeID', '$timeNow')";
 $conn->query($sqlActivityLog);
 
-// ✅ Return response
+// ✅ Return success JSON
 echo json_encode([
     'status' => 'success',
     'message' => 'Project updated successfully.',

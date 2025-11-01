@@ -86,7 +86,7 @@ if ($employeeID) {
   <div class="card">
     <div class="card-title">HAG-01</div>
     <div class="card-actions">
-      <button class="open-button" id="openEnvelopeBtn">OPEN</button>
+      <button class="open-button" id="openEnvelopeBtn">VIEW</button>
       <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
         <i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>
       <?php endif; ?>
@@ -96,7 +96,7 @@ if ($employeeID) {
   <div class="card">
     <div class="card-title">CAL-01</div>
     <div class="card-actions">
-      <button class="open-button">OPEN</button>
+      <button class="open-button">VIEW</button>
       <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
         <i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>
       <?php endif; ?>
@@ -201,7 +201,7 @@ if ($employeeID) {
 
             <!-- Buttons -->
             <div class="modal-buttons">
-                <button class="open-btn">OPEN</button>
+                <button class="open-btn">VIEW</button>
             </div>
         </div>
     </div>

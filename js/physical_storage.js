@@ -15,22 +15,28 @@ function initPhysicalStorage() {
     let existingProjects = []; // full project IDs like HAG-01-100-ABC
     let existingPrefixes = new Set(); // just prefixes like HAG-01-100
 
-    // 🧩 Fetch existing full project IDs from database
     async function fetchExistingProjects() {
         try {
             const response = await fetch("model/get_existing_projects.php");
             const data = await response.json();
 
             if (Array.isArray(data)) {
-                existingProjects = data; // example: ["HAG-01-100-ABC", "HAG-01-101-XYZ"]
+                existingProjects = data.map(p => p.ProjectID);
                 existingPrefixes = new Set(
-                    data.map(pid => pid.split("-").slice(0, 3).join("-"))
+                    data.map(p => p.ProjectID.split("-").slice(0, 3).join("-"))
                 );
+
+                // store map for storage statuses
+                window.projectStorageStatus = {};
+                data.forEach(p => {
+                    window.projectStorageStatus[p.ProjectID] = p.StorageStatus?.toLowerCase() || "";
+                });
             }
         } catch (err) {
             console.error("Error fetching project IDs:", err);
         }
     }
+
 
     const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
 
@@ -42,19 +48,39 @@ function initPhysicalStorage() {
             .catch(err => console.error("ESP connection failed:", err));
     }
 
-    // Initialize lock click handlers
-    // Initialize lock click handlers — idempotent guard
     function initLockToggle() {
         const lock1 = document.getElementById("lock1");
         const lock2 = document.getElementById("lock2");
 
+        const disableBothTemporarily = () => {
+            const locks = [lock1, lock2].filter(Boolean);
+            locks.forEach(icon => {
+                icon.style.pointerEvents = "none"; // disable clicks
+                icon.dataset.originalColor = icon.style.color || ""; // store original color
+                icon.style.color = "gray"; // gray out
+            });
+
+            setTimeout(() => {
+                locks.forEach(icon => {
+                    icon.style.pointerEvents = "auto"; // enable clicks
+                    icon.style.color = icon.dataset.originalColor; // restore color
+                });
+            }, 10000); // 10 seconds
+        };
+
         if (lock1 && !lock1.dataset.listenerAttached) {
-            lock1.addEventListener("click", () => toggleRelay(1));
+            lock1.addEventListener("click", () => {
+                toggleRelay(1);
+                disableBothTemporarily();
+            });
             lock1.dataset.listenerAttached = "true";
         }
 
         if (lock2 && !lock2.dataset.listenerAttached) {
-            lock2.addEventListener("click", () => toggleRelay(2));
+            lock2.addEventListener("click", () => {
+                toggleRelay(2);
+                disableBothTemporarily();
+            });
             lock2.dataset.listenerAttached = "true";
         }
     }
@@ -129,27 +155,38 @@ function initPhysicalStorage() {
             if (prefix === "HAG-01") relayNumber = 1;
             else if (prefix === "CAL-01") relayNumber = 2;
 
+            // 🔍 Determine button label based on StorageStatus
+            let storageStatus = window.projectStorageStatus?.[fullProjectId] || "";
+            let buttonText = "RETRIEVE"; // default
+
+            if (storageStatus.toLowerCase() === "stored") {
+                buttonText = "RETRIEVE";
+            } else if (storageStatus.toLowerCase() === "retrieve") {
+                buttonText = "STORE";
+            }
+
             return `
-        <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
-            <div class="envelope-title">${label}</div>
-            <div class="envelope-right">
-                ${exists ? `
-                    <div class="preview-modal-btn fa fa-eye"></div>
-                    ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
-                        <button class="fa fa-edit update-btn"
-                            data-projectid="${fullProjectId}">
+            <div class="envelope-card ${exists ? "" : "unavailable"}" data-projectid="${fullProjectId}">
+                <div class="envelope-title">${label}</div>
+                <div class="envelope-right">
+                    ${exists ? `
+                        <div class="preview-modal-btn fa fa-eye"></div>
+                        ${(jobPosition === "cad operator" || jobPosition === "compliance officer") ? "" : `
+                            <button class="fa fa-edit update-btn"
+                                data-projectid="${fullProjectId}">
+                            </button>
+                        `}
+                        <button class="envelope-button" data-relay="${relayNumber || ""}">
+                            ${buttonText}
                         </button>
+                    ` : `
+                        <div class="fa fa-eye" style="visibility:hidden;"></div>
+                        <button class="envelope-button" style="visibility:hidden;">RETRIEVE</button>
                     `}
-                    <button class="envelope-button" data-relay="${relayNumber || ""}">
-                        RETRIEVE
-                    </button>
-                ` : `
-                    <div class="fa fa-eye" style="visibility:hidden;"></div>
-                    <button class="envelope-button" style="visibility:hidden;">RETRIEVE</button>
-                `}
-            </div>
-        </div>`;
+                </div>
+            </div>`;
         };
+
 
         for (let i = leftStart; i <= leftEnd; i++) leftCol.innerHTML += makeCard(i);
         for (let i = rightStart; i <= rightEnd; i++) rightCol.innerHTML += makeCard(i);

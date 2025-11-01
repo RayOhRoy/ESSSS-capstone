@@ -60,7 +60,6 @@ function uploadFile(input, docName) {
   renderFileList(row);
 }
 
-
 function submitForm() {
   const form = document.getElementById("projectForm");
   const uploadBtn = document.getElementById("uploadBtn");
@@ -774,18 +773,18 @@ function loadBarangays() {
   // 🏙️ Full barangay lists for first 4
   if (municipality === "Hagonoy") {
     barangays = [
-      "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
-      "San Agustin", "San Isidro", "San Juan", "San Miguel", "San Nicolas",
-      "San Pablo", "San Pedro", "San Roque", "San Sebastian", "San Pascual",
-      "Santa Cruz", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario",
-      "Tampok", "Tibaguin"
+      "Abulalas", "Carillo", "Iba", "Iba‑Ibayo", "Mercado", "Palapat", "Pugad",
+      "Sagrada Familia", "San Agustin", "San Isidro", "San Jose", "San Juan",
+      "San Miguel", "San Nicolas", "San Pablo", "San Pascual", "San Pedro",
+      "San Roque", "San Sebastian", "Santa Cross", "Santa Elena", "Santa Monica",
+      "Santo Niño", "Santo Rosario", "Tampok", "Tibaguin"
     ];
   } else if (municipality === "Calumpit") {
     barangays = [
-      "Balite", "Balungao", "Bugyon", "Calizon", "Calumpang", "Corazon", "Frances",
-      "Gatbuca", "Gugu", "Iba Este", "Iba O’este", "Longos", "Malolos", "Meyto",
-      "Palimbang", "Panducot", "Poblacion", "Pungo", "San Jose", "Santo Niño",
-      "Sapang Bayan", "Suklayin", "Sunga", "Tinejero"
+      "Balite", "Balungao", "Buguion", "Bulusan", "Calizon", "Calumpang", "Caniogan", "Corazon", "Frances",
+      "Gatbuca", "Gugo", "Iba Este", "Iba O’este", "Longos", "Meysulao", "Meyto",
+      "Palimbang", "Panducot", "Pio Cruzcosa", "Poblacion", "Pungo", "San Jose", "San Marcos",
+      "San Miguel", "Santa Lucia", "Santo Niño", "Sapang Bayan", "Sergio Bayan", "Sucol"
     ];
   } else if (municipality === "Malolos City") {
     barangays = [

@@ -325,7 +325,7 @@ $hideUpdate = ($jobPosition === 'cad operator' || $jobPosition === 'compliance o
 
             <!-- Buttons -->
             <div class="modal-buttons">
-                <button class="open-btn">OPEN</button>
+                <button class="open-btn">VIEW</button>
             </div>
         </div>
     </div>

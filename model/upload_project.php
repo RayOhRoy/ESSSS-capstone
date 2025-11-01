@@ -79,7 +79,7 @@ if (!is_dir($projectFolder))
 $sqlProject = "INSERT INTO project 
     (ProjectID, LotNo, ClientFName, ClientLName, SurveyType, SurveyStartDate, SurveyEndDate, Agent, RequestType, Approval, AddressID, DigitalLocation, ProjectStatus, StorageStatus) 
     VALUES ('$projectID','$lotNo','$fname','$lname','$surveyType','$startDate','$endDate','$agent','$requestType',"
-    . ($approval !== null ? "'$approval'" : "NULL") . 
+    . ($approval !== null ? "'$approval'" : "NULL") .
     ",'$addressID','uploads/$baseProjectID','$projectStatus', 'Stored')";
 if ($conn->query($sqlProject) !== TRUE) {
     die(json_encode(['status' => 'error', 'message' => 'Error inserting project', 'error' => $conn->error]));
@@ -138,13 +138,14 @@ foreach ($documentKeys as $docKey) {
             if ($files['error'][$i] !== UPLOAD_ERR_OK)
                 continue;
             $ext = pathinfo($origName, PATHINFO_EXTENSION);
-            $newName = "$safeDocName-" . ($i + 1) . "." . $ext;
+            $newName = "$safeDocName." . $ext; // no numbering
             $uploadedFiles[] = [
                 'tmp_name' => $files['tmp_name'][$i],
                 'newFileName' => $newName
             ];
         }
     }
+
 
     if (!$physicalChecked && count($uploadedFiles) === 0) {
         continue;

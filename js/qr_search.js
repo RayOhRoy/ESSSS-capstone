@@ -144,7 +144,7 @@ function generateProjectHTML(project) {
     </div>
 
     <div class="modal-buttons">
-        <button class="open-btn">OPEN</button>
+        <button class="open-btn">VIEW</button>
     </div> 
   `;
 }
@@ -176,7 +176,7 @@ function generateDocumentHTML(document) {
     </div>
 
     <div class="modal-buttons" style="margin-top: 1em; padding: 0 1em;">
-      <button class="open-btn">OPEN</button>
+      <button class="open-btn">VIEW</button>
     </div>
   `;
 }
