@@ -167,6 +167,13 @@ function initPhysicalStorage() {
             });
         });
 
+        document.querySelectorAll(".update-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                redirectToUpdate(btn);
+            });
+        });
+
         attachEnvelopeClickHandlers();
         attachButtonClickBlockers();
         PhysicalPreview();
@@ -251,7 +258,7 @@ function initPhysicalStorage() {
     function redirectToUpdate(element) {
         const projectId = element.getAttribute("data-projectid");
         if (projectId) {
-            loadAdminPage("update_project.php?projectId=" + encodeURIComponent(projectId));
+            loadAdminPage("edit_project.php?projectId=" + encodeURIComponent(projectId));
         }
     }
 
@@ -305,7 +312,7 @@ function PhysicalPreview() {
                     const project = data.project;
 
                     if (details) {
-                        details.innerHTML = `
+                        details.innerHTML = `   
                 <p><strong>Lot No.:</strong> ${project.LotNo || ''}</p>
                 <p><strong>Address:</strong> ${project.FullAddress || ''}</p>
                 <p><strong>Survey Type:</strong> ${project.SurveyType || ''}</p>
@@ -316,10 +323,11 @@ function PhysicalPreview() {
                     }
 
                     const qrImage = modal.querySelector('.qr-img');
-                    if (qrImage && project.ProjectID) {
-                        qrImage.src = `uploads/${project.ProjectID}/${project.ProjectID}-QR.png`;
+                    if (qrImage && project.ProjectQR) {
+                        qrImage.src = project.ProjectQR;
                         qrImage.alt = `QR Code for ${project.ProjectID}`;
                     }
+
 
                     if (docTableBody) {
                         docTableBody.innerHTML = '';

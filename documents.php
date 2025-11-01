@@ -59,10 +59,7 @@ if ($employeeID) {
 </div>
 
 <div class="topbar">
-  <button id="backBtn" onclick="showProvinces()" class="fa fa-arrow-left"></button>
-
   <span class="document">Documents</span>
-
   <div class="topbar-content">
     <div class="icons">
       <span id="user-circle-icon" class="fa fa-user-circle"></span>
@@ -72,13 +69,28 @@ if ($employeeID) {
 
 <hr class="top-line" />
 
-<!-- Province Buttons -->
-<div id="provinceButtons" class="province-buttons">
-  <button class="btns" data-province="Bulacan" onclick="showMunicipalities(this)">Bulacan</button>
-  <button class="btns" data-province="Pampanga" onclick="showMunicipalities(this)">Pampanga</button>
-</div>
-
-<!-- Municipality Buttons -->
 <div id="municipalityButtons" class="municipality-buttons">
-  <!-- Municipalities will appear here -->
+    <?php
+    include 'server/server.php';
+
+    // Query: get unique municipalities from project + address relationship
+    $query = "
+        SELECT DISTINCT a.Municipality 
+        FROM project p
+        JOIN address a ON p.AddressID = a.AddressID
+        WHERE a.Province = 'Bulacan'
+        ORDER BY a.Municipality ASC
+    ";
+
+    $result = $conn->query($query);
+
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $municipality = htmlspecialchars($row['Municipality']);
+            echo '<button class="btns" data-municipality="' . $municipality . '" onclick="redirectToProjectList(this)">' . $municipality . '</button>';
+        }
+    } else {
+        echo "<p style='text-align:center; color:#7B0302; font-weight:600;'>No municipalities found.</p>";
+    }
+    ?>
 </div>

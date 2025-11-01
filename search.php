@@ -85,7 +85,6 @@ if ($employeeID) {
         <option value="Survey Authority">Survey Authority</option>
         <option value="Blueprint">Blueprint</option>
         <option value="CAD File">CAD File</option>
-        <option value="Others">Others</option>
     </select>
 </div>
 

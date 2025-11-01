@@ -20,6 +20,9 @@ if (!$projectId) {
 $projectId = $conn->real_escape_string($projectId);
 $documentPath = strtolower($conn->real_escape_string($documentPath));
 
+// 🧹 Remove "-ABC" or any trailing 3-letter suffix (case-insensitive)
+$projectId = preg_replace('/-[a-z]{3}$/i', '', $projectId);
+
 // 🧹 Remove "uploads/" prefix if present
 if (strpos($documentPath, 'uploads/') === 0) {
     $documentPath = substr($documentPath, strlen('uploads/'));
@@ -51,7 +54,7 @@ $sql = "SELECT
         FROM document d
         INNER JOIN project p ON d.ProjectID = p.ProjectID
         LEFT JOIN address a ON p.AddressID = a.AddressID
-        WHERE d.ProjectID = ?
+        WHERE p.ProjectID LIKE CONCAT(?, '%')
           AND LOWER(REPLACE(d.DocumentQR, 'uploads/', '')) LIKE CONCAT('%', ?, '%')
         LIMIT 1";
 

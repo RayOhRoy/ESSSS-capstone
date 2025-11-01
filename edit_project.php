@@ -216,8 +216,6 @@ while ($docRow = $docResult->fetch_assoc()) {
                         <select id="province" name="province" disabled onchange="loadMunicipalities()">
                             <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>
                                 Bulacan</option>
-                            <option value="Pampanga" <?= ($project['Province'] === 'Pampanga') ? 'selected' : '' ?>>
-                                Pampanga</option>
                         </select>
                     </div>
 

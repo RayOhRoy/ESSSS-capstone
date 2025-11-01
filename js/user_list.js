@@ -36,8 +36,8 @@ function loadAdminPage(page) {
         initQRFormToggles();
       } else if (cleanPage === 'edit_project.php') {
         setTimeout(() => {
-          initializeEditForm(); 
-          initeditBackButton();  
+          initializeEditForm();
+          initeditBackButton();
         }, 0);
       } else {
         initUserMenuDropdown();
@@ -199,8 +199,8 @@ function initPreviewModal() {
           }
 
           const qrImage = modal.querySelector('.qr-img');
-          if (qrImage && project.ProjectID) {
-            qrImage.src = `uploads/${project.ProjectID}/${project.ProjectID}-QR.png`;
+          if (qrImage && project.ProjectQR) {
+            qrImage.src = project.ProjectQR;
             qrImage.alt = `QR Code for ${project.ProjectID}`;
           }
 

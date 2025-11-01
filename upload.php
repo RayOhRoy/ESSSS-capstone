@@ -96,7 +96,6 @@ if ($employeeID) {
                         <select name="province" id="province" onchange="loadMunicipalities()">
                             <option value="">Select Province</option>
                             <option value="Bulacan">Bulacan</option>
-                            <option value="Pampanga">Pampanga</option>
                         </select>
                     </div>
 

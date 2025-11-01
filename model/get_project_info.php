@@ -16,7 +16,10 @@ if (!$projectId) {
     exit;
 }
 
-$projectId = $conn->real_escape_string($projectId);
+$projectId = $conn->real_escape_string(trim($projectId));
+
+// 🧹 Remove "-ABC" or any trailing 3-letter suffix (case-insensitive)
+$projectId = preg_replace('/-[a-z]{3}$/i', '', $projectId);
 
 // Fetch project info with AddressID and requestType, approvalType
 $sql = "SELECT 
@@ -39,7 +42,7 @@ $sql = "SELECT
             p.Approval
         FROM project p
         LEFT JOIN address a ON p.AddressID = a.AddressID
-        WHERE p.ProjectID = ?";
+        WHERE p.ProjectID LIKE CONCAT(?, '%')";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $projectId);
@@ -57,8 +60,9 @@ $requestType = $project['RequestType'] ?? '';
 $approvalType = $project['Approval'] ?? '';
 
 // Format client full name
-$project['ClientName'] = trim($project['ClientFName'] . ' ' . $project['ClientLName']);
+$project['ClientName'] = trim(($project['ClientFName'] ?? '') . ' ' . ($project['ClientLName'] ?? ''));
 
+// Format survey dates
 $project['SurveyStartDate'] = $project['SurveyStartDate'] && $project['SurveyStartDate'] !== '0000-00-00' 
     ? date('F j, Y', strtotime($project['SurveyStartDate'])) 
     : '';
@@ -91,7 +95,6 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Tax Declaration",
         "Blueprint",
         "CAD File",
-        "Others"
     ];
 } else if ($requestType === "For Approval" && $approvalType === "CSD") {
     $docsToRender = [
@@ -106,7 +109,6 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Survey Authority",
         "Blueprint",
         "CAD File",
-        "Others"
     ];
 } else if ($requestType === "For Approval" && $approvalType === "LRA") {
     $docsToRender = [
@@ -118,7 +120,6 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Fieldnotes",
         "Blueprint",
         "CAD File",
-        "Others"
     ];
 } else if ($requestType === "Sketch Plan") {
     $docsToRender = [
@@ -129,7 +130,6 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Tax Declaration",
         "Blueprint",
         "CAD File",
-        "Others"
     ];
 } else {
     $docsToRender = [
@@ -139,7 +139,6 @@ if ($requestType === "For Approval" && $approvalType === "PSD") {
         "Tax Declaration",
         "Building Permit",
         "Authorization Letter",
-        "Others"
     ];
 }
 
@@ -162,7 +161,7 @@ foreach ($docsToRender as $docName) {
 }
 
 // Fetch documents from DB for this project
-$doc_sql = "SELECT DocumentName, DocumentStatus, DigitalLocation FROM document WHERE ProjectID = ?";
+$doc_sql = "SELECT DocumentName, DocumentStatus, DigitalLocation FROM document WHERE ProjectID LIKE CONCAT(?, '%')";
 $doc_stmt = $conn->prepare($doc_sql);
 $doc_stmt->bind_param("s", $projectId);
 $doc_stmt->execute();
@@ -179,25 +178,22 @@ while ($doc = $doc_result->fetch_assoc()) {
         }
     }
 
-if ($matchedKey !== null && isset($documents[$matchedKey])) {
-    $documentStatus = strtoupper(trim($doc['DocumentStatus'] ?? ''));
-    $digitalLocation = trim($doc['DigitalLocation'] ?? '');
+    if ($matchedKey !== null && isset($documents[$matchedKey])) {
+        $documentStatus = strtoupper(trim($doc['DocumentStatus'] ?? ''));
+        $digitalLocation = trim($doc['DigitalLocation'] ?? '');
 
-    // Set digital status if digital location exists
-    if (!empty($digitalLocation)) {
-        $documents[$matchedKey]['digital_status'] = 'available';
+        // Set digital status if digital location exists
+        if (!empty($digitalLocation)) {
+            $documents[$matchedKey]['digital_status'] = 'available';
+        }
+
+        // Set physical status ONLY if DocumentStatus is NOT empty/null
+        if (!empty($documentStatus)) {
+            $documents[$matchedKey]['physical_status'] = $documentStatus;
+        } else {
+            unset($documents[$matchedKey]['physical_status']);
+        }
     }
-
-    // Set physical status ONLY if DocumentStatus is NOT empty/null
-    if (!empty($documentStatus)) {
-        $documents[$matchedKey]['physical_status'] = $documentStatus;
-    } else {
-        // If DocumentStatus is empty or null, ensure physical_status is not set or cleared
-        unset($documents[$matchedKey]['physical_status']);
-    }
-}
-
-
 }
 
 // Re-index array for frontend

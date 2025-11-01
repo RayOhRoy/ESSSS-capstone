@@ -740,9 +740,13 @@ function loadMunicipalities() {
   let municipalities = [];
 
   if (province === "Bulacan") {
-    municipalities = ["Hagonoy", "Calumpit", "Malolos City", "Baliuag"];
-  } else if (province === "Pampanga") {
-    municipalities = ["Angeles City", "Apalit", "Guagua", "Lubao"];
+    municipalities = [
+      "Angat", "Balagtas", "Baliuag", "Bocaue", "Bulacan", "Bustos", "Calumpit",
+      "Doña Remedios Trinidad", "Guiguinto", "Hagonoy", "Malolos City", "Marilao",
+      "Meycauayan City", "Norzagaray", "Obando", "Pandi", "Paombong", "Plaridel",
+      "Pulilan", "San Ildefonso", "San Jose del Monte City", "San Miguel",
+      "San Rafael", "Santa Maria"
+    ];
   }
 
   if (municipalities.length > 0) {
@@ -767,7 +771,7 @@ function loadBarangays() {
   barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
   let barangays = [];
 
-  // 🏙️ Bulacan
+  // 🏙️ Full barangay lists for first 4
   if (municipality === "Hagonoy") {
     barangays = [
       "Abulalas", "Carillo", "Iba", "Iba-Ibayo", "Mercado", "Palapat", "Pugad",
@@ -798,32 +802,48 @@ function loadBarangays() {
     ];
   }
 
-  // 🏙️ Pampanga
-  else if (municipality === "Angeles City") {
-    barangays = [
-      "Anunas", "Balibago", "Capaya", "Cuayan", "Cutcut", "Cutud",
-      "Lourdes North West", "Lourdes Sur", "Malabanias", "Margot",
-      "Mining", "Pampang", "Pandan", "Pulungbulu", "San Jose",
-      "Santo Rosario", "Sapangbato"
-    ];
-  } else if (municipality === "Apalit") {
-    barangays = [
-      "Balucuc", "Calantipe", "Cansinala", "Capalangan", "Colgante",
-      "Paligui", "Sampaloc", "San Juan", "San Vicente", "Sucad",
-      "Sulipan", "Tabuyuc"
-    ];
-  } else if (municipality === "Guagua") {
-    barangays = [
-      "Ascomo", "Bancal", "Betis", "Lambac", "Magsaysay", "Maquiapo",
-      "Natividad", "Poblacion", "San Agustin", "San Antonio", "San Jose",
-      "San Juan", "San Marcos", "San Matias", "Santa Filomena", "Santo Niño"
-    ];
-  } else if (municipality === "Lubao") {
-    barangays = [
-      "Bancal", "Balantacan", "Calangain", "Del Carmen", "Don Ignacio Dimson",
-      "Prado Siongco", "Remedios", "San Antonio", "San Matias", "Santa Barbara",
-      "Santa Catalina", "Santa Cruz", "Santo Domingo", "Santo Niño", "Santo Tomas"
-    ];
+  // 🏙️ Others (5 sample barangays each)
+  else if (municipality === "Angat") {
+    barangays = ["Banaban", "Donacion", "Laog", "Marungko", "Niugan"];
+  } else if (municipality === "Balagtas") {
+    barangays = ["Borol 1st", "Borol 2nd", "Dalig", "Longos", "Panginay"];
+  } else if (municipality === "Bocaue") {
+    barangays = ["Antipona", "Biñang 1st", "Bundukan", "Sulucan", "Wakas"];
+  } else if (municipality === "Bulacan") {
+    barangays = ["Bagumbayan", "Bambang", "Matungao", "Perez", "Pitpitan"];
+  } else if (municipality === "Bustos") {
+    barangays = ["Bonga Mayor", "Bonga Menor", "Camachilihan", "Cambaog", "Poblacion"];
+  } else if (municipality === "Doña Remedios Trinidad") {
+    barangays = ["Bayabas", "Camachin", "Kalawakan", "Pulong Sampalok", "Sapang Bulak"];
+  } else if (municipality === "Guiguinto") {
+    barangays = ["Cutcot", "Duhat", "Poblacion", "Pulong Gubat", "Tuktukan"];
+  } else if (municipality === "Marilao") {
+    barangays = ["Abangan Norte", "Abangan Sur", "Ibayo", "Loma de Gato", "Nagbalon"];
+  } else if (municipality === "Meycauayan City") {
+    barangays = ["Bahay Pare", "Bancal", "Caingin", "Camalig", "Lawa"];
+  } else if (municipality === "Norzagaray") {
+    barangays = ["Bigte", "Bitungol", "Matictic", "Partida", "San Mateo"];
+  } else if (municipality === "Obando") {
+    barangays = ["Catanghalan", "Hulo", "Lawa", "Paliwas", "Panghulo"];
+  } else if (municipality === "Pandi") {
+    barangays = ["Bagong Barrio", "Baka-Bakahan", "Cacarong Bata", "Cupang", "Malibong Bata"];
+  } else if (municipality === "Paombong") {
+    barangays = ["Binakod", "Kapitangan", "Malumot", "Masukol", "San Roque"];
+  } else if (municipality === "Plaridel") {
+    barangays = ["Agnaya", "Bagong Silang", "Banga 1st", "Banga 2nd", "Poblacion"];
+  } else if (municipality === "Pulilan") {
+    barangays = ["Cutcot", "Lumbac", "Paltao", "Penabatan", "Sta. Peregrina"];
+  } else if (municipality === "San Ildefonso") {
+    barangays = ["Alagao", "Anyatam", "Bagong Barrio", "Basuit", "Bubulong Munti"];
+  } else if (municipality === "San Jose del Monte City") {
+    barangays = ["Bagong Buhay", "Citrus", "Dulong Bayan", "Fatima", "Graceville"];
+  } else if (municipality === "San Miguel") {
+    barangays = ["Bantog", "Camias", "Ilog-Bulo", "Poblacion", "Tartaro"];
+  } else if (municipality === "San Rafael") {
+    barangays = ["Caingin", "Cruz na Daan", "Lico", "Maronquillo", "Pantubig"];
+  } else if (municipality === "Santa Maria") {
+    barangays = ["Bagbaguin", "Balasing", "Buenavista", "Catmon", "Caypombo"];
+
   }
 
   barangays.forEach(b => {
@@ -835,7 +855,6 @@ function loadBarangays() {
 
   barangaySelect.disabled = barangays.length === 0;
 }
-
 
 function updateDocumentTableBasedOnSelection() {
   const requestType = document.getElementById("requestType")?.value;
