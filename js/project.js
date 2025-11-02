@@ -160,6 +160,28 @@ function initQRFormHandler() {
   });
 }
 
+const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
+let lastRelayTime = 0; // timestamp of last relay trigger in ms
+
+// 🔹 Toggle relay (send unlock signal only)
+function Relay(lockNumber) {
+  const now = Date.now();
+
+  // Check 10-second cooldown
+  if (now - lastRelayTime < 10000) {
+    console.log(`Relay is on cooldown. Try again in ${Math.ceil((10000 - (now - lastRelayTime)) / 1000)}s`);
+    return;
+  }
+
+  lastRelayTime = now;
+
+  fetch(`${espIP}/relay?lock=${lockNumber}&action=unlock`)
+    .then(response => response.text())
+    .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
+    .catch(err => console.error("ESP connection failed:", err));
+}
+
+// 🔹 Initialize QR scanning logic
 function initQRFormToggles() {
   const forms = document.querySelectorAll('.qr-validate-form');
 
@@ -167,23 +189,21 @@ function initQRFormToggles() {
     const toggleBtn = form.querySelector('.toggle-qr-btn');
     const qrInput = form.querySelector('input[name="scannedQR"]');
 
-    // Create the scan text span
+    // Create the "Scan QR" hint text
     const scanText = document.createElement('span');
     scanText.textContent = 'Scan QR Code to proceed';
-    scanText.style.marginRight = '10px'; // space between text and button
+    scanText.style.marginRight = '10px';
     scanText.style.fontStyle = 'italic';
     scanText.style.color = '#555';
     scanText.style.display = 'none';
-
-    // Insert scanText before the toggleBtn to appear on the left
     toggleBtn.parentNode.insertBefore(scanText, toggleBtn);
 
-    // Store original button label
+    // Save original button label
     if (!toggleBtn.dataset.originalLabel) {
       toggleBtn.dataset.originalLabel = toggleBtn.textContent;
     }
 
-    // Hide input initially off-screen
+    // Hide QR input initially
     Object.assign(qrInput.style, {
       position: 'fixed',
       left: '-9999px',
@@ -194,43 +214,46 @@ function initQRFormToggles() {
       pointerEvents: 'none',
     });
 
-    // Track toggle state
     let scanning = false;
 
+    // 🔹 Toggle button click
     toggleBtn.addEventListener('click', () => {
       if (!scanning) {
-        // Close all other forms first
+        // Open this form for scanning
+
+        // 🔹 Trigger relay only when opening
+        const projectId = form.dataset.projectid?.trim() || '';
+        if (projectId.startsWith('HAG')) {
+          Relay(1);
+        } else if (projectId.startsWith('CAL')) {
+          Relay(2);
+        } else {
+          console.log(`No relay assigned for project ${projectId}`);
+        }
+
+        // Close all other open QR forms
         forms.forEach(otherForm => {
           if (otherForm !== form) {
-            const otherToggleBtn = otherForm.querySelector('.toggle-qr-btn');
-            const otherQrInput = otherForm.querySelector('input[name="scannedQR"]');
-            const otherScanText = otherToggleBtn.previousSibling;
-
-            otherToggleBtn.textContent = otherToggleBtn.dataset.originalLabel || 'Toggle';
+            const otherBtn = otherForm.querySelector('.toggle-qr-btn');
+            const otherInput = otherForm.querySelector('input[name="scannedQR"]');
+            const otherScanText = otherBtn.previousSibling;
+            otherBtn.textContent = otherBtn.dataset.originalLabel || 'Toggle';
             otherScanText.style.display = 'none';
-
-            Object.assign(otherQrInput.style, {
+            Object.assign(otherInput.style, {
               position: 'fixed',
               left: '-9999px',
-              top: 'auto',
-              width: '1px',
-              height: '1px',
               opacity: '0',
               pointerEvents: 'none',
             });
-            otherQrInput.value = '';
+            otherInput.value = '';
           }
         });
 
-        // Open this form
         toggleBtn.textContent = 'Cancel';
         scanText.style.display = 'inline';
         Object.assign(qrInput.style, {
           position: 'fixed',
           left: '-9999px',
-          top: 'auto',
-          width: '1px',
-          height: '1px',
           opacity: '0',
           pointerEvents: 'auto',
         });
@@ -238,15 +261,12 @@ function initQRFormToggles() {
         qrInput.focus();
         scanning = true;
       } else {
-        // Close this form
+        // Close current form (Cancel) — do NOT trigger relay
         toggleBtn.textContent = toggleBtn.dataset.originalLabel;
         scanText.style.display = 'none';
         Object.assign(qrInput.style, {
           position: 'fixed',
           left: '-9999px',
-          top: 'auto',
-          width: '1px',
-          height: '1px',
           opacity: '0',
           pointerEvents: 'none',
         });
@@ -255,10 +275,12 @@ function initQRFormToggles() {
       }
     });
 
+    // 🔹 QR Enter key handler (still submits the form)
     qrInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         if (!qrInput.value.trim()) return;
+
         form.dispatchEvent(new Event('submit', { cancelable: true }));
       }
     });

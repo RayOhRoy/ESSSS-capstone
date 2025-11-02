@@ -161,7 +161,7 @@ a.signout-button:hover {
 }
 
 .doc-tab-button:hover {
-    background-color: #ddd;
+    transform: scale(1.05);
 }
 
 .active-tab {

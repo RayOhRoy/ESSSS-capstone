@@ -252,7 +252,7 @@ $conn->close();
     LEFT JOIN document d ON al.DocumentID = d.DocumentID
     WHERE al.EmployeeID = ?
     ORDER BY al.Time DESC
-    LIMIT 10
+    LIMIT 5
     ";
     } else {
         // No valid role or user id, no activities

@@ -222,18 +222,18 @@ a.signout-button:hover {
 }
 
 .envelope-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: white;
-  border: 1px solid #7B0302;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  padding: 10px 20px;
-  height: 3rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    border: 1px solid #7B0302;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    padding: 10px 20px;
+    height: 3rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .envelope-card:not(.unavailable):hover {
@@ -296,14 +296,15 @@ a.signout-button:hover {
 }
 
 .envelope-card.unavailable:hover {
-    background-color: #f2f2f2; /* no hover change */
+    background-color: #f2f2f2;
+    /* no hover change */
     box-shadow: none;
     transform: none;
 }
 
 
 .hidden {
-  display: none !important;
+    display: none !important;
 }
 
 .fa-eye:hover {
@@ -512,46 +513,99 @@ a.signout-button:hover {
     cursor: pointer;
 }
 
+#relayModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.relay-modal-content {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    max-width: 300px;
+}
+
+#relayModalMsg {
+    font-size: 1rem;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+#relayModalMsg .relay-subtext {
+    font-size: 0.8rem;
+    color: #555;
+    margin-top: 6px;
+}
+
+
+#closeRelayModal {
+    margin-top: 12px;
+    padding: 6px 16px;
+    background: #7B0302;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#closeRelayModal:hover {
+    background-color: #a10000;
+}
+
+
 @media (max-width: 1080px) {
     .envelope-columns {
 
-    gap: 3.4rem;
-    margin-left: -4%;
+        gap: 3.4rem;
+        margin-left: -4%;
 
-}
+    }
+
     .envelope-button {
 
-    font-size: 1.3rem;
- 
-}
+        font-size: 1.3rem;
+
+    }
+
     .fa-eye,
-.fa-edit {
-    font-size: 4cqw;
-   
-}
-.envelope-card {
- height: 120px;
- width: 110%;
-}
+    .fa-edit {
+        font-size: 4cqw;
+
+    }
+
+    .envelope-card {
+        height: 120px;
+        width: 110%;
+    }
+
     .envelope-card.unavailable {
-    background-color: #f2f2f2;
-    border-color: #ccc;
-    color: #999;
-    cursor: not-allowed;
-    box-shadow: none;
-    height: 120px;
-    width: 110%;
-}
-.envelope-title {
-   font-size: 3cqw;
-}
+        background-color: #f2f2f2;
+        border-color: #ccc;
+        color: #999;
+        cursor: not-allowed;
+        box-shadow: none;
+        height: 120px;
+        width: 110%;
+    }
+
+    .envelope-title {
+        font-size: 3cqw;
+    }
 
     .fa-lock,
-.fa-unlock-alt {
-    color: #7B0302;
-    font-size: 4.75rem;
-    transition: all ease 0.2s;
-}
+    .fa-unlock-alt {
+        color: #7B0302;
+        font-size: 4.75rem;
+        transition: all ease 0.2s;
+    }
 
     .card-title {
         font-size: 4rem;
@@ -597,11 +651,12 @@ a.signout-button:hover {
         width: 20%;
         font-size: 25px;
     }
+
     .fa-arrow-left {
-    font-size: 7vw;
-    margin-top: 30px;
-    
-}
+        font-size: 7vw;
+        margin-top: 30px;
+
+    }
 
 
     #previewModal .modal-content {
@@ -615,12 +670,13 @@ a.signout-button:hover {
         height: 1580px;
         /* horizontal center */
     }
-      .project-details p {
+
+    .project-details p {
         font-size: 2cqw;
         margin: 0.5vh 0;
         color: black;
     }
-    
+
     .qr-section {
         text-align: center;
         margin-bottom: 2vh;
@@ -679,7 +735,8 @@ a.signout-button:hover {
         font-size: 9cqw;
 
     }
-        .document-table {
+
+    .document-table {
         width: 100%;
         overflow-x: auto;
         height: 800px;
@@ -693,7 +750,8 @@ a.signout-button:hover {
         font-weight: 500;
         font-size: 2cqw;
     }
-       .open-btn,
+
+    .open-btn,
     .close-btn {
 
         width: 20%;

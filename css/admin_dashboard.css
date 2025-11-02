@@ -196,10 +196,11 @@ a.signout-button:hover {
 }
 
 .status {
-    margin-left: 2%;
     flex: 1;
     text-align: left;
-    font-size: 0.9rem;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-left: 20px;
 }
 
 .display-info {

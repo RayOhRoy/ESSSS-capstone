@@ -12,9 +12,10 @@ header("ETag: " . md5_file(__FILE__));
 date_default_timezone_set("Asia/Manila");
 session_start();
 
+
 $userRole = $_SESSION['role'] ?? null;
 $userID = $_SESSION['employeeid'] ?? null;
-$userPosition = $_SESSION['JobPosition'] ?? null; 
+$userPosition = $_SESSION['jobposition'] ?? null;
 ?>
 
 <!DOCTYPE html>

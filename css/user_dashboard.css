@@ -1,3 +1,8 @@
+body,
+html {
+    overflow-y: hidden;
+}
+
 .topbar span {
     font-size: 2cqw;
     color: #7B0302;

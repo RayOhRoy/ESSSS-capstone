@@ -152,8 +152,8 @@ function initPhysicalStorage() {
 
             // Determine relay number
             let relayNumber = null;
-            if (prefix === "HAG-01") relayNumber = 1;
-            else if (prefix === "CAL-01") relayNumber = 2;
+            if (prefix === "HAG-01") relayNumber = 2;
+            else if (prefix === "CAL-01") relayNumber = 1;
 
             // 🔍 Determine button label based on StorageStatus
             let storageStatus = window.projectStorageStatus?.[fullProjectId] || "";
@@ -194,15 +194,54 @@ function initPhysicalStorage() {
         columnsContainer.appendChild(leftCol);
         columnsContainer.appendChild(rightCol);
 
-        // ✅ Attach retrieve button click handlers dynamically
         document.querySelectorAll(".envelope-button[data-relay]").forEach(btn => {
             const relay = parseInt(btn.getAttribute("data-relay"));
             if (!relay) return;
-            btn.addEventListener("click", (e) => {
-                e.stopPropagation(); // prevent opening project
-                toggleRelay(relay);
+
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+
+                const buttonAction = btn.textContent.trim().toUpperCase(); // "RETRIEVE" or "STORE"
+                const projectIdFull = btn.closest(".envelope-card")?.dataset.projectid || "";
+                const projectIdBase = projectIdFull.split("-").slice(0, 3).join("-"); // HAG-01-001
+                const cabinetName = projectIdBase.split("-").slice(0, 2).join("-");  // HAG-01
+
+                // Disable buttons for 10s
+                document.querySelectorAll(".envelope-button").forEach(b => {
+                    b.disabled = true;
+                    b.style.opacity = "0.5";
+                });
+
+                await toggleRelay(relay);
+
+                // 🧾 Message content (keep your version)
+                let message = "";
+                if (buttonAction === "RETRIEVE") {
+                    message = `
+                        <div><strong>${cabinetName} is now open</strong></div>
+                        <div class="relay-subtext">Scan the Project QR of ${projectIdBase} to proceed with retrieval.</div>
+                    `;
+                        } else {
+                            message = `
+                        <div><strong>${cabinetName} is now open</strong></div>
+                        <div class="relay-subtext">Scan the Project QR of ${projectIdBase} to proceed with storage.</div>
+                    `;
+                }
+
+                // ✅ Show modal with all required data
+                showRelayModal(message, buttonAction, projectIdBase);
+
+                // Re-enable buttons after 10 seconds
+                setTimeout(() => {
+                    document.querySelectorAll(".envelope-button").forEach(b => {
+                        b.disabled = false;
+                        b.style.opacity = "1";
+                    });
+                }, 10000);
             });
         });
+
+
 
         document.querySelectorAll(".update-btn").forEach(btn => {
             btn.addEventListener("click", (e) => {
@@ -302,6 +341,130 @@ function initPhysicalStorage() {
     backButton.addEventListener("click", goBackToCabinets);
     backButton.style.display = "none";
     initLockToggle();
+}
+
+function showRelayModal(message, buttonAction, projectIdBase) {
+    let modal = document.getElementById("relayModal");
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "relayModal";
+        modal.innerHTML = `
+            <div class="relay-modal-content">
+                <p id="relayModalMsg"></p>
+                <input type="text" id="relayHiddenInput" style="position:absolute; opacity:0; pointer-events:none;" />
+                <div id="relayFeedback" style="margin-top:10px; color:#d33; font-size:14px;"></div>
+                <button id="closeRelayModal">CANCEL</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    const hiddenInput = document.getElementById("relayHiddenInput");
+    const feedback = document.getElementById("relayFeedback");
+    const relayMsg = document.getElementById("relayModalMsg");
+
+    relayMsg.innerHTML = message;
+    feedback.textContent = "";
+    modal.style.display = "flex";
+    hiddenInput.value = "";
+
+    if (window.relayFocusInterval) clearInterval(window.relayFocusInterval);
+    hiddenInput.focus();
+    window.relayFocusInterval = setInterval(() => hiddenInput.focus(), 1000);
+
+    hiddenInput.onkeydown = async (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const scannedQR = hiddenInput.value.trim();
+            if (!scannedQR) return;
+
+            try {
+                const res = await fetch("model/update_project_status.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        scannedQR,
+                        projectIdBase,
+                        action: buttonAction
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // 🟢 Stop scanning and clear old message
+                    clearInterval(window.relayFocusInterval);
+                    hiddenInput.blur();
+
+                    relayMsg.textContent = ""; // ⬅️ Remove “HAG-01 is now open” + scan instructions
+                    feedback.style.color = "green";
+                    feedback.textContent = `Project status updated to "${data.newStatus}". Close the cabinet to proceed.`;
+
+                    // Remove cancel button & outside click close
+                    const cancelBtn = document.getElementById("closeRelayModal");
+                    if (cancelBtn) cancelBtn.remove();
+                    modal.onclick = null;
+
+                    // 🧠 Poll ESP32 to detect when cabinet is re-locked
+                    const cabinetName = projectIdBase.split("-").slice(0, 2).join("-");
+                    const targetLockKey = cabinetName === "HAG-01" ? "lock1"
+                        : cabinetName === "CAL-01" ? "lock2" : null;
+
+                    if (targetLockKey) {
+                        const espIP = "http://192.168.10.189";
+                        const checkLockInterval = setInterval(async () => {
+                            try {
+                                const res = await fetch(`${espIP}/status`);
+                                if (!res.ok) throw new Error("ESP fetch failed");
+                                const espData = await res.json();
+
+                                if (espData[targetLockKey] === true) {
+                                    clearInterval(checkLockInterval);
+                                    closeModal();
+
+                                    // Update button label dynamically
+                                    const btns = document.querySelectorAll(".envelope-button");
+                                    btns.forEach(btn => {
+                                        const card = btn.closest(".envelope-card");
+                                        if (card && card.dataset.projectid.startsWith(projectIdBase)) {
+                                            btn.textContent =
+                                                data.newStatus.toLowerCase() === "stored"
+                                                    ? "RETRIEVE"
+                                                    : "STORE";
+                                        }
+                                    });
+                                }
+                            } catch (err) {
+                                console.error("ESP check error:", err);
+                            }
+                        }, 1000);
+                    }
+
+                } else {
+                    feedback.style.color = "#d33";
+                    feedback.textContent = data.message || "Incorrect Project QR.";
+                    hiddenInput.value = "";
+                    hiddenInput.focus();
+                }
+
+            } catch (err) {
+                console.error(err);
+                feedback.style.color = "#d33";
+                feedback.textContent = "Server error occurred.";
+            }
+        }
+    };
+
+    const closeModal = () => {
+        modal.style.display = "none";
+        clearInterval(window.relayFocusInterval);
+        hiddenInput.value = "";
+    };
+
+    document.getElementById("closeRelayModal").onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
 }
 
 // 🔍 Physical Preview Modal (kept outside for global use)

@@ -4,7 +4,9 @@
 session_start();
 include 'server/server.php';
 
-$employeeID = $_SESSION['employeeid'] ?? null;
+// ✅ Try both possible session key casings
+$employeeID = $_SESSION['employeeid'] ?? $_SESSION['EmployeeID'] ?? null;
+
 $empFName = '';
 $empLName = '';
 $jobPosition = '';
@@ -24,6 +26,37 @@ if (!isset($_GET['projectId'])) {
 }
 
 $projectId = $_GET['projectId'];
+
+// ✅ Add activity log for VIEWED
+date_default_timezone_set("Asia/Manila");
+$timeNow = date('Y-m-d H:i:s');
+
+// Generate next ACT-000 ID
+$result = $conn->query("SELECT activitylogid FROM activity_log ORDER BY activitylogid DESC LIMIT 1");
+$nextId = "ACT-001";
+if ($result && $row = $result->fetch_assoc()) {
+    $lastId = $row['activitylogid'];
+    $num = (int) str_replace('ACT-', '', $lastId) + 1;
+    $nextId = 'ACT-' . str_pad($num, 3, '0', STR_PAD_LEFT);
+}
+
+$emptyDocId = '';
+$status = 'VIEWED';
+
+// ✅ Only log if we have an employeeID
+if ($employeeID) {
+    $logStmt = $conn->prepare("
+        INSERT INTO activity_log (activitylogid, employeeid, projectid, documentid, status, time)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    $logStmt->bind_param("ssssss", $nextId, $employeeID, $projectId, $emptyDocId, $status, $timeNow);
+    $logStmt->execute();
+    $logStmt->close();
+} else {
+    // Optional debug — comment out in production
+    error_log("⚠️ employeeID missing in session, activity not logged for project {$projectId}");
+}
+
 
 // --- Fetch Project Data ---
 $sql = "SELECT 
@@ -153,6 +186,10 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
             if (empty($doc['DigitalLocation']) || empty($doc['DocumentName']))
                 continue;
 
+            // ✅ If CAD Operator, only show CAD File
+            if (strtolower($jobPosition) === 'cad operator' && strtolower($doc['DocumentType']) !== 'cad file')
+                continue;
+
             $filePathRaw = $doc['DigitalLocation'];
             $fileParts = explode(';', $filePathRaw);
             $filePath = $fileParts[0];
@@ -180,13 +217,14 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
     <?php endif; ?>
 </div>
 
-
 <!-- Physical Documents Section -->
 <div id="physical-section" class="document-section" style="display: none;">
     <h3>Physical Documents</h3>
     <ul>
         <?php
+        // ✅ These are the only document types visible to CAD Operator
         $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
+
         foreach ($documents as $doc):
             $statusRaw = $doc['DocumentStatus'];
             $statusUpper = strtoupper(trim($statusRaw));
@@ -195,10 +233,10 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
             if (!in_array($statusUpper, ['STORED', 'RELEASE']))
                 continue;
 
-            // CAD Operator filtering
+            // ✅ Filter: CAD operator only sees the 4 allowed types
             if (
                 strtolower($jobPosition) === 'cad operator' &&
-                !in_array(strtolower($doc['DocumentType']), $allowedTypes)
+                !in_array(strtolower(trim($doc['DocumentType'])), $allowedTypes)
             )
                 continue;
 
@@ -208,10 +246,11 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
                 <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
 
                 <?php
+                // ✅ For CAD Operator: show buttons for the 4 allowed types
                 $showButtons = true;
                 if (
                     strtolower($jobPosition) === 'cad operator' &&
-                    strtolower($doc['DocumentType']) !== 'cad file'
+                    !in_array(strtolower(trim($doc['DocumentType'])), $allowedTypes)
                 ) {
                     $showButtons = false;
                 }
@@ -235,6 +274,7 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
         <?php endforeach; ?>
     </ul>
 </div>
+
 
 <!-- Image Preview Modal -->
 <div id="imageModal" class="image-modal">
