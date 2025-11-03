@@ -212,7 +212,7 @@ while ($docRow = $docResult->fetch_assoc()) {
 
                     <div class="form-row">
                         <label for="province"><span class="required-asterisk">* </span>Province:</label>
-                        <select id="province" name="province" disabled onchange="loadMunicipalities()">
+                        <select id="provinceedit" name="province" disabled onchange="loadMunicipalitiesedit()">
                             <option value="Bulacan" <?= ($project['Province'] === 'Bulacan') ? 'selected' : '' ?>>
                                 Bulacan</option>
                         </select>
@@ -220,14 +220,14 @@ while ($docRow = $docResult->fetch_assoc()) {
 
                     <div class="form-row">
                         <label for="municipality"><span class="required-asterisk">* </span>Municipality:</label>
-                        <select id="municipality" name="municipality" disabled onchange="loadBarangays()">
+                        <select id="municipalityedit" name="municipality" disabled onchange="loadBarangaysedit()">
                             <option selected><?= htmlspecialchars($project['Municipality']) ?></option>
                         </select>
                     </div>
 
                     <div class="form-row">
                         <label for="barangay"><span class="required-asterisk">* </span>Barangay:</label>
-                        <select id="barangay" name="barangay" disabled>
+                        <select id="barangayedit" name="barangay" disabled>
                             <option selected><?= htmlspecialchars($project['Barangay']) ?></option>
                         </select>
                     </div>
@@ -364,10 +364,18 @@ while ($docRow = $docResult->fetch_assoc()) {
                                 <div class="digital-cell">
                                     <div class="file-list">
                                         <?php if ($fileName): ?>
-                                            <span class="existing-file"><?= htmlspecialchars($fileName) ?></span>
+                                            <div class="file-preview">
+                                                <span class="file-label existing-file"><?= htmlspecialchars($fileName) ?></span>
+                                                <span class="remove-file" style="display:none; cursor:pointer;"
+                                                    onclick="removeFile(this)">✖</span>
+                                            </div>
                                             <i class="no-file" style="display:none;">No file</i>
                                         <?php else: ?>
-                                            <span class="existing-file" style="display:none;"></span>
+                                            <div class="file-preview">
+                                                <span class="file-label existing-file" style="display:none;"></span>
+                                                <span class="remove-file" style="display:none; cursor:pointer;"
+                                                    onclick="removeFile(this)">✖</span>
+                                            </div>
                                             <i class="no-file">No file</i>
                                         <?php endif; ?>
                                     </div>
@@ -377,7 +385,7 @@ while ($docRow = $docResult->fetch_assoc()) {
                                         📎
                                         <input type="file" name="digital_<?= $key ?>" class="hidden-file"
                                             accept="<?php echo (stripos($key, 'cad') !== false) ? '.dwg' : 'application/pdf'; ?>"
-                                            onchange="uploadFile(this, '<?= $key ?>')" style="display:none;" />
+                                            onchange="uploadFileedit(this, '<?= $key ?>')" style="display:none;" />
                                     </label>
                                 </div>
                             </td>
@@ -400,7 +408,7 @@ while ($docRow = $docResult->fetch_assoc()) {
             <button type="button" id="update-printqr-btn" class="btn-red"
                 onclick="printProjectQRCodes('<?= $projectId ?>')">Print QR</button>
             <button type="button" id="update-save-btn" class="btn-red" style="display:none;">Save Changes</button>
-            <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave()">Edit</button>
+            <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave(event)">Edit</button>
         </div>
     </form>
 </div>

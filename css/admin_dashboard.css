@@ -224,17 +224,19 @@ a.signout-button:hover {
 
 
 @media (max-width: 1080px) {
-    .chart-section{
+    .chart-section {
         display: block;
     }
+
     .piechart {
-    width: 100%;
-    max-width: 35rem;
-    align-items: center;
-}
-  .recent-list H3{
-    font-size: 40px;
-  }
+        width: 100%;
+        max-width: 35rem;
+        align-items: center;
+    }
+
+    .recent-list H3 {
+        font-size: 40px;
+    }
 
     body,
     html {
