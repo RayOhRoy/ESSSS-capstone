@@ -23,7 +23,7 @@ if ($employeeID) {
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">
         <div class="user-top-info">
-            <p style="font-size: 2rem; font-weight: 700;"><?= htmlspecialchars($empFName . ' ' . $empLName) ?></p>
+            <p ><?= htmlspecialchars($empFName . ' ' . $empLName) ?></p>
             <p style="font-size: 1rem;"><?= htmlspecialchars($jobPosition) ?></p>
         </div>
     </div>

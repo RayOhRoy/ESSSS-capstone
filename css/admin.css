@@ -118,14 +118,16 @@
         max-width: 60cqw;
 
     }
-
+    .hamburger.closed {
+        top: 2%;
+    }
     .hamburger {
         left: 68%;
         position: fixed;
     }
 
     .hamburger span {
-        width: 90px;
+        width: 65px;
         height: 10px;
     }
 

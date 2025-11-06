@@ -44,9 +44,12 @@ html {
 
 .user-panel-top {
     background-color: #7B0302;
-    height: 14rem;
+    height: 17rem;
 }
-
+.user-panel-top p {
+   font-size: 2rem;
+    font-weight: 700;
+}
 .user-top-info {
     position: absolute;
     top: 15%;
@@ -244,6 +247,7 @@ a.signout-button:hover {
     }
 
     #user-circle-icon {
+        margin-top: -50px;
         font-size: 8.25cqw;
         color: #7B0302;
         z-index: 1000;
@@ -256,6 +260,7 @@ a.signout-button:hover {
     }
 
     .topbar span {
+        margin-left: 6%;
         font-size: 70px;
         color: #7B0302;
         font-weight: 700;
@@ -267,6 +272,20 @@ a.signout-button:hover {
         color: #7B0302;
         padding: 30px 30px 30px 0px;
 
+    }
+    #changepassword-button {
+        position: absolute;
+        top: 95%;
+        right: -40%;
+        font-size: 1rem;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .user-panel-top p {
+        font-size: 2.8rem;
+        font-weight: 700;
     }
 
     .status {
@@ -291,13 +310,13 @@ a.signout-button:hover {
 
     .fa.fa-user-circle {
         font-size: 70px;
-        color: #7B0302;
+        color: #7B0302; 
     }
 
     .user-menu-panel {
-        width: 47%;
-        height: 35%;
-
+        width: 55%;
+        height: 33%;
+     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
 }

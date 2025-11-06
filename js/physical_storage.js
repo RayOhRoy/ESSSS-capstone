@@ -38,7 +38,7 @@ function initPhysicalStorage() {
     }
 
 
-    const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
+    const espIP = "http://192.168.34.189"; // Replace with your ESP32 IP
 
     // Toggle relay (send unlock signal only)
     function toggleRelay(lockNumber) {
@@ -152,8 +152,8 @@ function initPhysicalStorage() {
 
             // Determine relay number
             let relayNumber = null;
-            if (prefix === "HAG-01") relayNumber = 2;
-            else if (prefix === "CAL-01") relayNumber = 1;
+            if (prefix === "HAG-01") relayNumber = 1;
+            else if (prefix === "CAL-01") relayNumber = 2;
 
             // 🔍 Determine button label based on StorageStatus
             let storageStatus = window.projectStorageStatus?.[fullProjectId] || "";
@@ -411,7 +411,7 @@ function showRelayModal(message, buttonAction, projectIdBase) {
                         : cabinetName === "CAL-01" ? "lock2" : null;
 
                     if (targetLockKey) {
-                        const espIP = "http://192.168.10.189";
+                        const espIP = "http://192.168.34.189";
                         const checkLockInterval = setInterval(async () => {
                             try {
                                 const res = await fetch(`${espIP}/status`);

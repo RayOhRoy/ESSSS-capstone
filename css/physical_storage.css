@@ -641,6 +641,7 @@ a.signout-button:hover {
     }
 
     .topbar span {
+        margin-left: 6%;
         font-size: 50px;
         color: #7B0302;
         font-weight: 700;

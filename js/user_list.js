@@ -156,14 +156,14 @@ function initPreviewModal() {
       const tr = button.closest('tr');
       if (!tr) return;
 
-      const projectID = tr.querySelector('td:nth-child(1)').textContent.trim();
-      if (!projectID) return;
+      const projectId = tr.querySelector('td:nth-child(1)').textContent.trim();
+      if (!projectId) return;
 
       // Store project ID for use in OPEN button
-      selectedProjectIdForPreview = projectID;
+      selectedProjectIdForPreview = projectId;
 
       // Show loading or clear modal content
-      modal.querySelector('.preview-projectname').textContent = projectID;
+      modal.querySelector('.preview-projectname').textContent = projectId;
       const details = modal.querySelector('.project-details');
       const docTableBody = modal.querySelector('.document-table tbody');
       if (details) details.innerHTML = '<p>Loading project details...</p>';
@@ -175,7 +175,7 @@ function initPreviewModal() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ projectId: projectID })
+        body: JSON.stringify({ projectId: projectId })
       })
         .then(response => response.json())
         .then(data => {
@@ -201,7 +201,7 @@ function initPreviewModal() {
           const qrImage = modal.querySelector('.qr-img');
           if (qrImage && project.ProjectQR) {
             qrImage.src = project.ProjectQR;
-            qrImage.alt = `QR Code for ${project.ProjectID}`;
+            qrImage.alt = `QR Code for ${project.projectId}`;
           }
 
           if (docTableBody) {

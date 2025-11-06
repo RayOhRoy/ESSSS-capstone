@@ -160,7 +160,7 @@ function initQRFormHandler() {
   });
 }
 
-const espIP = "http://192.168.10.189"; // Replace with your ESP32 IP
+const espIP = "https://unostentatious-unconfected-marya.ngrok-free.dev"; // Replace with your ESP32 IP
 let lastRelayTime = 0; // timestamp of last relay trigger in ms
 
 // 🔹 Toggle relay (send unlock signal only)

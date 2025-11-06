@@ -234,7 +234,7 @@ a.signout-button:hover {
 
 @media (max-width: 1080px) {
     .download-btn {
-        margin-left:300%;
+        margin-left:285%;
         font-size:3cqw;
         height: 90px;
         width: 110%;
@@ -264,6 +264,7 @@ a.signout-button:hover {
     }
 
     .topbar span {
+        margin-left: 6%;
         font-size: 70px;
         color: #7B0302;
         font-weight: 700;
@@ -317,7 +318,7 @@ a.signout-button:hover {
 
     .inputdate label {
         display: flex;
-        font-size: 40px;
+        font-size: 35px;
     }
 
     .inputdate input[type="date"] {

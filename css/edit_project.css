@@ -401,8 +401,8 @@ input[type="checkbox"]:checked::after {
 
 .qr-box {
     position: relative;
-    width: 200px;
-    height: 200px;
+    width: 300px;
+    height: 300px;
     border: 1px solid #ccc;
     /* optional */
     background: #800000;
