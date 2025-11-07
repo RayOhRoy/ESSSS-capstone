@@ -35,7 +35,7 @@ if ($employeeID) {
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">
         <div class="user-top-info">
-            <p style="font-size: 2rem; font-weight: 700;">
+            <p>
                 <?= htmlspecialchars($empFName . ' ' . $empLName) ?>
             </p>
             <p style="font-size: 1rem;">
@@ -82,28 +82,50 @@ if ($employeeID) {
 
 <hr class="top-line" />
 
+<?php
+$query = "SELECT municipality FROM address";
+$result = $conn->query($query);
+
+$cards = [];
+$counter = [];
+
+while ($row = $result->fetch_assoc()) {
+    $municipality = $row['municipality'];
+    $short = strtoupper(substr($municipality, 0, 3)); // first three letters
+    if (!isset($counter[$short])) $counter[$short] = 1;
+
+    $code = $short . '-' . str_pad($counter[$short], 2, '0', STR_PAD_LEFT);
+    $counter[$short]++;
+    $cards[] = [
+        'municipality' => $municipality,
+        'code' => $code
+    ];
+}
+?>
+
 <div class="card-container">
-  <div class="card">
-    <div class="card-title">HAG-01</div>
-    <div class="card-actions">
-      <button class="open-button" id="openEnvelopeBtn">VIEW</button>
-      <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
-        <i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(2, this)"></i>
-      <?php endif; ?>
-    </div>
-  </div>
+  <?php foreach ($cards as $card): ?>
+    <div class="card">
+      <div class="card-title"><?= htmlspecialchars($card['code']) ?></div>
+      <div class="card-actions">
+        <button class="open-button">VIEW</button>
 
-  <div class="card">
-    <div class="card-title">CAL-01</div>
-    <div class="card-actions">
-      <button class="open-button">VIEW</button>
-      <?php if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer'): ?>
-        <i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(1, this)"></i>
-      <?php endif; ?>
+        <?php
+          $muni = strtoupper(substr($card['municipality'], 0, 3));
+          if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer') {
+            if ($muni === 'HAG') {
+              echo '<i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>';
+            } elseif ($muni === 'CAL') {
+              echo '<i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>';
+            } else {
+              echo '<i class="fa fa-unlock-alt nolock" id="nolock"></i>';
+            }
+          }
+        ?>
+      </div>
     </div>
-  </div>
+  <?php endforeach; ?>
 </div>
-
 
 <div class="envelope-section" style="display:none; flex-direction:column; align-items:center;">
     <button id="scrollUp" class="scroll-btn"><i class="fa fa-angle-up"></i></button>

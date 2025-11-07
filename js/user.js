@@ -1,9 +1,9 @@
 function initAdminPage() {
   const contentArea = document.getElementById('content-area');
   if (contentArea) {
-    loadAdminPage('user_dashboard.php', initUserMenuDropdown); // Run dropdown init after load
+    loadAdminPage('user_dashboard.php', initUserMenuDropdown);
     loadScript('https://cdn.jsdelivr.net/npm/chart.js');
-    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');    
+    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');
     loadScript('js/upload.js');
     loadScript('js/documents.js');
     loadScript('js/project_list.js');
@@ -68,14 +68,14 @@ function initDocumentPieChart() {
 
   // Maroon shades: lighter = completed, darker = pending
   const backgroundColors = [
-    '#f4cccc', // Sketch Completed
-    '#990000', // Sketch Pending
-    '#e6b8af', // LRA Completed
-    '#660000', // LRA Pending
-    '#d9a6a0', // PSD Completed
-    '#660000', // PSD Pending
-    '#c99994', // CSD Completed
-    '#660000'  // CSD Pending
+    '#4A3B2C', // Sketch Completed
+    '#3b3024ff', // Sketch Pending
+    '#FFD966', // LRA Completed
+    '#a8914bff', // LRA Pending
+    '#1E3D59', // PSD Completed
+    '#101e2bff', // PSD Pending
+    '#A0ACAD', // CSD Completed
+    '#707a7aff'  // CSD Pending
   ];
 
   const ctx = canvas.getContext('2d');

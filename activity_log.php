@@ -23,7 +23,7 @@ if ($employeeID) {
 <div class="user-menu-panel" id="userPanel">
     <div class="user-panel-top">
         <div class="user-top-info">
-            <p style="font-size: 2rem; font-weight: 700;">
+            <p>
                 <?= htmlspecialchars($empFName . ' ' . $empLName) ?>
             </p>
             <p style="font-size: 1rem;">
@@ -124,7 +124,7 @@ $conn->close();
         <input type="date" id="dateTo" onchange="filterByDate()" />
     </div>
 
-    <button id="downloadPDF" class="download-btn" onclick="window.location.href='model/download_activity_log.php'">
+    <button id="downloadPDF" class="download-btn" onclick="downloadFilteredActivityLog()">
         <i class="fa fa-download" style="margin-right: 5px;"></i> Download Activity Log
     </button>
 </div>

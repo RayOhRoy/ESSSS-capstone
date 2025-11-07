@@ -276,7 +276,7 @@ a.signout-button:hover {
     #changepassword-button {
         position: absolute;
         top: 95%;
-        right: -40%;
+        right: -22%;
         font-size: 1rem;
         text-decoration: underline;
         font-weight: 600;
@@ -315,7 +315,7 @@ a.signout-button:hover {
 
     .user-menu-panel {
         width: 55%;
-        height: 33%;
+        height: 40%;
      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 

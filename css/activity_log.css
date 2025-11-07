@@ -231,6 +231,10 @@ a.signout-button:hover {
 .download-btn:hover {
     background-color: #a50403;
 }
+.user-top-info p {
+    font-size: 2rem; 
+    font-weight: 700;
+  }
 
 @media (max-width: 1080px) {
     .download-btn {
@@ -239,17 +243,30 @@ a.signout-button:hover {
         height: 90px;
         width: 110%;
         margin-top: -100px;
-}
+    }
+    .user-top-info p {
+        font-size: 2.8rem; 
+        font-weight: 700;
+    }
     .user-menu-panel {
-        display: none;
+        width: 55%;
+        height: 40%;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .user-panel-top {
+    background-color: #7B0302;
+    height: 17rem;
+    }
+        #changepassword-button {
         position: absolute;
-        background: white;
-        top: 0;
-        right: 0;
-        width: 47%;
-        height: 35%;
-        z-index: 999;
-        text-align: center;
+        top: 95%;
+        right: -22%;
+        font-size: 1rem;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
 
     #employeeFilter {

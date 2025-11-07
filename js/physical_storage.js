@@ -38,14 +38,16 @@ function initPhysicalStorage() {
     }
 
 
-    const espIP = "http://192.168.34.189"; // Replace with your ESP32 IP
+    const lockAPI = "https://essss-centralized-dms.com/model/lockapi.php";
 
-    // Toggle relay (send unlock signal only)
-    function toggleRelay(lockNumber) {
-        fetch(`${espIP}/relay?lock=${lockNumber}&action=unlock`)
-            .then(response => response.text())
-            .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
-            .catch(err => console.error("ESP connection failed:", err));
+    async function toggleRelay(lockNumber) {
+        try {
+            const response = await fetch(`${lockAPI}?endpoint=/relay&lock=${lockNumber}&action=unlock`);
+            const data = await response.text();
+            console.log(`Lock API [Relay ${lockNumber}] triggered:`, data);
+        } catch (err) {
+            console.error("Lock API connection failed:", err);
+        }
     }
 
     function initLockToggle() {
@@ -88,7 +90,7 @@ function initPhysicalStorage() {
     // Update lock icons based on ESP pin states (GPIO 32 & 33)
     async function updateLockIcons() {
         try {
-            const response = await fetch(`${espIP}/status`);
+            const response = await fetch(`${lockAPI}?endpoint=/status&ts=${Date.now()}`);
             if (!response.ok) throw new Error(`Status ${response.status}`);
 
             const data = await response.json();
@@ -221,8 +223,8 @@ function initPhysicalStorage() {
                         <div><strong>${cabinetName} is now open</strong></div>
                         <div class="relay-subtext">Scan the Project QR of ${projectIdBase} to proceed with retrieval.</div>
                     `;
-                        } else {
-                            message = `
+                } else {
+                    message = `
                         <div><strong>${cabinetName} is now open</strong></div>
                         <div class="relay-subtext">Scan the Project QR of ${projectIdBase} to proceed with storage.</div>
                     `;
@@ -411,10 +413,10 @@ function showRelayModal(message, buttonAction, projectIdBase) {
                         : cabinetName === "CAL-01" ? "lock2" : null;
 
                     if (targetLockKey) {
-                        const espIP = "http://192.168.34.189";
+                        const lockAPI = "https://essss-centralized-dms.com/model/lockapi.php";
                         const checkLockInterval = setInterval(async () => {
                             try {
-                                const res = await fetch(`${espIP}/status`);
+                                const response = await fetch(`${lockAPI}?endpoint=/relay&lock=${lockNumber}&action=unlock`);
                                 if (!res.ok) throw new Error("ESP fetch failed");
                                 const espData = await res.json();
 

@@ -69,6 +69,21 @@ function initeditBackButton() {
   });
 }
 
+function downloadFilteredActivityLog() {
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  const employee = document.getElementById('employeeFilter').value;
+
+  const params = new URLSearchParams();
+
+  if (dateFrom) params.append('from', dateFrom);
+  if (dateTo) params.append('to', dateTo);
+  if (employee) params.append('employee', employee);
+
+  // Redirect to PHP backend with filters applied
+  window.location.href = 'model/download_activity_log.php?' + params.toString();
+}
+
 function filterByDate() {
   const dateFromInput = document.getElementById('dateFrom');
   const dateToInput = document.getElementById('dateTo');

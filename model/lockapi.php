@@ -1,40 +1,36 @@
 <?php
-// model/lockapi.php
-header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: *");
+header("Content-Type: application/json");
 
-// Allow your frontend to access it
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header('Access-Control-Allow-Headers: Content-Type');
-
-// Replace with your ESP’s *local* or *public* IP if it has one
-$espIP = "http://192.168.34.189"; // LAN IP
-
-// Security token (optional but recommended)
-$API_KEY = "mysecretkey";
-
-// Verify API key
-if (!isset($_GET['key']) || $_GET['key'] !== $API_KEY) {
-    echo json_encode(["success" => false, "message" => "Invalid API key"]);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
     exit;
 }
 
-// Validate params
-$lock = $_GET['lock'] ?? null;
-$action = $_GET['action'] ?? null;
+// ===== CONFIGURE YOUR ESP32 PUBLIC URL OR NGROK =====
+$espIP = "https://unostentatious-unconfected-marya.ngrok-free.dev"; 
+// or "http://yourpublicip:8080" if using port forwarding
 
-if (!$lock || !$action) {
-    echo json_encode(["success" => false, "message" => "Missing parameters"]);
+$endpoint = $_GET['endpoint'] ?? '';
+$lock = $_GET['lock'] ?? '';
+$action = $_GET['action'] ?? '';
+
+if (!$endpoint) {
+    echo json_encode(["error" => "Missing endpoint"]);
     exit;
 }
 
-// Relay the command to ESP32
-$url = "{$espIP}/relay?lock={$lock}&action={$action}";
+$url = rtrim($espIP, "/") . $endpoint;
+if ($lock && $action) {
+    $url .= "?lock=$lock&action=$action";
+}
+
 $response = @file_get_contents($url);
-
 if ($response === FALSE) {
-    echo json_encode(["success" => false, "message" => "ESP unreachable"]);
+    echo json_encode(["error" => "ESP not reachable"]);
 } else {
-    echo json_encode(["success" => true, "response" => $response]);
+    echo $response;
 }
 ?>

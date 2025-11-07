@@ -178,15 +178,15 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
 
 <!-- Digital Documents Section -->
 <div id="digital-section" class="document-section">
-    <h3>Digital Documents</h3>
-    <?php if (!empty($documents)): ?>
-        <?php
+    <?php 
+    $hasDigitalDocs = false;
+
+    if (!empty($documents)):
         $baseDir = __DIR__ . '/uploads';
         foreach ($documents as $doc):
             if (empty($doc['DigitalLocation']) || empty($doc['DocumentName']))
                 continue;
 
-            // ✅ If CAD Operator, only show CAD File
             if (strtolower($jobPosition) === 'cad operator' && strtolower($doc['DocumentType']) !== 'cad file')
                 continue;
 
@@ -200,81 +200,70 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
             if (!file_exists($fullPath))
                 continue;
 
+            $hasDigitalDocs = true;
             $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
             $isPreviewable = in_array($ext, $previewableExts);
             $relativeWebPath = str_replace(['../', './'], '', $filePath);
             ?>
             <div class="file-row" style="display: flex; align-items: center; margin-bottom: 10px;">
                 <div class="file-name <?= $isPreviewable ? 'preview-doc' : '' ?>"
-                    data-file="<?= htmlspecialchars($relativeWebPath) ?>" title="<?= $isPreviewable ? 'Preview' : 'File' ?>"
+                    data-file="<?= htmlspecialchars($relativeWebPath) ?>"
+                    title="<?= $isPreviewable ? 'Preview' : 'File' ?>"
                     style="cursor: pointer; flex: 1;">
                     <?= htmlspecialchars($fileName) ?>
                 </div>
             </div>
         <?php endforeach; ?>
-    <?php else: ?>
-        <p style="text-align: center; color: #555;">No digital documents available.</p>
+    <?php endif; ?>
+
+    <?php if (!$hasDigitalDocs): ?>
+        <p style="text-align: center; color: #555;">No digital files on record.</p>
     <?php endif; ?>
 </div>
 
 <!-- Physical Documents Section -->
 <div id="physical-section" class="document-section" style="display: none;">
-    <h3>Physical Documents</h3>
+    <?php 
+    $hasPhysicalDocs = false;
+    $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
+    ?>
     <ul>
-        <?php
-        // ✅ These are the only document types visible to CAD Operator
-        $allowedTypes = ['cad file', 'certified title', 'original plan', 'tax declaration'];
-
-        foreach ($documents as $doc):
+        <?php foreach ($documents as $doc):
             $statusRaw = $doc['DocumentStatus'];
             $statusUpper = strtoupper(trim($statusRaw));
 
-            // Skip if not STORED/RELEASE
             if (!in_array($statusUpper, ['STORED', 'RELEASE']))
                 continue;
 
-            // ✅ Filter: CAD operator only sees the 4 allowed types
-            if (
-                strtolower($jobPosition) === 'cad operator' &&
-                !in_array(strtolower(trim($doc['DocumentType'])), $allowedTypes)
-            )
+            if (strtolower($jobPosition) === 'cad operator' && !in_array(strtolower(trim($doc['DocumentType'])), $allowedTypes))
                 continue;
 
+            $hasPhysicalDocs = true;
             $toggleLabel = $statusUpper === 'RELEASE' ? 'Store' : 'Retrieve';
             ?>
             <li style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
                 <span style="flex: 1;"><?= htmlspecialchars($doc['DocumentType']) ?></span>
 
-                <?php
-                // ✅ For CAD Operator: show buttons for the 4 allowed types
-                $showButtons = true;
-                if (
-                    strtolower($jobPosition) === 'cad operator' &&
-                    !in_array(strtolower(trim($doc['DocumentType'])), $allowedTypes)
-                ) {
-                    $showButtons = false;
-                }
-                ?>
+                <form class="qr-validate-form" data-projectid="<?= htmlspecialchars($projectId) ?>"
+                    data-docname="<?= htmlspecialchars($doc['DocumentName']) ?>"
+                    data-newstatus="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>"
+                    style="margin: 0; display: flex; align-items: center; gap: 10px;">
 
-                <?php if ($showButtons): ?>
-                    <form class="qr-validate-form" data-projectid="<?= htmlspecialchars($projectId) ?>"
-                        data-docname="<?= htmlspecialchars($doc['DocumentName']) ?>"
-                        data-newstatus="<?= $statusUpper === 'RELEASE' ? 'STORED' : 'RELEASE' ?>"
-                        style="margin: 0; display: flex; align-items: center; gap: 10px;">
-
-                        <button type="button" class="toggle-qr-btn"><?= $toggleLabel ?></button>
-                        <input type="text" name="scannedQR" required autocomplete="off" autocorrect="off"
-                            style="opacity: 0; position: absolute; pointer-events: none; width: 1px; height: 1px;">
-                        <span class="scan-qr-text" style="display: none; font-style: italic; color: #555;">
-                            Scan QR Code to proceed
-                        </span>
-                    </form>
-                <?php endif; ?>
+                    <button type="button" class="toggle-qr-btn"><?= $toggleLabel ?></button>
+                    <input type="text" name="scannedQR" required autocomplete="off" autocorrect="off"
+                        style="opacity: 0; position: absolute; pointer-events: none; width: 1px; height: 1px;">
+                    <span class="scan-qr-text" style="display: none; font-style: italic; color: #555;">
+                        Scan QR Code to proceed
+                    </span>
+                </form>
             </li>
         <?php endforeach; ?>
     </ul>
-</div>
 
+    <?php if (!$hasPhysicalDocs): ?>
+        <p style="text-align: center; color: #555;">No physical records found.</p>
+    <?php endif; ?>
+</div>
 
 <!-- Image Preview Modal -->
 <div id="imageModal" class="image-modal">
