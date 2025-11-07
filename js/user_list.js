@@ -14,7 +14,7 @@ function loadAdminPage(page) {
     .then(html => {
       contentArea.innerHTML = html;
 
-      // Initialize correct handlers after loading content
+      // --- Page-specific initializations ---
       if (page === 'user_list.php') {
         initUserListHandlers();
       } else if (cleanPage === 'project_list.php') {
@@ -40,13 +40,30 @@ function loadAdminPage(page) {
           initeditBackButton();
         }, 0);
       } else {
+        // --- Default case (dashboard) ---
         initUserMenuDropdown();
-        initDocumentPieChart();
+
+        // ✅ Load Chart.js dynamically if not already loaded
+        ensureChartJsLoaded(() => {
+          initDocumentPieChart();
+        });
       }
     })
     .catch(err => {
       console.error('Failed to load admin page:', err);
     });
+}
+
+// --- Chart.js loader (only loads once) ---
+function ensureChartJsLoaded(callback) {
+  if (window.Chart && typeof Chart === 'function') {
+    callback();
+    return;
+  }
+
+  loadScript('https://cdn.jsdelivr.net/npm/chart.js', () => {
+    loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', callback);
+  });
 }
 
 function initBackButton() {

@@ -16,14 +16,29 @@ $municipality = mysqli_real_escape_string($conn, $_POST['municipality']);
 $barangay = mysqli_real_escape_string($conn, $_POST['barangay']);
 $street = mysqli_real_escape_string($conn, $_POST['street']);
 
-// Automatically derive prefix from municipality
-$cleanMunicipality = preg_replace('/[^a-zA-Z]/', '', $municipality); // remove non-letters
-if (!empty($cleanMunicipality)) {
-    $prefix = strtoupper(substr($cleanMunicipality, 0, 3)); // first 3 letters, uppercase
-} else {
-    $prefix = 'OTH'; // fallback if empty or invalid
-}
+$cleanMunicipality = preg_replace('/[^a-zA-Z\s]/', '', $municipality); // allow spaces for 'San ...'
+$cleanMunicipality = trim($cleanMunicipality);
 
+if (!empty($cleanMunicipality)) {
+    $words = explode(' ', $cleanMunicipality);
+
+    // Default prefix: first 3 letters of full name
+    $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $cleanMunicipality), 0, 3));
+
+    // Special cases
+    if (strcasecmp($cleanMunicipality, 'Balagtas') === 0) {
+        $prefix = 'BAS';
+    } elseif (strcasecmp($cleanMunicipality, 'Baliuag') === 0) {
+        $prefix = 'BAG';
+    }
+    // If starts with "San" and has a next word
+    elseif (strcasecmp($words[0], 'San') === 0 && !empty($words[1])) {
+        $nextWord = preg_replace('/[^a-zA-Z]/', '', $words[1]);
+        $prefix = strtoupper(substr($nextWord, 0, 3));
+    }
+} else {
+    $prefix = 'OTH';
+}
 
 // Generate new AddressID
 $sqlLast = "SELECT AddressID FROM address WHERE AddressID LIKE '$prefix-%' ORDER BY AddressID DESC LIMIT 1";

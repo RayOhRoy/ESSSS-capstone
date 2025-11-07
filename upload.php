@@ -378,3 +378,15 @@ if ($employeeID) {
     <span class="close">&times;</span>
     <img id="qrModalImg" class="qr-modal-content">
 </div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modaldblcheck">
+  <div class="modaldblcheck-content">
+    <h3>Confirm Details</h3>
+    <p>Please confirm that all fields are correct before generating the QR code.</p>
+    <div class="modaldblcheck-buttons">
+      <button onclick="confirmGenerate()" class="btn-confirm">Proceed</button>
+      <button onclick="closeConfirmModal()" class="btn-cancel">Cancel</button>
+    </div>
+  </div>
+</div>

@@ -323,21 +323,21 @@ function submitForm() {
 }
 
 function generateQR() {
-  const projectForm = document.getElementById("projectForm");
+    const projectForm = document.getElementById("projectForm");
 
-  const requiredFields = [
-    { id: "lotNumber", name: "Lot Number" },
-    { id: "clientName", name: "Client First Name" },
-    { id: "clientLastName", name: "Client Last Name" },
-    { id: "province", name: "Province" },
-    { id: "municipality", name: "Municipality" },
-    { id: "barangay", name: "Barangay" },
-    { id: "surveyType", name: "Survey Type" },
-    { id: "projectStatus", name: "Project Status" },
-    { id: "startDate", name: "Survey Start Date" },
-  ];
+    const requiredFields = [
+      { id: "lotNumber", name: "Lot Number" },
+      { id: "clientName", name: "Client First Name" },
+      { id: "clientLastName", name: "Client Last Name" },
+      { id: "province", name: "Province" },
+      { id: "municipality", name: "Municipality" },
+      { id: "barangay", name: "Barangay" },
+      { id: "surveyType", name: "Survey Type" },
+      { id: "projectStatus", name: "Project Status" },
+      { id: "startDate", name: "Survey Start Date" },
+    ];
 
-  const missingFields = [];
+    const missingFields = [];
 
   // Reset any old borders
   requiredFields.forEach(f => {
@@ -549,14 +549,133 @@ let qrGenerated = false;
 
 function toggleGenerateQR() {
   if (!qrGenerated) {
-    const result = generateQR();
-    if (result instanceof Promise) {
-      result.then(success => { if (success) afterGenerate(); });
-    } else { if (result) afterGenerate(); }
+    const projectForm = document.getElementById("projectForm");
+
+    const requiredFields = [
+      { id: "lotNumber", name: "Lot Number" },
+      { id: "clientName", name: "Client First Name" },
+      { id: "clientLastName", name: "Client Last Name" },
+      { id: "province", name: "Province" },
+      { id: "municipality", name: "Municipality" },
+      { id: "barangay", name: "Barangay" },
+      { id: "surveyType", name: "Survey Type" },
+      { id: "projectStatus", name: "Project Status" },
+      { id: "startDate", name: "Survey Start Date" },
+    ];
+
+    const missingFields = [];
+
+    requiredFields.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (el) el.style.border = "";
+    });
+
+    requiredFields.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (!el || el.value.trim() === "") {
+        missingFields.push(f.name);
+        if (el) {
+          el.style.border = "2px solid red";
+          addAutoBorderReset(el);
+        }
+      }
+    });
+
+    const surveyType = document.getElementById("surveyType")?.value;
+    const requestTypeEl = document.getElementById("requestType");
+
+    if (requestTypeEl) requestTypeEl.style.border = "";
+
+    if (surveyType !== "Sketch Plan") {
+      if (!requestTypeEl || requestTypeEl.value.trim() === "") {
+        missingFields.push("Request Type");
+        if (requestTypeEl) {
+          requestTypeEl.style.border = "2px solid red";
+          addAutoBorderReset(requestTypeEl);
+        }
+      }
+    }
+
+    const approvalRadios = document.querySelectorAll("input[name='approval']");
+    const approvalContainer = document.getElementById("approvalContainer");
+    if (approvalContainer) approvalContainer.style.outline = "";
+
+    if (surveyType === "Sketch Plan") {
+      if (![...approvalRadios].some(r => r.checked)) {
+        missingFields.push("Approval (select one)");
+        if (approvalContainer) {
+          approvalContainer.style.outline = "2px solid red";
+          approvalContainer.style.outlineOffset = "4px";
+        }
+
+        // remove red once a radio is chosen
+        approvalRadios.forEach(radio => {
+          radio.addEventListener("change", () => {
+            if (approvalContainer) approvalContainer.style.outline = "";
+          });
+        });
+      }
+    }
+
+    const rows = document.querySelectorAll("#documentTable tbody tr");
+    let anyDocSelected = false;
+    rows.forEach(row => {
+      const checkbox = row.querySelector("input[type='checkbox']");
+      if ((row.filesArray && row.filesArray.length > 0) || (checkbox && checkbox.checked)) {
+        anyDocSelected = true;
+      }
+    });
+
+    if (!anyDocSelected) {
+      missingFields.push("At least one document selected or file uploaded");
+    }
+
+    if (missingFields.length > 0) {
+      alert("Please complete the following before generating QR Code:\n- " + missingFields.join("\n- "));
+      return;
+    }
+    
+    const startDate = new Date(document.getElementById("startDate").value);
+    const endDateEl = document.getElementById("endDate");
+    if (endDateEl && endDateEl.value) {
+      const endDate = new Date(endDateEl.value);
+      if (startDate > endDate) {
+        alert("Start date cannot be later than end date.");
+        endDateEl.style.border = "2px solid red";
+        addAutoBorderReset(endDateEl);
+        return;
+      } else {
+        endDateEl.style.border = "";
+      }
+    }
+
+    showConfirmModal();
+
   } else {
     if (confirm("Are you sure you want to cancel and reset the form? All progress will be lost.")) {
       cancelGenerate();
     }
+  }
+}
+
+function showConfirmModal() {
+  const modal = document.getElementById("confirmModal");
+  modal.style.display = "flex"; // show modal (flex for centered layout)
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById("confirmModal");
+  modal.style.display = "none";
+}
+
+function confirmGenerate() {
+  closeConfirmModal();
+
+  const result = generateQR();
+  if (result instanceof Promise) {
+    result.then(success => { if (success) afterGenerate(); });
+  } else { 
+    if (result) afterGenerate(); 
   }
 }
 

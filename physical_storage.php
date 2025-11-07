@@ -28,8 +28,7 @@ if ($employeeID) {
 }
 ?>
 
-<div id="userData" 
-     data-jobposition="<?= htmlspecialchars($jobPosition) ?>">
+<div id="userData" data-jobposition="<?= htmlspecialchars($jobPosition) ?>">
 </div>
 
 <div class="user-menu-panel" id="userPanel">
@@ -91,11 +90,25 @@ $counter = [];
 
 while ($row = $result->fetch_assoc()) {
     $municipality = $row['municipality'];
-    $short = strtoupper(substr($municipality, 0, 3)); // first three letters
-    if (!isset($counter[$short])) $counter[$short] = 1;
+    $words = explode(' ', trim($municipality));
+
+    // Determine prefix
+    if (strcasecmp($municipality, 'Balagtas') === 0) {
+        $short = 'BAS';
+    } elseif (strcasecmp($municipality, 'Baliuag') === 0) {
+        $short = 'BAG';
+    } elseif (strcasecmp($words[0], 'San') === 0 && !empty($words[1])) {
+        $short = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $words[1]), 0, 3));
+    } else {
+        $short = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $municipality), 0, 3));
+    }
+
+    if (!isset($counter[$short]))
+        $counter[$short] = 1;
 
     $code = $short . '-' . str_pad($counter[$short], 2, '0', STR_PAD_LEFT);
     $counter[$short]++;
+
     $cards[] = [
         'municipality' => $municipality,
         'code' => $code
@@ -104,27 +117,27 @@ while ($row = $result->fetch_assoc()) {
 ?>
 
 <div class="card-container">
-  <?php foreach ($cards as $card): ?>
-    <div class="card">
-      <div class="card-title"><?= htmlspecialchars($card['code']) ?></div>
-      <div class="card-actions">
-        <button class="open-button">VIEW</button>
+    <?php foreach ($cards as $card): ?>
+        <div class="card">
+            <div class="card-title"><?= htmlspecialchars($card['code']) ?></div>
+            <div class="card-actions">
+                <button class="open-button">VIEW</button>
 
-        <?php
-          $muni = strtoupper(substr($card['municipality'], 0, 3));
-          if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer') {
-            if ($muni === 'HAG') {
-              echo '<i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>';
-            } elseif ($muni === 'CAL') {
-              echo '<i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>';
-            } else {
-              echo '<i class="fa fa-unlock-alt nolock" id="nolock"></i>';
-            }
-          }
-        ?>
-      </div>
-    </div>
-  <?php endforeach; ?>
+                <?php
+                $muni = strtoupper(substr($card['municipality'], 0, 3));
+                if ($jobPosition !== 'cad operator' && $jobPosition !== 'compliance officer') {
+                    if ($muni === 'HAG') {
+                        echo '<i class="fa fa-unlock-alt" id="lock1" onclick="toggleRelay(1, this)"></i>';
+                    } elseif ($muni === 'CAL') {
+                        echo '<i class="fa fa-unlock-alt" id="lock2" onclick="toggleRelay(2, this)"></i>';
+                    } else {
+                        echo '<i class="fa fa-unlock-alt nolock" id="nolock"></i>';
+                    }
+                }
+                ?>
+            </div>
+        </div>
+    <?php endforeach; ?>
 </div>
 
 <div class="envelope-section" style="display:none; flex-direction:column; align-items:center;">

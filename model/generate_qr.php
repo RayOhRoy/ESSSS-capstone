@@ -11,13 +11,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // ----------------------
 $municipality = trim($_POST['municipality'] ?? 'OTH');
 
-// Use first 3 alphabetic characters (uppercase) as prefix, default to "OTH"
 if (!empty($municipality)) {
+    $municipality = trim($municipality);
+    $words = explode(' ', $municipality);
+
+    // Default prefix
     $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $municipality), 0, 3));
+
+    // Custom mappings
+    if (strcasecmp($municipality, 'Balagtas') == 0) {
+        $prefix = 'BAS';
+    } elseif (strcasecmp($municipality, 'Baliuag') == 0) {
+        $prefix = 'BAG';
+    }
+    // If municipality starts with "San" and has another word after it
+    elseif (strcasecmp($words[0], 'San') == 0 && !empty($words[1])) {
+        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $words[1]), 0, 3));
+    }
 } else {
     $prefix = 'OTH';
 }
-
 
 // Get last project number by searching ProjectID with prefix
 $sqlLastProj = "SELECT ProjectID FROM project WHERE ProjectID LIKE '$prefix-%' ORDER BY ProjectID DESC LIMIT 1";

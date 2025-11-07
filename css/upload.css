@@ -473,110 +473,171 @@ button {
     color: red;
     font-weight: bold;
 }
+
 .custom-modal {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5); 
-    display: flex; 
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
     align-items: center;
-    justify-content: center; 
+    justify-content: center;
     z-index: 9999;
-  }
+}
 
-  .custom-modal-content {
-    background: white; 
-    padding: 50px; 
-    border-radius: 10px; 
-    text-align: center; 
+.custom-modal-content {
+    background: white;
+    padding: 50px;
+    border-radius: 10px;
+    text-align: center;
     max-width: 300px;
-  }
+}
 
-  .custom-modal-buttons {
+.custom-modal-buttons {
     margin-top: 15px;
-  }
+}
 
-  .custom-modal-buttons button {
+.custom-modal-buttons button {
     padding: 8px 15px;
     margin-right: 10px;
-  }
-  
-  .user-top-info p {
-    font-size: 2rem; 
-    font-weight: 700;
-  }
+}
 
-   .custom-modal-buttons button:last-child {
+.user-top-info p {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.custom-modal-buttons button:last-child {
     margin-right: 0;
-  }
+}
+
+.modaldblcheck {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modaldblcheck-content {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    max-width: 80%;
+}
+
+.modaldblcheck-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-around;
+}
+
+.btn-confirm {
+    background: #7B0302;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel {
+    background: #ccc;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-confirm:hover {
+    filter: brightness(0.9);
+}
+
+.btn-cancel:hover {
+    filter: brightness(0.9);
+}
+
 @media (max-width: 1080px) {
     .user-menu-panel {
         width: 55%;
         height: 40%;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
+
     .user-top-info p {
-    font-size: 2.8rem; 
-    font-weight: 700;
+        font-size: 2.8rem;
+        font-weight: 700;
     }
+
     #changepassword-button {
-    position: absolute;
-    top: 95%;
-    right: -22%;
-    font-size: 1rem;
-    text-decoration: underline;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+        position: absolute;
+        top: 95%;
+        right: -22%;
+        font-size: 1rem;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
-    .custom-modal h3{ 
-        font-size:7cqw;
+
+    .custom-modal h3 {
+        font-size: 7cqw;
     }
+
     .user-panel-top {
-    background-color: #7B0302;
-    height: 17rem;
+        background-color: #7B0302;
+        height: 17rem;
     }
 
-   .custom-modal {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%;
-    background: rgba(0,0,0,0.5); 
-    display: flex; 
-    align-items: center;
-    justify-content: center; 
-    z-index: 9999;
-  }
+    .custom-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
 
-  .custom-modal-content {
-    background: white; 
-    padding: 50px; 
-    border-radius: 10px; 
-    text-align: center; 
-    width:90%;
-    max-width: 100%;
-    height:50%;
-  }
+    .custom-modal-content {
+        background: white;
+        padding: 50px;
+        border-radius: 10px;
+        text-align: center;
+        width: 90%;
+        max-width: 100%;
+        height: 50%;
+    }
 
 
-  .custom-modal-buttons {
-    margin-top: 15px;
-  }
+    .custom-modal-buttons {
+        margin-top: 15px;
+    }
 
-  .custom-modal-buttons button {
-    padding: 8px 15px;
-    margin-right: 10px;
-    font-size:7cqw;
-    margin-top:14cqw;
-  }
+    .custom-modal-buttons button {
+        padding: 8px 15px;
+        margin-right: 10px;
+        font-size: 7cqw;
+        margin-top: 14cqw;
+    }
 
-  .custom-modal-buttons button:last-child {
-    margin-right: 0;
-  }
+    .custom-modal-buttons button:last-child {
+        margin-right: 0;
+    }
 
     .table-container {
         max-height: 200rem;
