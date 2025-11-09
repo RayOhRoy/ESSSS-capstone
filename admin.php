@@ -37,6 +37,10 @@
                 <span class="fa fa-clock-o" alt="Activity Log"></span>
                 <span>Activity Log</span>
             </a>
+            <a href="#" class="menu-item" data-page="report.php">
+                <span class="fa fa-clipboard" alt="Report"></span>
+                <span>Report</span>
+            </a>
         </div>
     </div>
 

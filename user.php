@@ -21,7 +21,8 @@
               ['page' => 'upload.php', 'icon' => 'fa-upload', 'label' => 'Upload'],
               ['page' => 'documents.php', 'icon' => 'fa-list', 'label' => 'Digital Documents'],
               ['page' => 'physical_storage.php', 'icon' => 'fa-database', 'label' => 'Physical Documents'],
-              ['page' => 'activity_log.php', 'icon' => 'fa-clock-o', 'label' => 'Activity Log']
+              ['page' => 'activity_log.php', 'icon' => 'fa-clock-o', 'label' => 'Activity Log'],
+              ['page' => 'report.php', 'icon' => 'fa-clipboard', 'label' => 'Report']
           ];
 
           if ($jobPosition === 'cad operator' || $jobPosition === 'compliance officer') {

@@ -103,16 +103,24 @@ if ($conn->query($sqlProject) !== TRUE) {
 // Log project creation
 $sqlLastActivity = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
 $resLastActivity = $conn->query($sqlLastActivity);
-$newActivityNum = ($resLastActivity && $resLastActivity->num_rows > 0)
-    ? str_pad(intval(substr($resLastActivity->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-    : "001";
-$activityLogID = "ACT-" . $newActivityNum;
 
+if ($resLastActivity && $resLastActivity->num_rows > 0) {
+    $lastRow = $resLastActivity->fetch_assoc();
+    $lastNum = intval(substr($lastRow['ActivityLogID'], 4)) + 1;
+    $newActivityNum = str_pad($lastNum, 5, "0", STR_PAD_LEFT);
+} else {
+    $newActivityNum = "00001";
+}
+
+$activityLogID = "ACT-" . $newActivityNum;
 $timeNow = date('Y-m-d H:i:s');
 
-$sqlActivityLog = "INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time) 
-                   VALUES ('$activityLogID','$projectID','CREATED','$employeeID', '$timeNow')";
+$sqlActivityLog = "
+    INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
+    VALUES ('$activityLogID', '$projectID', 'CREATED', '$employeeID', '$timeNow')
+";
 $conn->query($sqlActivityLog);
+
 
 // Generate project-level QR (foldername without -XYZ)
 $projQRFileName = "$baseProjectID-QR.png";
@@ -197,21 +205,38 @@ foreach ($documentKeys as $docKey) {
     $documentName = "$projectID-$safeDocName";
 
     $sqlDoc = "INSERT INTO document 
-        (DocumentID, DocumentName, ProjectID, DocumentType, DigitalLocation, DocumentStatus, DocumentQR)
-        VALUES ('$documentID','$documentName','$projectID','$docName'," .
-        ($filesString !== NULL ? "'" . mysqli_real_escape_string($conn, $filesString) . "'" : "NULL") . "," .
-        ($status !== null ? "'$status'" : "NULL") . ",'$docQRPath')";
+    (DocumentID, DocumentName, ProjectID, DocumentType, DigitalLocation, DocumentStatus, DocumentQR)
+    VALUES (
+        '$documentID',
+        '$documentName',
+        '$projectID',
+        '$docName',
+        " . ($filesString !== NULL ? "'" . mysqli_real_escape_string($conn, $filesString) . "'" : "NULL") . ",
+        " . ($status !== null ? "'$status'" : "NULL") . ",
+        '$docQRPath'
+    )";
+
     if ($conn->query($sqlDoc) === TRUE) {
+        // ✅ Generate next ACT-00000 ID
         $sqlLastAct = "SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1";
         $resLastAct = $conn->query($sqlLastAct);
-        $newActNum = ($resLastAct && $resLastAct->num_rows > 0)
-            ? str_pad(intval(substr($resLastAct->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-            : "001";
+
+        if ($resLastAct && $resLastAct->num_rows > 0) {
+            $lastRow = $resLastAct->fetch_assoc();
+            $lastNum = intval(substr($lastRow['ActivityLogID'], 4)) + 1;
+            $newActNum = str_pad($lastNum, 5, "0", STR_PAD_LEFT);
+        } else {
+            $newActNum = "00001";
+        }
+
         $activityLogIDDoc = "ACT-" . $newActNum;
         $statusDoc = 'UPLOADED';
         $timeNow = date('Y-m-d H:i:s');
-        $sqlActDoc = "INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time) 
-                      VALUES ('$activityLogIDDoc','$projectID','$documentID','$statusDoc','$employeeID', '$timeNow')";
+
+        $sqlActDoc = "
+        INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time)
+        VALUES ('$activityLogIDDoc', '$projectID', '$documentID', '$statusDoc', '$employeeID', '$timeNow')
+        ";
         $conn->query($sqlActDoc);
     }
 }

@@ -33,11 +33,11 @@ $timeNow = date('Y-m-d H:i:s');
 
 // Generate next ACT-000 ID
 $result = $conn->query("SELECT activitylogid FROM activity_log ORDER BY activitylogid DESC LIMIT 1");
-$nextId = "ACT-001";
+$nextId = "ACT-00001";
 if ($result && $row = $result->fetch_assoc()) {
     $lastId = $row['activitylogid'];
     $num = (int) str_replace('ACT-', '', $lastId) + 1;
-    $nextId = 'ACT-' . str_pad($num, 3, '0', STR_PAD_LEFT);
+    $nextId = 'ACT-' . str_pad($num, 5, '0', STR_PAD_LEFT);
 }
 
 $emptyDocId = '';
@@ -175,8 +175,6 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
     <?php endif; ?>
 </div>
 
-
-<!-- Digital Documents Section -->
 <div id="digital-section" class="document-section">
     <?php 
     $hasDigitalDocs = false;
@@ -221,7 +219,6 @@ $jobPosition = strtolower($_SESSION['jobposition'] ?? '');
     <?php endif; ?>
 </div>
 
-<!-- Physical Documents Section -->
 <div id="physical-section" class="document-section" style="display: none;">
     <?php 
     $hasPhysicalDocs = false;

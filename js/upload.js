@@ -1,3 +1,23 @@
+const lockAPI = "https://essss-centralized-dms.com/model/lockapi.php";
+let lastRelayTime = 0; // timestamp of last relay trigger in ms
+
+function RelayUpload(lockNumber) {
+  const now = Date.now();
+
+  // Check 10-second cooldown
+  if (now - lastRelayTime < 10000) {
+    console.log(`Relay is on cooldown. Try again in ${Math.ceil((10000 - (now - lastRelayTime)) / 1000)}s`);
+    return;
+  }
+
+  lastRelayTime = now;
+
+  fetch(`${lockAPI}?endpoint=/relay&lock=${lockNumber}&action=unlock`)
+    .then(response => response.text())
+    .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
+    .catch(err => console.error("ESP connection failed:", err));
+}
+
 function handleFileUpload(input) {
   const row = input.closest("tr");
   const fileListDiv = row.querySelector(".file-list");
@@ -147,11 +167,15 @@ function submitForm() {
 
           const projectQR = document.getElementById("projectQRImg");
           if (projectQR) {
-            qrImages.push({ src: projectQR.src, label: "Project QR" });
+            qrImages.push({ src: projectQR.src, label: projectId });
           }
 
           document.querySelectorAll(".doc-qr-img").forEach(img => {
-            qrImages.push({ src: img.src, label: img.dataset.docname });
+            const docLabel = img.dataset.docname || ""; // current label
+            qrImages.push({
+              src: img.src,
+              label: projectId + " " + docLabel // prepend projectId to document label
+            });
           });
 
           if (qrImages.length === 0) {
@@ -171,52 +195,47 @@ function submitForm() {
 
           const printHTML = `
             <html>
-              <head>
-                <title>Print QR Codes</title>
-                <style>
-                  @page { size: A4 portrait; margin: 5mm; }
-                  body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-                  .print-wrapper {
-                    display: flex; flex-direction: column; align-items: center;
-                  }
-                  .project-id-header {
-                    font-size: 14px; font-weight: bold; text-align: center;
-                    margin: 5mm 0 3mm 0;
-                  }
-                  .qr-grid {
-                    display: grid;
-                    grid-template-columns: repeat(4, 48mm);
-                    grid-auto-rows: 55mm;
-                    gap: 2mm;
-                    padding: 5mm;
-                  }
-                  .qr-block {
-                    width: 48mm; height: 55mm; border: 1px solid #000;
-                    display: flex; flex-direction: column;
-                    align-items: center; justify-content: center;
-                    box-sizing: border-box; padding: 2mm;
-                  }
-                  .qr-block img {
-                    width: 44mm; height: 36mm;
-                  }
-                  .label {
-                    margin-top: 1.5mm; font-size: 11px;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="print-wrapper">
-                  <div class="project-id-header">${projectId}</div>
-                  <div class="qr-grid">${qrGridHTML}</div>
-                </div>
-                <script>
-                  window.onload = () => {
-                    window.print();
-                    window.onafterprint = () => window.close();
-                  }
-                </script>
-              </body>
-            </html>
+            <head>
+              <title>Print QR Codes</title>
+              <style>
+                @page { size: A4 portrait; margin: 0mm; }
+                body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+                .print-wrapper { display: flex; flex-direction: column; align-items: center; }
+                .qr-grid {
+                  display: grid;
+                  grid-template-columns: repeat(4, 50mm);
+                  grid-template-rows: repeat(7, 38mm);
+                  gap: 4mm 2mm;
+                  justify-content: center;
+                  padding: 0 3mm;
+                }
+                .qr-block {
+                  width: 50mm;
+                  height: 38mm;
+                  border: none;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  box-sizing: border-box;
+                  padding: 1mm;
+                }
+                .qr-block img { width: 42mm; height: 26mm; object-fit: contain; }
+                .label { margin-top: 1.5mm; font-size: 9px; text-align: center; word-wrap: break-word; }
+              </style>
+            </head>
+            <body>
+              <div class="print-wrapper">
+                <div class="qr-grid">${qrGridHTML}</div>
+              </div>
+              <script>
+                window.onload = () => {
+                  window.print();
+                  window.onafterprint = () => window.close();
+                }
+              </script>
+            </body>
+          </html>
           `;
 
           const iframe = document.createElement("iframe");
@@ -240,13 +259,25 @@ function submitForm() {
 
           let digitalStorage = `${municipality}/${projectId}`;
 
-
           // Clean up Physical Storage ID (remove from 3rd dash onwards)
           let physicalStorage = projectId;
           const dashParts = projectId.split("-");
           if (dashParts.length >= 3) {
             physicalStorage = dashParts.slice(0, 3).join("-");
           }
+
+          let relayNumber = 0;
+          if (municipality.toLowerCase().includes("hagonoy")) {
+            relayNumber = 1;
+          } else if (municipality.toLowerCase().includes("calumpit")) {
+            relayNumber = 2;
+          }
+
+          // ✅ Trigger relay right away when upload success modal appears
+          if (relayNumber > 0) {
+            RelayUpload(relayNumber);
+          }
+
           // Create Storage Modal
           const storageModal = document.createElement("div");
           storageModal.style = `
@@ -323,21 +354,21 @@ function submitForm() {
 }
 
 function generateQR() {
-    const projectForm = document.getElementById("projectForm");
+  const projectForm = document.getElementById("projectForm");
 
-    const requiredFields = [
-      { id: "lotNumber", name: "Lot Number" },
-      { id: "clientName", name: "Client First Name" },
-      { id: "clientLastName", name: "Client Last Name" },
-      { id: "province", name: "Province" },
-      { id: "municipality", name: "Municipality" },
-      { id: "barangay", name: "Barangay" },
-      { id: "surveyType", name: "Survey Type" },
-      { id: "projectStatus", name: "Project Status" },
-      { id: "startDate", name: "Survey Start Date" },
-    ];
+  const requiredFields = [
+    { id: "lotNumber", name: "Lot Number" },
+    { id: "clientName", name: "Client First Name" },
+    { id: "clientLastName", name: "Client Last Name" },
+    { id: "province", name: "Province" },
+    { id: "municipality", name: "Municipality" },
+    { id: "barangay", name: "Barangay" },
+    { id: "surveyType", name: "Survey Type" },
+    { id: "projectStatus", name: "Project Status" },
+    { id: "startDate", name: "Survey Start Date" },
+  ];
 
-    const missingFields = [];
+  const missingFields = [];
 
   // Reset any old borders
   requiredFields.forEach(f => {
@@ -634,7 +665,7 @@ function toggleGenerateQR() {
       alert("Please complete the following before generating QR Code:\n- " + missingFields.join("\n- "));
       return;
     }
-    
+
     const startDate = new Date(document.getElementById("startDate").value);
     const endDateEl = document.getElementById("endDate");
     if (endDateEl && endDateEl.value) {
@@ -674,8 +705,8 @@ function confirmGenerate() {
   const result = generateQR();
   if (result instanceof Promise) {
     result.then(success => { if (success) afterGenerate(); });
-  } else { 
-    if (result) afterGenerate(); 
+  } else {
+    if (result) afterGenerate();
   }
 }
 

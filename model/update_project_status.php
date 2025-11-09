@@ -65,13 +65,13 @@ try {
     $getLastId = $conn->query("SELECT activitylogid FROM activity_log ORDER BY activitylogid DESC LIMIT 1");
     $lastRow = $getLastId->fetch_assoc();
     $nextNum = $lastRow ? (intval(substr($lastRow['activitylogid'], 4)) + 1) : 1;
-    $newActivityId = "ACT-" . str_pad($nextNum, 3, "0", STR_PAD_LEFT);
+    $newActivityId = "ACT-" . str_pad($nextNum, 5, "0", STR_PAD_LEFT); // ✅ 5 digits
 
     // --- Insert project-level activity (documentid = '') ---
     $emptyDocId = '';
     $insertActivity = $conn->prepare("
-        INSERT INTO activity_log (activitylogid, projectid, documentid, status, employeeid, time)
-        VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO activity_log (activitylogid, projectid, documentid, status, employeeid, time)
+    VALUES (?, ?, ?, ?, ?, ?)
     ");
     $insertActivity->bind_param("ssssss", $newActivityId, $projectId, $emptyDocId, $activityStatus, $userID, $timeNow);
     $insertActivity->execute();
@@ -83,13 +83,13 @@ try {
     $docResult = $docQuery->get_result();
 
     while ($doc = $docResult->fetch_assoc()) {
-        $nextNum++;
-        $docActivityId = "ACT-" . str_pad($nextNum, 3, "0", STR_PAD_LEFT);
+        $nextNum++; // increment for next activity
+        $docActivityId = "ACT-" . str_pad($nextNum, 5, "0", STR_PAD_LEFT); // ✅ 5 digits
 
         $insertDocActivity = $conn->prepare("
-            INSERT INTO activity_log (activitylogid, projectid, documentid, status, employeeid, time)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+        INSERT INTO activity_log (activitylogid, projectid, documentid, status, employeeid, time)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
         $insertDocActivity->bind_param("ssssss", $docActivityId, $projectId, $doc['documentid'], $activityStatus, $userID, $timeNow);
         $insertDocActivity->execute();
     }

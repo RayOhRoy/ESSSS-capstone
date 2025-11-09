@@ -53,14 +53,23 @@ $conn->query("UPDATE project
                   Approval=" . ($approval !== null ? "'$approval'" : "NULL") . " 
               WHERE ProjectID='$projectID'");
 
-// Create main activity log
+// ✅ Create main activity log
 $resLastAct = $conn->query("SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1");
-$newActNum = ($resLastAct && $resLastAct->num_rows > 0)
-    ? str_pad(intval(substr($resLastAct->fetch_assoc()['ActivityLogID'], 4)) + 1, 3, "0", STR_PAD_LEFT)
-    : "001";
+
+if ($resLastAct && $resLastAct->num_rows > 0) {
+    $lastRow = $resLastAct->fetch_assoc();
+    $lastNum = intval(substr($lastRow['ActivityLogID'], 4)) + 1;
+    $newActNum = str_pad($lastNum, 5, "0", STR_PAD_LEFT);
+} else {
+    $newActNum = "00001";
+}
+
 $activityLogID = "ACT-" . $newActNum;
-$conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
-              VALUES ('$activityLogID', '$projectID', 'MODIFIED', '$employeeID', '$timeNow')");
+
+$conn->query("
+    INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
+    VALUES ('$activityLogID', '$projectID', 'MODIFIED', '$employeeID', '$timeNow')
+");
 
 // Base upload folder
 $uploadBase = __DIR__ . '/../uploads/';
@@ -75,12 +84,14 @@ $updatedDocs = [];
 // Document handling
 // --------------------------
 foreach ($_POST as $key => $value) {
-    if (!preg_match('/^(physical|digital)_(.+)$/', $key, $matches)) continue;
+    if (!preg_match('/^(physical|digital)_(.+)$/', $key, $matches))
+        continue;
 
     $type = $matches[1]; // "physical" or "digital"
     $docKey = $matches[2]; // e.g., "cad_file"
     $docType = ucwords(str_replace("_", " ", $docKey));
-    if (strcasecmp($docType, 'Cad File') === 0) $docType = 'CAD File';
+    if (strcasecmp($docType, 'Cad File') === 0)
+        $docType = 'CAD File';
     $safeDocName = str_replace(" ", "-", $docType);
 
     $physicalChecked = isset($_POST["physical_$docKey"]);
@@ -119,7 +130,8 @@ foreach ($_POST as $key => $value) {
         $statusToInsert = $physicalChecked ? 'Stored' : null;
 
         $docFolder = "$projectFolder/$safeDocName";
-        if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
+        if (!is_dir($docFolder))
+            mkdir($docFolder, 0777, true);
 
         // QR file
         $qrFile = "{$baseProjectID}-{$safeDocName}-QR.png";
@@ -140,7 +152,8 @@ foreach ($_POST as $key => $value) {
     // Handle digital upload
     if ($hasDigital) {
         $docFolder = "$projectFolder/$safeDocName";
-        if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
+        if (!is_dir($docFolder))
+            mkdir($docFolder, 0777, true);
 
         $ext = pathinfo($digitalFile['name'], PATHINFO_EXTENSION);
         $newName = "$safeDocName.$ext";
@@ -166,5 +179,5 @@ foreach ($_POST as $key => $value) {
 }
 
 ob_clean();
-echo json_encode(['status'=>'success', 'message'=>'Test']);
+echo json_encode(['status' => 'success', 'message' => 'Test']);
 exit;

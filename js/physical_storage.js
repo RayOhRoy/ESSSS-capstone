@@ -214,8 +214,6 @@ function initPhysicalStorage() {
                     b.style.opacity = "0.5";
                 });
 
-                await toggleRelay(relay);
-
                 // 🧾 Message content (keep your version)
                 let message = "";
                 if (buttonAction === "RETRIEVE") {
@@ -233,6 +231,7 @@ function initPhysicalStorage() {
                 // ✅ Show modal with all required data
                 showRelayModal(message, buttonAction, projectIdBase);
 
+                await toggleRelay(relay);
                 // Re-enable buttons after 10 seconds
                 setTimeout(() => {
                     document.querySelectorAll(".envelope-button").forEach(b => {
@@ -242,7 +241,6 @@ function initPhysicalStorage() {
                 }, 10000);
             });
         });
-
 
 
         document.querySelectorAll(".update-btn").forEach(btn => {
@@ -350,14 +348,81 @@ function showRelayModal(message, buttonAction, projectIdBase) {
     if (!modal) {
         modal = document.createElement("div");
         modal.id = "relayModal";
-        modal.innerHTML = `
-            <div class="relay-modal-content">
-                <p id="relayModalMsg"></p>
-                <input type="text" id="relayHiddenInput" style="position:absolute; opacity:0; pointer-events:none;" />
-                <div id="relayFeedback" style="margin-top:10px; color:#d33; font-size:14px;"></div>
-                <button id="closeRelayModal">CANCEL</button>
-            </div>
-        `;
+       modal.innerHTML = `
+    <style>
+        /* Default modal style */
+        #relayModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+
+       .relay-modal-content {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    width: 90%; /* controls overall size */
+    text-align: center;
+}
+
+
+        #closeRelayModal {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #7B0302;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+            #relayFeedback {
+              margin-top:10px; 
+              color:#d33; 
+              font-size:14px;
+            }
+
+    @media screen and (max-width: 1080px) and (max-height: 2460px) {
+     .relay-modal-content {
+        width: 90vw;       /* 90% of the viewport width */
+        max-width: none;   /* remove any max-width restriction */
+        padding: 60px 40px;
+        border-radius: 16px;
+        font-size: 1.2rem;
+    }
+
+            #relayModalMsg {
+                font-size: 3.2rem;
+            }
+            #relayModalMsg .relay-subtext {
+             font-size: 2.2rem;
+            }
+
+            #relayFeedback {
+                font-size: 3rem;
+                margin-top: 15px;
+            }
+
+            #closeRelayModal {
+                padding: 15px 25px;
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+
+    <div class="relay-modal-content">
+        <p id="relayModalMsg"></p>
+        <input type="text" id="relayHiddenInput" style="position:absolute; opacity:0; pointer-events:none;" />
+        <div id="relayFeedback" ></div>
+        <button id="closeRelayModal">CANCEL</button>
+    </div>
+`;
         document.body.appendChild(modal);
     }
 
@@ -369,6 +434,12 @@ function showRelayModal(message, buttonAction, projectIdBase) {
     feedback.textContent = "";
     modal.style.display = "flex";
     hiddenInput.value = "";
+
+    const closeModal = () => {
+        modal.style.display = "none";
+        clearInterval(window.relayFocusInterval);
+        hiddenInput.value = "";
+    };
 
     if (window.relayFocusInterval) clearInterval(window.relayFocusInterval);
     hiddenInput.focus();
@@ -416,7 +487,7 @@ function showRelayModal(message, buttonAction, projectIdBase) {
                         const lockAPI = "https://essss-centralized-dms.com/model/lockapi.php";
                         const checkLockInterval = setInterval(async () => {
                             try {
-                                const response = await fetch(`${lockAPI}?endpoint=/relay&lock=${lockNumber}&action=unlock`);
+                                const response = await fetch(`${lockAPI}?endpoint=/status&ts=${Date.now()}`);
                                 if (!res.ok) throw new Error("ESP fetch failed");
                                 const espData = await res.json();
 
@@ -455,12 +526,6 @@ function showRelayModal(message, buttonAction, projectIdBase) {
                 feedback.textContent = "Server error occurred.";
             }
         }
-    };
-
-    const closeModal = () => {
-        modal.style.display = "none";
-        clearInterval(window.relayFocusInterval);
-        hiddenInput.value = "";
     };
 
     document.getElementById("closeRelayModal").onclick = closeModal;

@@ -38,7 +38,7 @@ if ($employeeID) {
                 <?= htmlspecialchars($empFName . ' ' . $empLName) ?>
             </p>
             <p style="font-size: 1rem;">
-                <?= htmlspecialchars($jobPosition) ?>
+                <?= htmlspecialchars(ucwords($jobPosition)) ?>
             </p>
         </div>
     </div>
@@ -87,10 +87,18 @@ $result = $conn->query($query);
 
 $cards = [];
 $counter = [];
+$seenMunicipalities = []; // 🟢 to avoid duplicates
 
 while ($row = $result->fetch_assoc()) {
-    $municipality = $row['municipality'];
-    $words = explode(' ', trim($municipality));
+    $municipality = trim($row['municipality']);
+
+    // 🟢 Skip if we've already added this municipality
+    if (in_array(strtolower($municipality), $seenMunicipalities)) {
+        continue;
+    }
+    $seenMunicipalities[] = strtolower($municipality);
+
+    $words = explode(' ', $municipality);
 
     // Determine prefix
     if (strcasecmp($municipality, 'Balagtas') === 0) {
@@ -139,6 +147,7 @@ while ($row = $result->fetch_assoc()) {
         </div>
     <?php endforeach; ?>
 </div>
+
 
 <div class="envelope-section" style="display:none; flex-direction:column; align-items:center;">
     <button id="scrollUp" class="scroll-btn"><i class="fa fa-angle-up"></i></button>

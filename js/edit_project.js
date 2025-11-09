@@ -82,6 +82,7 @@ async function toggleEditSave(event) {
   const attachIcons = form.querySelectorAll(".attach-icon");
   const saveBtn = document.getElementById("update-save-btn");
   const editBtn = document.getElementById("update-edit-btn");
+  const deleteBtn = document.getElementById("update-delete-btn");
   const printQRBtn = document.getElementById("update-printqr-btn");
   const requestTypeField = document.getElementById("requestType");
 
@@ -103,6 +104,7 @@ async function toggleEditSave(event) {
 
     if (saveBtn) saveBtn.style.display = "inline-block";
     if (printQRBtn) printQRBtn.style.display = "none";
+    if (deleteBtn) deleteBtn.style.display = "none";
 
     if (editBtn) {
       editBtn.textContent = "Cancel";
@@ -173,6 +175,7 @@ async function toggleEditSave(event) {
     }
 
     if (printQRBtn) printQRBtn.style.display = "inline-block";
+    if (deleteBtn) deleteBtn.style.display = "inline-block";
 
     if (editBtn) {
       editBtn.textContent = "Edit";
@@ -878,95 +881,369 @@ function printProjectQRCodes(projectId, projectQR = null) {
     return;
   }
 
-  // Fetch documents (including Project QR) for the project
+  // Fetch documents
   fetch(`model/get_project_docs.php?projectId=${encodeURIComponent(projectId)}`)
     .then(res => res.json())
     .then(docs => {
-      const qrImages = [];
-
-      // Include Project QR at the top with label "Project QR"
-      if (projectQR) {
-        qrImages.push({ src: projectQR, label: "Project QR" });
-      }
-
-      // Add QR codes for documents
-      docs.forEach(doc => {
-        if (doc.DocumentQR) {
-          qrImages.push({
-            src: doc.DocumentQR,
-            label: doc.DocumentType // label for individual documents
-          });
-        }
-      });
-
-      if (qrImages.length === 0) {
+      if (!docs.length && !projectQR) {
         console.warn("No QR codes to print.");
         return;
       }
 
-      // Build QR grid HTML
-      let qrGridHTML = "";
-      qrImages.forEach(qr => {
-        qrGridHTML += `
-          <div class="qr-block">
-            <img src="${qr.src}" alt="QR Code">
-            <div class="label">${qr.label}</div>
+      const documentTypes = docs.map(doc => doc.DocumentType);
+
+      // Modal HTML
+      const modalHTML = `
+      <div id="qrModal" style="
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+          z-index: 9999;
+        ">
+        <div style="
+          background: #fff; padding: 20px; border-radius: 10px; max-width: 450px; width: 90%;
+          text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        ">
+          <style>
+            #qrModal button {
+              transition: all 0.2s ease;
+            }
+            #qrModal button:hover {
+              filter: brightness(90%);
+            }
+          </style>
+
+          <!-- Initial Choice -->
+          <div id="qrChoice">
+            <h3 style="margin-bottom: 20px;">Select QR Codes to Print</h3>
+            <button id="printAllBtn" style="
+              display:block; width: 80%; margin: 10px auto; padding: 12px; font-size:16px; cursor:pointer;
+              border:none; border-radius:6px; background-color:#7B0302; color:#fff;
+            ">Print All</button>
+            <button id="selectDocsBtn" style="
+              display:block; width: 80%; margin: 10px auto; padding: 12px; font-size:16px; cursor:pointer;
+              border:none; border-radius:6px; background-color:#7B0302; color:#fff;
+            ">Select Documents</button>
           </div>
-        `;
+
+          <!-- Document selection -->
+          <div id="selectDocuments" style="display:none; margin-top: 10px; text-align:left;">
+            <h3 style="margin-bottom: 15px;">Select Documents</h3>
+            <div style="
+              display: flex; flex-wrap: wrap; gap: 10px; max-height: 200px; overflow-y: auto;
+            ">
+              ${documentTypes.map(type => `
+                <label style="
+                  display:flex; align-items:center; gap:5px; background:#f0f0f0; padding:6px 10px; border-radius:5px;
+                ">
+                  <input type="checkbox" name="docType" value="${type}" checked> ${type}
+                </label>
+              `).join('')}
+            </div>
+            <div style="margin-top: 15px; text-align:center;">
+              <button id="backBtn" style="
+                padding:8px 16px; font-size:14px; margin-right:10px; cursor:pointer;
+                border:none; border-radius:5px; background:#6c757d; color:#fff;
+              ">Back</button>
+              <button id="printSelectedBtn" style="
+                padding:8px 16px; font-size:14px; cursor:pointer;
+                border:none; border-radius:5px; background:#7B0302; color:#fff;
+              ">Print Selected</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+      const modalWrapper = document.createElement('div');
+      modalWrapper.innerHTML = modalHTML;
+      document.body.appendChild(modalWrapper);
+
+      // Elements
+      const qrChoice = modalWrapper.querySelector('#qrChoice');
+      const selectDocumentsDiv = modalWrapper.querySelector('#selectDocuments');
+      const printAllBtn = modalWrapper.querySelector('#printAllBtn');
+      const selectDocsBtn = modalWrapper.querySelector('#selectDocsBtn');
+      const backBtn = modalWrapper.querySelector('#backBtn');
+      const printSelectedBtn = modalWrapper.querySelector('#printSelectedBtn');
+
+      // Print All button
+      printAllBtn.addEventListener('click', () => {
+        modalWrapper.remove();
+        printQR(docs, projectQR);
       });
 
-      const printHTML = `
-        <html>
-          <head>
-            <title>Print QR Codes</title>
-            <style>
-              @page { size: A4 portrait; margin: 5mm; }
-              body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-              .print-wrapper { display: flex; flex-direction: column; align-items: center; }
-              .project-id-header { font-size: 14px; font-weight: bold; text-align: center; margin: 5mm 0 3mm 0; }
-              .qr-grid {
-                display: grid;
-                grid-template-columns: repeat(4, 48mm);
-                grid-auto-rows: 55mm;
-                gap: 2mm;
-                padding: 5mm;
-              }
-              .qr-block {
-                width: 48mm; height: 55mm; border: 1px solid #000;
-                display: flex; flex-direction: column;
-                align-items: center; justify-content: center;
-                box-sizing: border-box; padding: 2mm;
-              }
-              .qr-block img { width: 44mm; height: 36mm; }
-              .label { margin-top: 1.5mm; font-size: 11px; }
-            </style>
-          </head>
-          <body>
-            <div class="print-wrapper">
-              <div class="project-id-header">${projectId}</div>
-              <div class="qr-grid">${qrGridHTML}</div>
+      // Show document selection
+      selectDocsBtn.addEventListener('click', () => {
+        qrChoice.style.display = 'none';
+        selectDocumentsDiv.style.display = 'block';
+      });
+
+      // Back button
+      backBtn.addEventListener('click', () => {
+        selectDocumentsDiv.style.display = 'none';
+        qrChoice.style.display = 'block';
+      });
+
+      // Print Selected button
+      printSelectedBtn.addEventListener('click', () => {
+        const checkedTypes = Array.from(modalWrapper.querySelectorAll('input[name="docType"]:checked'))
+          .map(cb => cb.value);
+        const filteredDocs = docs.filter(doc => checkedTypes.includes(doc.DocumentType));
+
+        modalWrapper.remove();
+        printQR(filteredDocs, projectQR);
+      });
+
+      // Function to generate print HTML
+      function printQR(selectedDocs, projectQRCode) {
+        const qrImages = [];
+        if (projectQRCode) {
+          qrImages.push({ src: projectQRCode, label: "Project QR" });
+        }
+        selectedDocs.forEach(doc => {
+          if (doc.DocumentQR) {
+            const labelText = doc.DocumentType === "Project QR"
+              ? doc.DocumentType
+              : `${doc.DocumentType} (${projectId})`;
+            qrImages.push({ src: doc.DocumentQR, label: labelText });
+          }
+        });
+
+        if (qrImages.length === 0) {
+          console.warn("No QR codes selected.");
+          return;
+        }
+
+        let qrGridHTML = "";
+        qrImages.forEach(qr => {
+          qrGridHTML += `
+            <div class="qr-block">
+              <img src="${qr.src}" alt="QR Code">
+              <div class="label">${qr.label}</div>
             </div>
-            <script>
-              window.onload = () => {
-                window.print();
-                window.onafterprint = () => window.close();
-              }
-            </script>
-          </body>
-        </html>
-      `;
+          `;
+        });
 
-      // Create iframe and print
-      const iframe = document.createElement("iframe");
-      iframe.style = "position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0;";
-      document.body.appendChild(iframe);
+        const printHTML = `
+          <html>
+            <head>
+              <title>Print QR Codes</title>
+              <style>
+                @page { size: A4 portrait; margin: 0mm; }
+                body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+                .print-wrapper { display: flex; flex-direction: column; align-items: center; }
+                .qr-grid {
+                  display: grid;
+                  grid-template-columns: repeat(4, 50mm);
+                  grid-template-rows: repeat(7, 38mm);
+                  gap: 4mm 2mm;
+                  justify-content: center;
+                  padding: 0 3mm;
+                }
+                .qr-block {
+                  width: 50mm;
+                  height: 38mm;
+                  border: none;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  box-sizing: border-box;
+                  padding: 1mm;
+                }
+                .qr-block img { width: 42mm; height: 26mm; object-fit: contain; }
+                .label { margin-top: 1.5mm; font-size: 9px; text-align: center; word-wrap: break-word; }
+              </style>
+            </head>
+            <body>
+              <div class="print-wrapper">
+                <div class="qr-grid">${qrGridHTML}</div>
+              </div>
+              <script>
+                window.onload = () => {
+                  window.print();
+                  window.onafterprint = () => window.close();
+                }
+              </script>
+            </body>
+          </html>
+        `;
 
-      const doc = iframe.contentWindow.document;
-      doc.open();
-      doc.write(printHTML);
-      doc.close();
+        const iframe = document.createElement("iframe");
+        iframe.style = "position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0;";
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(printHTML);
+        doc.close();
+      }
     })
-    .catch(err => {
-      console.error("Failed to fetch document QR codes.", err);
+    .catch(err => console.error("Failed to fetch document QR codes.", err));
+}
+
+function initDeleteProjectButton() {
+  const deleteBtn = document.getElementById("update-delete-btn");
+  const projectIdInput = document.getElementById("projectId");
+
+  if (!deleteBtn || !projectIdInput) return;
+
+  deleteBtn.onclick = () => {
+    showConfirmModaldel("Are you sure you want to delete this project?", () => {
+      showConfirmModaldel("This action is irreversible. Delete permanently?", async () => {
+        const projectId = projectIdInput.value.trim();
+        const formData = new FormData();
+        formData.append("projectId", projectId);
+
+        try {
+          const res = await fetch("model/delete_project.php", {
+            method: "POST",
+            body: formData
+          });
+
+          if (res.ok) {
+            showAlertModal("Project deleted successfully!", "success");
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            showAlertModal("Failed to delete project.", "error");
+          }
+        } catch (err) {
+          console.error(err);
+          showAlertModal("Error connecting to server.", "error");
+        }
+      }, true); // enable countdown
     });
+  };
+}
+
+/* Confirmation Modal */
+// Inject global modal media query styles once
+if (!document.getElementById("modal-media-style")) {
+  const style = document.createElement("style");
+  style.id = "modal-media-style";
+  style.innerHTML = `
+    @media (max-width: 1080px) {
+      .custom-modal-content {
+        max-width: 80% !important;
+        padding: 15px !important;
+        height:300px;
+      }
+      .custom-modal-content p {
+        font-size: 50px !important;
+      }
+     @media (max-width: 1080px) {
+  .custom-modal-buttons {
+    display: flex !important;       
+    flex-direction: row !important;    
+    gap: 12px !important;              
+    justify-content: center;           
+    width: 100%;                    
+  }
+
+  .custom-modal-buttons button {
+    flex: 1;         
+    max-width: 200px;   
+    padding: 8px 0;      
+    font-size:50px;
+  }
+}
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/* Confirmation Modal */
+function showConfirmModaldel(message, onConfirm, withCountdown = false) {
+  const modal = document.createElement("div");
+  modal.style = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  `;
+
+  modal.innerHTML = `
+    <div class="custom-modal-content" style="
+      background: white; padding: 20px 25px; border-radius: 10px;
+      text-align: center; max-width: 350px; width: 90%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      animation: fadeIn 0.2s ease;
+    ">
+      <p>${message}</p>
+      <div class="custom-modal-buttons" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+        <button id="noBtn" style="
+          background:#ccc; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;
+        ">Cancel</button>
+        <button id="yesBtn" style="
+          background:#7B0302; color:white; border:none; padding:8px 15px; border-radius:5px;
+          cursor:pointer; opacity:${withCountdown ? 0.6 : 1};
+        ">Yes</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const yesBtn = modal.querySelector("#yesBtn");
+  const noBtn = modal.querySelector("#noBtn");
+
+  noBtn.onclick = () => modal.remove();
+
+  if (withCountdown) {
+    let countdown = 2;
+    yesBtn.disabled = true;
+    yesBtn.textContent = `Yes (${countdown})`;
+
+    const interval = setInterval(() => {
+      countdown--;
+      if (countdown > 0) {
+        yesBtn.textContent = `Yes (${countdown})`;
+      } else {
+        clearInterval(interval);
+        yesBtn.textContent = "Yes";
+        yesBtn.disabled = false;
+        yesBtn.style.opacity = "1";
+      }
+    }, 1000);
+  }
+
+  yesBtn.onclick = () => {
+    if (yesBtn.disabled) return;
+    modal.remove();
+    if (typeof onConfirm === "function") onConfirm();
+  };
+}
+
+/* Alert Modal */
+function showAlertModal(message, type = "info") {
+  const modal = document.createElement("div");
+  modal.style = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+  `;
+
+  const color =
+    type === "success" ? "#13572fff" :
+    type === "error" ? "#e74c3c" :
+    "#3498db";
+
+  modal.innerHTML = `
+    <div class="custom-modal-content" style="
+      background: white; padding: 20px 25px; border-radius: 10px;
+      text-align: center; max-width: 350px; width: 90%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      animation: fadeIn 0.2s ease;
+    ">
+      <p style="color:${color};">${message}</p>
+      <div class="custom-modal-buttons" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+        <button style="
+          margin-top: 15px; background:${color}; color:white; border:none; padding:8px 15px;
+          border-radius:5px; cursor:pointer;
+        ">OK</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.querySelector("button").onclick = () => modal.remove();
 }

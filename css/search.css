@@ -612,13 +612,69 @@ input[type="date"] {
     margin-top: 50px;
     display: inline-block;
 }
-.user-top-info p{
-font-size: 2rem; font-weight: 700;
+
+.user-top-info p {
+    font-size: 2rem;
+    font-weight: 700;
 }
 
- #liveResults {
+#liveResults {
     margin-top: 1%;
- }
+}
+
+#reportDescription {
+    width: 100%;
+    height: 160px;
+    resize: none;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #b7b7b7;
+    box-sizing: border-box;
+}
+
+.search-dropdown input[list] {
+    width: 300px;
+    padding: 10px;
+    border: 2px solid #800000;
+    border-radius: 20px;
+    font-size: 15px;
+    color: #800000;
+    outline: none;
+}
+.note1 {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+#generateReportBtn {
+    background-color: #7B0302;
+    color: white;
+    margin-top: 2%;
+    padding: 10px 24px;
+    border-radius: 6px;
+    border: none;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+#generateReportBtn:hover {
+    filter: brightness(0.9);
+}
+#report-dropdown {  
+    width: 300px;
+    padding: 10px;
+    border: 2px solid #800000;
+    border-radius: 20px;
+    font-size: 15px;
+    color: #800000;
+    outline: none;
+
+}
+
 
 @media (max-width: 1080px) {
     .user-menu-panel {
@@ -626,23 +682,54 @@ font-size: 2rem; font-weight: 700;
         height: 40%;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
-    .user-top-info p{
-    font-size: 2.8rem; 
-    font-weight: 700;
+    .note1 {
+    font-size: 38px;
+    color: #555;
+    margin-bottom: 20px;
     }
-    #changepassword-button {
-    position: absolute;
-    top: 95%;
-    right: -22%;
-    font-size: 1rem;
-    text-decoration: underline;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    }
-    .user-panel-top {
+    #generateReportBtn {
     background-color: #7B0302;
-    height: 17rem;
+    color: white;
+    margin-top: 2%;
+    padding: 17px 20px;
+    border-radius: 6px;
+    border: none;
+    text-decoration: none;
+    font-size: 2rem;
+    font-weight: 600;
+    transition: all 0.2s 
+    ease;
+    cursor: pointer;
+    }
+    #reportDescription {
+    font-size: 30px;
+    width: 100%;
+    height: 360px;
+    resize: none;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #b7b7b7;
+    box-sizing: border-box;
+}
+    .user-top-info p {
+        font-size: 2.8rem;
+        font-weight: 700;
+    }
+
+    #changepassword-button {
+        position: absolute;
+        top: 95%;
+        right: -22%;
+        font-size: 1rem;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .user-panel-top {
+        background-color: #7B0302;
+        height: 17rem;
     }
 
 
@@ -755,20 +842,22 @@ font-size: 2rem; font-weight: 700;
         padding: 10px;
         border: 10px solid #ccc;
         font-size: 30px;
-      
+
     }
-    .result-item{
+
+    .result-item {
         display: flex;
     }
-    
+
 
     .fa.fa-user-circle {
         font-size: 70px;
         color: #7B0302;
     }
-    .field i{
 
-        font-size:150%
+    .field i {
+
+        font-size: 150%
     }
 
     .form-row label {

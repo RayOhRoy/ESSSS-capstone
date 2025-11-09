@@ -160,27 +160,6 @@ function initQRFormHandler() {
   });
 }
 
-const espIP = "https://unostentatious-unconfected-marya.ngrok-free.dev"; // Replace with your ESP32 IP
-let lastRelayTime = 0; // timestamp of last relay trigger in ms
-
-// 🔹 Toggle relay (send unlock signal only)
-function Relay(lockNumber) {
-  const now = Date.now();
-
-  // Check 10-second cooldown
-  if (now - lastRelayTime < 10000) {
-    console.log(`Relay is on cooldown. Try again in ${Math.ceil((10000 - (now - lastRelayTime)) / 1000)}s`);
-    return;
-  }
-
-  lastRelayTime = now;
-
-  fetch(`${espIP}/relay?lock=${lockNumber}&action=unlock`)
-    .then(response => response.text())
-    .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
-    .catch(err => console.error("ESP connection failed:", err));
-}
-
 // 🔹 Initialize QR scanning logic
 function initQRFormToggles() {
   const forms = document.querySelectorAll('.qr-validate-form');
@@ -216,6 +195,26 @@ function initQRFormToggles() {
 
     let scanning = false;
 
+    const lockAPI = "https://essss-centralized-dms.com/model/lockapi.php";
+    let lastRelayTime = 0; // timestamp of last relay trigger in ms
+
+    // 🔹 Toggle relay (send unlock signal only)
+    function Relay(lockNumber) {
+      const now = Date.now();
+
+      // Check 10-second cooldown
+      if (now - lastRelayTime < 10000) {
+        console.log(`Relay is on cooldown. Try again in ${Math.ceil((10000 - (now - lastRelayTime)) / 1000)}s`);
+        return;
+      }
+
+      lastRelayTime = now;
+
+      fetch(`${lockAPI}?endpoint=/relay&lock=${lockNumber}&action=unlock`)
+        .then(response => response.text())
+        .then(data => console.log(`ESP [Relay ${lockNumber}] triggered:`, data))
+        .catch(err => console.error("ESP connection failed:", err));
+    }
     // 🔹 Toggle button click
     toggleBtn.addEventListener('click', () => {
       if (!scanning) {

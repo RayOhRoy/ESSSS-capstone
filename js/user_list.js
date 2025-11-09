@@ -28,6 +28,8 @@ function loadAdminPage(page) {
         filterByDate();
       } else if (page === 'physical_storage.php') {
         initPhysicalStorage();
+      } else if (page === 'report.php') {
+        initReportFilter();
       } else if (cleanPage === 'project.php') {
         initBackButton();
         initImageModal();
@@ -36,6 +38,7 @@ function loadAdminPage(page) {
         initQRFormToggles();
       } else if (cleanPage === 'edit_project.php') {
         setTimeout(() => {
+          initDeleteProjectButton() 
           initializeEditForm();
           initeditBackButton();
         }, 0);
@@ -562,3 +565,28 @@ function initUserListHandlers() {
     }
   });
 }
+
+$(document).ready(function() {
+    $('#reportType').select2();
+    $('#reportProject').select2();
+
+    $('#reportType').on('change', function() {
+        const selectedType = $(this).val();
+
+        // Clear and show loading state
+        $('#reportProject').html('<option>Loading...</option>');
+
+        // Fetch filtered projects
+        $.ajax({
+            url: 'model/get_projectbytype.php',
+            method: 'GET',
+            data: { type: selectedType },
+            success: function(data) {
+                $('#reportProject').html(data);
+            },
+            error: function() {
+                $('#reportProject').html('<option>Error loading projects</option>');
+            }
+        });
+    });
+});

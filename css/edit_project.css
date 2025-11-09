@@ -469,6 +469,17 @@ input[type="checkbox"]:checked::after {
     margin-top: 2vh;
 }
 
+#update-delete-btn {
+    width: 50%;
+    padding: 1.11vh 0.83vw;
+    background-color: #000000;
+    color: #fff;
+    border: none;
+    border-radius: 0.26vw;
+    cursor: pointer;
+    margin-top: 2vh;
+}
+
 .btn-gray {
     background-color: gray !important;
 }
