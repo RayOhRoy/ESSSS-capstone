@@ -1,14 +1,16 @@
 <?php
-ob_start();          // start output buffering
-ini_set('display_errors', 0);
-error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
+ob_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+header('Content-Type: application/json');
 session_start();
+
 include '../server/server.php';
 include 'phpqrcode/qrlib.php';
-header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die(json_encode(['status' => 'error', 'message' => 'POST required']));
+}
 
 date_default_timezone_set("Asia/Manila");
 
@@ -34,126 +36,141 @@ $barangay = mysqli_real_escape_string($conn, $_POST['barangay']);
 $street = mysqli_real_escape_string($conn, $_POST['address']);
 
 // Fetch AddressID
-$sqlAddr = "SELECT AddressID FROM project WHERE ProjectID = '$projectID'";
-$resAddr = $conn->query($sqlAddr);
-if (!$resAddr || $resAddr->num_rows == 0)
+$resAddr = $conn->query("SELECT AddressID FROM project WHERE ProjectID='$projectID'");
+if (!$resAddr || $resAddr->num_rows == 0) {
     die(json_encode(['status' => 'error', 'message' => 'Project not found']));
+}
 $addressID = $resAddr->fetch_assoc()['AddressID'];
 
 // Update address
 $conn->query("UPDATE address 
-              SET Province='$province', Municipality='$municipality', Barangay='$barangay', Address='$street'
-              WHERE AddressID='$addressID'");
+    SET Province='$province', Municipality='$municipality', Barangay='$barangay', Address='$street'
+    WHERE AddressID='$addressID'");
 
 // Update project
 $conn->query("UPDATE project 
-              SET LotNo='$lotNo', ClientFName='$fname', ClientLName='$lname', SurveyType='$surveyType',
-                  SurveyStartDate='$startDate', SurveyEndDate='$endDate', Agent='$agent', 
-                  RequestType='$requestType', ProjectStatus='$projectStatus', 
-                  Approval=" . ($approval !== null ? "'$approval'" : "NULL") . " 
-              WHERE ProjectID='$projectID'");
+    SET LotNo='$lotNo', ClientFName='$fname', ClientLName='$lname', SurveyType='$surveyType',
+        SurveyStartDate='$startDate', SurveyEndDate='$endDate', Agent='$agent', 
+        RequestType='$requestType', ProjectStatus='$projectStatus', 
+        Approval=" . ($approval !== null ? "'$approval'" : "NULL") . "
+    WHERE ProjectID='$projectID'");
 
-// ✅ Create main activity log
-$resLastAct = $conn->query("SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1");
-
-if ($resLastAct && $resLastAct->num_rows > 0) {
-    $lastRow = $resLastAct->fetch_assoc();
-    $lastNum = intval(substr($lastRow['ActivityLogID'], 4)) + 1;
-    $newActNum = str_pad($lastNum, 5, "0", STR_PAD_LEFT);
-} else {
-    $newActNum = "00001";
+// --------------------
+// Activity Log Helper
+// --------------------
+function generateActivityLogId($conn) {
+    $res = $conn->query("SELECT ActivityLogID FROM activity_log ORDER BY ActivityLogID DESC LIMIT 1");
+    if ($res && $res->num_rows > 0) {
+        $last = $res->fetch_assoc();
+        $lastNum = intval(substr($last['ActivityLogID'], 4)) + 1;
+    } else {
+        $lastNum = 1;
+    }
+    return "ACT-" . str_pad($lastNum, 5, "0", STR_PAD_LEFT);
 }
 
-$activityLogID = "ACT-" . $newActNum;
+// Insert main MODIFIED log for project
+$activityLogID = generateActivityLogId($conn);
+$conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
+              VALUES ('$activityLogID', '$projectID', 'MODIFIED', '$employeeID', '$timeNow')");
 
-$conn->query("
-    INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
-    VALUES ('$activityLogID', '$projectID', 'MODIFIED', '$employeeID', '$timeNow')
-");
-
-// Base upload folder
+// --------------------
+// Document Handling
+// --------------------
 $uploadBase = __DIR__ . '/../uploads/';
 $baseProjectID = preg_replace('/-[A-Z]{3}$/', '', $projectID);
 $projectFolder = $uploadBase . $baseProjectID;
-if (!is_dir($projectFolder))
-    mkdir($projectFolder, 0777, true);
+if (!is_dir($projectFolder)) mkdir($projectFolder, 0777, true);
 
 $updatedDocs = [];
 
-// --------------------------
-// Document handling
-// --------------------------
 foreach ($_POST as $key => $value) {
-    if (!preg_match('/^(physical|digital)_(.+)$/', $key, $matches))
-        continue;
+    if (!preg_match('/^(physical|digital)_(.+)$/', $key, $matches)) continue;
 
-    $type = $matches[1]; // "physical" or "digital"
-    $docKey = $matches[2]; // e.g., "cad_file"
+    $type = $matches[1]; // physical/digital
+    $docKey = $matches[2];
     $docType = ucwords(str_replace("_", " ", $docKey));
-    if (strcasecmp($docType, 'Cad File') === 0)
-        $docType = 'CAD File';
+    if (strcasecmp($docType, 'Cad File') === 0) $docType = 'CAD File';
     $safeDocName = str_replace(" ", "-", $docType);
 
-    $physicalChecked = isset($_POST["physical_$docKey"]);
+    $physicalState = strtolower($_POST["physical_$docKey"] ?? 'off');
+    $digitalValue = $_POST["digital_$docKey"] ?? '';
     $digitalFile = $_FILES["digital_$docKey"] ?? null;
-    $hasDigital = $digitalFile && $digitalFile['error'] === UPLOAD_ERR_OK;
+    $hasNewDigital = $digitalFile && $digitalFile['error'] === UPLOAD_ERR_OK;
 
-    // Fetch existing document
-    $resDoc = $conn->query("SELECT DocumentID, DigitalLocation, DocumentStatus FROM document WHERE ProjectID='$projectID' AND DocumentType='$docType'");
+    // Existing document
+    $resDoc = $conn->query("SELECT * FROM document WHERE ProjectID='$projectID' AND DocumentType='$docType'");
     $existingDoc = $resDoc && $resDoc->num_rows > 0 ? $resDoc->fetch_assoc() : null;
 
-    // Delete row if both physical and digital empty
-    if (!$physicalChecked && !$hasDigital && $existingDoc) {
+    // CASE 1: Delete doc (physical off + no digital)
+    if ($physicalState === 'off' && empty($digitalValue) && !$hasNewDigital && $existingDoc) {
+        if (!empty($existingDoc['DigitalLocation'])) {
+            $absPath = str_replace('../', __DIR__ . '/../', $existingDoc['DigitalLocation']);
+            if (file_exists($absPath)) unlink($absPath);
+        }
         $conn->query("DELETE FROM document WHERE DocumentID='{$existingDoc['DocumentID']}'");
-        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
-                      VALUES ('$activityLogID', '$projectID', 'DELETED', '$employeeID', '$timeNow')");
+
+        $newActID = generateActivityLogId($conn);
+        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time)
+                      VALUES ('$newActID', '$projectID', '{$existingDoc['DocumentID']}', 'DELETED', '$employeeID', '$timeNow')");
         continue;
     }
 
-    // Update DocumentStatus to NULL if physical unchecked
-    if ($existingDoc && !$physicalChecked) {
-        $conn->query("UPDATE document 
-                      SET DocumentStatus=NULL 
-                      WHERE DocumentID='{$existingDoc['DocumentID']}'");
-        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
-                      VALUES ('$activityLogID', '$projectID', 'STATUS CLEARED', '$employeeID', '$timeNow')");
+    // CASE 2: Physical off only
+    if ($existingDoc && $physicalState === 'off' && (!empty($digitalValue) || $existingDoc['DigitalLocation'])) {
+        $conn->query("UPDATE document SET DocumentStatus=NULL WHERE DocumentID='{$existingDoc['DocumentID']}'");
+
+        $newActID = generateActivityLogId($conn);
+        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time)
+                      VALUES ('$newActID', '$projectID', '{$existingDoc['DocumentID']}', 'MODIFIED', '$employeeID', '$timeNow')");
     }
 
-    // Create new document if doesn't exist
-    if (!$existingDoc && ($physicalChecked || $hasDigital)) {
+    // CASE 3: Digital removed only
+    if ($existingDoc && $physicalState === 'on' && empty($digitalValue) && !$hasNewDigital) {
+        if (!empty($existingDoc['DigitalLocation'])) {
+            $absPath = str_replace('../', __DIR__ . '/../', $existingDoc['DigitalLocation']);
+            if (file_exists($absPath)) unlink($absPath);
+        }
+        $conn->query("UPDATE document SET DigitalLocation=NULL WHERE DocumentID='{$existingDoc['DocumentID']}'");
+
+        $newActID = generateActivityLogId($conn);
+        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time)
+                      VALUES ('$newActID', '$projectID', '{$existingDoc['DocumentID']}', 'MODIFIED', '$employeeID', '$timeNow')");
+    }
+
+    // CASE 4: Create new document
+    if (!$existingDoc && ($physicalState === 'on' || $hasNewDigital)) {
         $resLastDoc = $conn->query("SELECT DocumentID FROM document ORDER BY DocumentID DESC LIMIT 1");
         $newDocNum = ($resLastDoc && $resLastDoc->num_rows > 0)
             ? str_pad(intval(substr($resLastDoc->fetch_assoc()['DocumentID'], 4)) + 1, 5, "0", STR_PAD_LEFT)
             : "00001";
         $documentID = "DOC-" . $newDocNum;
         $documentName = "$projectID-$safeDocName";
-        $statusToInsert = $physicalChecked ? 'Stored' : null;
+        $statusToInsert = ($physicalState === 'on') ? 'Stored' : null;
 
         $docFolder = "$projectFolder/$safeDocName";
-        if (!is_dir($docFolder))
-            mkdir($docFolder, 0777, true);
+        if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
 
-        // QR file
         $qrFile = "{$baseProjectID}-{$safeDocName}-QR.png";
         $qrPath = "$docFolder/$qrFile";
         $qrData = "uploads/$baseProjectID/$safeDocName";
         QRcode::png($qrData, $qrPath, QR_ECLEVEL_L, 4);
-
         $qrLocation = "uploads/$baseProjectID/$safeDocName/$qrFile";
 
         $conn->query("INSERT INTO document (DocumentID, ProjectID, DocumentName, DocumentType, DocumentStatus, DocumentQR)
-                      VALUES ('$documentID', '$projectID', '$documentName', '$docType', " . ($statusToInsert !== null ? "'$statusToInsert'" : "NULL") . ", '$qrLocation')");
+                      VALUES ('$documentID', '$projectID', '$documentName', '$docType', " . ($statusToInsert ? "'$statusToInsert'" : "NULL") . ", '$qrLocation')");
 
-        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
-                      VALUES ('$activityLogID', '$projectID', 'UPLOADED', '$employeeID', '$timeNow')");
-        $existingDoc = ['DocumentID' => $documentID, 'DocumentQR' => $qrLocation]; // for later
+        $newActID = generateActivityLogId($conn);
+        $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time)
+                      VALUES ('$newActID', '$projectID', '$documentID', 'UPLOADED', '$employeeID', '$timeNow')");
+
+        $existingDoc = ['DocumentID' => $documentID, 'DocumentQR' => $qrLocation];
     }
 
-    // Handle digital upload
-    if ($hasDigital) {
+    // CASE 5: New digital upload
+    if ($hasNewDigital) {
         $docFolder = "$projectFolder/$safeDocName";
-        if (!is_dir($docFolder))
-            mkdir($docFolder, 0777, true);
+        if (!is_dir($docFolder)) mkdir($docFolder, 0777, true);
 
         $ext = pathinfo($digitalFile['name'], PATHINFO_EXTENSION);
         $newName = "$safeDocName.$ext";
@@ -161,23 +178,24 @@ foreach ($_POST as $key => $value) {
 
         if (move_uploaded_file($digitalFile['tmp_name'], $destPath)) {
             $digitalLocation = "../uploads/$baseProjectID/$safeDocName/$newName";
-            $conn->query("UPDATE document SET DigitalLocation='$digitalLocation' WHERE ProjectID='$projectID' AND DocumentType='$docType'");
+            $conn->query("UPDATE document SET DigitalLocation='$digitalLocation' 
+                          WHERE ProjectID='$projectID' AND DocumentType='$docType'");
 
-            if ($existingDoc) {
-                $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, Status, EmployeeID, Time)
-                              VALUES ('$activityLogID', '$projectID', 'UPLOADED', '$employeeID', '$timeNow')");
-            }
+            $newActID = generateActivityLogId($conn);
+            $conn->query("INSERT INTO activity_log (ActivityLogID, ProjectID, DocumentID, Status, EmployeeID, Time)
+                          VALUES ('$newActID', '$projectID', '{$existingDoc['DocumentID']}', 'MODIFIED', '$employeeID', '$timeNow')");
         }
     }
 
-    $updatedDocs[] = [
-        'DocumentType' => $docType,
-        'DigitalLocation' => $digitalLocation ?? $existingDoc['DigitalLocation'] ?? null,
-        'DocumentStatus' => $physicalChecked ? 'Stored' : null,
-        'DocumentQR' => $existingDoc['DocumentQR'] ?? null
-    ];
+    // JSON response array
+    $resUpdated = $conn->query("SELECT DocumentType, DigitalLocation, DocumentStatus, DocumentQR, DocumentID 
+                                FROM document WHERE ProjectID='$projectID' AND DocumentType='$docType'");
+    if ($resUpdated && $resUpdated->num_rows > 0) {
+        $updatedDocs[] = $resUpdated->fetch_assoc();
+    }
 }
 
 ob_clean();
-echo json_encode(['status' => 'success', 'message' => 'Test']);
+echo json_encode(['status' => 'success', 'updatedDocs' => $updatedDocs]);
 exit;
+?>

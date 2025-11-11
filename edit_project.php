@@ -409,7 +409,7 @@ while ($docRow = $docResult->fetch_assoc()) {
                 onclick="printProjectQRCodes('<?= $projectId ?>')">Print QR</button>
             <button type="button" id="update-save-btn" class="btn-red" style="display:none;">Save Changes</button>
             <button type="button" id="update-edit-btn" class="btn-red" onclick="toggleEditSave(event)">Edit</button>
-            <button type="button" id="update-delete-btn" class="btn-red">Delete Project</button>
+            <button type="button" id="update-delete-btn" class="btn-red"><i class="fa fa-trash"></i></button>
         </div>
     </form>
 </div>

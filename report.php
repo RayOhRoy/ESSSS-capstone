@@ -101,13 +101,13 @@ $projectQuery = $conn->query("SELECT ProjectID FROM project ORDER BY ProjectID A
 
 <p class="note1">Enter a description below.</p>
 
+<!-- Report Form -->
 <form id="reportForm" enctype="multipart/form-data">
     <textarea id="reportDescription" name="report_description" placeholder="Enter report description here..."></textarea>
+    <div class="report-buttons">
+        <button type="submit" id="generateReportBtn">Generate Report</button>
+    </div>
 </form>
-
-<div class="report-buttons">
-    <button type="submit" id="generateReportBtn">Generate Report</button>
-</div>
 
 <?php if($jobPosition !== 'CAD Operator' && $jobPosition !== 'Compliance Officer'): ?>
 <span class="result">Reports</span>

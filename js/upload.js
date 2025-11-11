@@ -165,16 +165,19 @@ function submitForm() {
         printBtn.addEventListener("click", () => {
           const qrImages = [];
 
+          // 🔹 Use projectId for the main project QR label
           const projectQR = document.getElementById("projectQRImg");
           if (projectQR) {
-            qrImages.push({ src: projectQR.src, label: projectId });
+          qrImages.push({ src: projectQR.src, label: "Project QR (" + projectId + ")" });
           }
 
+          // 🔹 For document QRs: show "DocumentName (ProjectID)"
           document.querySelectorAll(".doc-qr-img").forEach(img => {
-            const docLabel = img.dataset.docname || ""; // current label
+            const docLabel = img.dataset.docname || "";
+            const labelText = `${docLabel} (${projectId})`;
             qrImages.push({
               src: img.src,
-              label: projectId + " " + docLabel // prepend projectId to document label
+              label: labelText
             });
           });
 
@@ -183,15 +186,17 @@ function submitForm() {
             return;
           }
 
+          // 🔹 Generate QR grid HTML
           let qrGridHTML = "";
           qrImages.forEach(qr => {
             qrGridHTML += `
-              <div class="qr-block">
-                <img src="${qr.src}" alt="QR Code">
-                <div class="label">${qr.label}</div>
-              </div>
-            `;
+            <div class="qr-block">
+              <img src="${qr.src}" alt="QR Code">
+              <div class="label">${qr.label}</div>
+            </div>
+          `;
           });
+
 
           const printHTML = `
             <html>

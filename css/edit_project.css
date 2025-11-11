@@ -470,7 +470,6 @@ input[type="checkbox"]:checked::after {
 }
 
 #update-delete-btn {
-    width: 50%;
     padding: 1.11vh 0.83vw;
     background-color: #000000;
     color: #fff;
@@ -495,7 +494,6 @@ input[type="checkbox"]:checked::after {
 
 .hidden-file {
     display: none;
-
 }
 
 .remove-icon {
@@ -579,6 +577,9 @@ input[type="checkbox"]:checked::after {
         margin-top: 30px;
     }
 
+    #update-delete-btn {
+        width: 10%;
+    }
 
     .form-row label {
         width: 240px;

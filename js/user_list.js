@@ -30,6 +30,7 @@ function loadAdminPage(page) {
         initPhysicalStorage();
       } else if (page === 'report.php') {
         initReportFilter();
+        reportForm();
       } else if (cleanPage === 'project.php') {
         initBackButton();
         initImageModal();
@@ -204,6 +205,7 @@ function initPreviewModal() {
       if (details) details.innerHTML = '<p>Loading project details...</p>';
       if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Loading documents...</td></tr>';
 
+      
       // Fetch project info from server
       fetch('model/get_project_info.php', {
         method: 'POST',

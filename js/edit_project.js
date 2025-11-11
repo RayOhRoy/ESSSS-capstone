@@ -406,6 +406,30 @@ async function saveChanges() {
 
   const formData = new FormData(form);
 
+  // 🧩 Include all physical checkboxes, even if unchecked
+  form.querySelectorAll('input[type="checkbox"][name^="physical_"]').forEach(cb => {
+    const fieldName = cb.name; // e.g. physical_lotplan
+    const value = cb.checked ? 'on' : 'off';
+    formData.set(fieldName, value);
+  });
+
+
+  // 🔹 Include digital document names even if no new file is uploaded
+  form.querySelectorAll('.document-table tr').forEach(row => {
+    const key = row.dataset.docid || ''; // or use your dataset if needed
+    const fileInput = row.querySelector('input[type="file"][name^="digital_"]');
+    const fileSpan = row.querySelector('.existing-file');
+
+    if (fileInput) {
+      const fieldName = fileInput.name; // e.g. digital_lotplan
+
+      // If no new file selected but an existing file is displayed
+      if ((!fileInput.files || fileInput.files.length === 0) && fileSpan && fileSpan.textContent.trim() !== '') {
+        formData.set(fieldName, fileSpan.textContent.trim()); // store existing filename
+      }
+    }
+  });
+
   // Ensure projectId is included
   const projectIdInput = document.getElementById('projectId');
   if (!projectIdInput || !projectIdInput.value) {
@@ -416,7 +440,9 @@ async function saveChanges() {
     }
     return;
   }
-  formData.set('projectId', projectIdInput.value);
+  
+  const projectId = projectIdInput.value; // ✅ use the value, not the element
+  formData.set('projectId', projectId);
 
   // --- Handle document table rows safely
   document.querySelectorAll('.document-table tr').forEach(row => {
@@ -424,7 +450,6 @@ async function saveChanges() {
     if (!docId) return;
 
     const fileInput = row.querySelector('input[type="file"]');
-    const fileSpan = row.querySelector('.existing-file');
     const cb = row.querySelector('input[type="checkbox"]');
 
     // 1️⃣ Deleted files
@@ -443,6 +468,16 @@ async function saveChanges() {
     }
   });
 
+  // 🧩 DEBUG: Log everything being sent to PHP
+  console.log("📦 Data being sent to PHP:");
+  for (const [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      console.log(`→ ${key}: [File] name="${value.name}", size=${value.size} bytes`);
+    } else {
+      console.log(`→ ${key}: ${value}`);
+    }
+  }
+
   try {
     const res = await fetch('model/update_project.php', {
       method: 'POST',
@@ -451,7 +486,17 @@ async function saveChanges() {
 
     if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
 
-    const data = await res.json();
+    const text = await res.text();
+    console.log('Raw server response:', text);
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error('JSON parse failed:', err);
+      alert('Server returned invalid JSON. Check console for details.');
+      return;
+    }
+
     console.log('Server response:', data);
 
     if (data.status === 'success') {
@@ -486,12 +531,10 @@ async function saveChanges() {
         });
       }
 
-      // Update JS copy of original values
       storeCurrentValues();
-
-      // Exit edit mode
       finalizeViewMode(false);
 
+      loadAdminPage('project.php?projectId=' + encodeURIComponent(projectId));
     } else {
       alert('Error: ' + (data.message || 'Unknown error'));
     }
@@ -998,11 +1041,11 @@ function printProjectQRCodes(projectId, projectQR = null) {
       function printQR(selectedDocs, projectQRCode) {
         const qrImages = [];
         if (projectQRCode) {
-          qrImages.push({ src: projectQRCode, label: "Project QR" });
+          qrImages.push({ src: projectQRCode, label: projectId });
         }
         selectedDocs.forEach(doc => {
           if (doc.DocumentQR) {
-            const labelText = doc.DocumentType === "Project QR"
+            const labelText = doc.DocumentType === projectId
               ? doc.DocumentType
               : `${doc.DocumentType} (${projectId})`;
             qrImages.push({ src: doc.DocumentQR, label: labelText });
@@ -1224,8 +1267,8 @@ function showAlertModal(message, type = "info") {
 
   const color =
     type === "success" ? "#13572fff" :
-    type === "error" ? "#e74c3c" :
-    "#3498db";
+      type === "error" ? "#e74c3c" :
+        "#3498db";
 
   modal.innerHTML = `
     <div class="custom-modal-content" style="

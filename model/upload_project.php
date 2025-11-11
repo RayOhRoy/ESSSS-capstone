@@ -3,8 +3,6 @@ session_start();
 include '../server/server.php';
 include 'phpqrcode/qrlib.php';
 header('Content-Type: application/json');
-if ($_SERVER['REQUEST_METHOD'] !== 'POST')
-    die(json_encode(['status' => 'error', 'message' => 'POST required']));
 
 date_default_timezone_set("Asia/Manila");
 

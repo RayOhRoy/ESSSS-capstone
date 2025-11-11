@@ -77,7 +77,7 @@ $released_documents = $conn->query("SELECT COUNT(*) as total FROM document WHERE
 
 // Stats array
 $stats = [
-    ["label" => "TOTAL PROJECTS", "value" => $total_projects, "icon" => "folder.png", "text" => "PROJECTS"],
+    ["label" => "TOTAL PROJECTS", "value" => $total_projects, "icon" => "Folder.png", "text" => "PROJECTS"],
     ["label" => "TOTAL PHYSICAL DOCUMENTS", "value" => $total_documents, "icon" => "File text.png", "text" => "PHYSICAL DOCUMENTS"],
     ["label" => "TOTAL DIGITAL DOCUMENTS", "value" => $total_digital, "icon" => "Database.png", "text" => "DIGITAL DOCUMENTS"],
     ["label" => "TOTAL RETRIEVED DOCUMENTS", "value" => $released_documents, "icon" => "Box.png", "text" => "RETRIEVED DOCUMENTS"]
