@@ -348,9 +348,8 @@ function showRelayModal(message, buttonAction, projectIdBase) {
     if (!modal) {
         modal = document.createElement("div");
         modal.id = "relayModal";
-       modal.innerHTML = `
+        modal.innerHTML = `
     <style>
-        /* Default modal style */
         #relayModal {
             position: fixed;
             top: 0;
@@ -363,16 +362,13 @@ function showRelayModal(message, buttonAction, projectIdBase) {
             background: rgba(0,0,0,0.5);
             z-index: 9999;
         }
-
-       .relay-modal-content {
-    background: white;
-    padding: 20px 30px;
-    border-radius: 12px;
-    width: 90%; /* controls overall size */
-    text-align: center;
-}
-
-
+        .relay-modal-content {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            width: 90%;
+            text-align: center;
+        }
         #closeRelayModal {
             margin-top: 15px;
             padding: 10px 20px;
@@ -382,33 +378,28 @@ function showRelayModal(message, buttonAction, projectIdBase) {
             border-radius: 8px;
             cursor: pointer;
         }
-            #relayFeedback {
-              margin-top:10px; 
-              color:#d33; 
-              font-size:14px;
+        #relayFeedback {
+            margin-top: 10px; 
+            color: #d33; 
+            font-size: 14px;
+        }
+        @media screen and (max-width: 1080px) and (max-height: 2460px) {
+            .relay-modal-content {
+                width: 90vw;
+                padding: 60px 40px;
+                border-radius: 16px;
+                font-size: 1.2rem;
             }
-
-    @media screen and (max-width: 1080px) and (max-height: 2460px) {
-     .relay-modal-content {
-        width: 90vw;       /* 90% of the viewport width */
-        max-width: none;   /* remove any max-width restriction */
-        padding: 60px 40px;
-        border-radius: 16px;
-        font-size: 1.2rem;
-    }
-
             #relayModalMsg {
                 font-size: 3.2rem;
             }
             #relayModalMsg .relay-subtext {
-             font-size: 2.2rem;
+                font-size: 2.2rem;
             }
-
             #relayFeedback {
                 font-size: 3rem;
                 margin-top: 15px;
             }
-
             #closeRelayModal {
                 padding: 15px 25px;
                 font-size: 2.5rem;
@@ -419,10 +410,10 @@ function showRelayModal(message, buttonAction, projectIdBase) {
     <div class="relay-modal-content">
         <p id="relayModalMsg"></p>
         <input type="text" id="relayHiddenInput" style="position:absolute; opacity:0; pointer-events:none;" />
-        <div id="relayFeedback" ></div>
+        <div id="relayFeedback"></div>
         <button id="closeRelayModal">CANCEL</button>
     </div>
-`;
+    `;
         document.body.appendChild(modal);
     }
 
@@ -465,53 +456,23 @@ function showRelayModal(message, buttonAction, projectIdBase) {
                 const data = await res.json();
 
                 if (data.success) {
-                    // 🟢 Stop scanning and clear old message
                     clearInterval(window.relayFocusInterval);
                     hiddenInput.blur();
-
-                    relayMsg.textContent = ""; // ⬅️ Remove “HAG-01 is now open” + scan instructions
+                    relayMsg.textContent = "";
                     feedback.style.color = "green";
-                    feedback.textContent = `Project status updated to "${data.newStatus}". Close the cabinet to proceed.`;
+                    feedback.textContent = `Project status updated to "${data.newStatus}".`;
 
-                    // Remove cancel button & outside click close
-                    const cancelBtn = document.getElementById("closeRelayModal");
-                    if (cancelBtn) cancelBtn.remove();
-                    modal.onclick = null;
-
-                    // 🧠 Poll ESP32 to detect when cabinet is re-locked
-                    const cabinetName = projectIdBase.split("-").slice(0, 2).join("-");
-                    const targetLockKey = cabinetName === "HAG-01" ? "lock1"
-                        : cabinetName === "CAL-01" ? "lock2" : null;
-
-                    if (targetLockKey) {
-                        const lockAPI = "https://essss-centralized-dms.com/model/lockapi.php";
-                        const checkLockInterval = setInterval(async () => {
-                            try {
-                                const response = await fetch(`${lockAPI}?endpoint=/status&ts=${Date.now()}`);
-                                if (!res.ok) throw new Error("ESP fetch failed");
-                                const espData = await res.json();
-
-                                if (espData[targetLockKey] === true) {
-                                    clearInterval(checkLockInterval);
-                                    closeModal();
-
-                                    // Update button label dynamically
-                                    const btns = document.querySelectorAll(".envelope-button");
-                                    btns.forEach(btn => {
-                                        const card = btn.closest(".envelope-card");
-                                        if (card && card.dataset.projectid.startsWith(projectIdBase)) {
-                                            btn.textContent =
-                                                data.newStatus.toLowerCase() === "stored"
-                                                    ? "RETRIEVE"
-                                                    : "STORE";
-                                        }
-                                    });
-                                }
-                            } catch (err) {
-                                console.error("ESP check error:", err);
-                            }
-                        }, 1000);
-                    }
+                    // Update button label dynamically
+                    const btns = document.querySelectorAll(".envelope-button");
+                    btns.forEach(btn => {
+                        const card = btn.closest(".envelope-card");
+                        if (card && card.dataset.projectid.startsWith(projectIdBase)) {
+                            btn.textContent =
+                                data.newStatus.toLowerCase() === "stored"
+                                    ? "RETRIEVE"
+                                    : "STORE";
+                        }
+                    });
 
                 } else {
                     feedback.style.color = "#d33";

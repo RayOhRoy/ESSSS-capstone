@@ -1,14 +1,14 @@
 <link rel="stylesheet" href="css/search.css">
 
-<?php 
-session_start(); 
-include 'server/server.php'; 
+<?php
+session_start();
+include 'server/server.php';
 
-$employeeID = $_SESSION['employeeid'] ?? null; 
-$empFName = ''; 
-$empLName = ''; 
-$jobPosition = ''; 
-$empEmail = ''; 
+$employeeID = $_SESSION['employeeid'] ?? null;
+$empFName = '';
+$empLName = '';
+$jobPosition = '';
+$empEmail = '';
 
 if ($employeeID) {
     $stmt = $conn->prepare("SELECT EmpFName, EmpLName, JobPosition, Email FROM employee WHERE EmployeeID = ?");
@@ -71,7 +71,7 @@ $projectQuery = $conn->query("SELECT ProjectID FROM project ORDER BY ProjectID A
 
 <div class="search-dropdown">
     <select id="reportType" name="report_type">
-        <option value="">Select Report Type</option>
+        <option value="">Select Document Type</option>
         <option value="Project">Project</option>
         <option value="Original Plan">Original Plan</option>
         <option value="Title">Title</option>
@@ -90,8 +90,8 @@ $projectQuery = $conn->query("SELECT ProjectID FROM project ORDER BY ProjectID A
 
 <div class="search-dropdown">
     <select id="reportProject" name="project_id">
-        <option value="">Search Project Name...</option>
-        <?php while($p = $projectQuery->fetch_assoc()): ?>
+        <option value="">Search Project Name</option>
+        <?php while ($p = $projectQuery->fetch_assoc()): ?>
             <option value="<?= htmlspecialchars($p['ProjectID']) ?>">
                 <?= htmlspecialchars($p['ProjectID']) ?>
             </option>
@@ -103,15 +103,25 @@ $projectQuery = $conn->query("SELECT ProjectID FROM project ORDER BY ProjectID A
 
 <!-- Report Form -->
 <form id="reportForm" enctype="multipart/form-data">
-    <textarea id="reportDescription" name="report_description" placeholder="Enter report description here..."></textarea>
+    <textarea id="reportDescription" name="report_description"
+        placeholder="Enter report description here..."></textarea>
     <div class="report-buttons">
         <button type="submit" id="generateReportBtn">Generate Report</button>
     </div>
 </form>
 
-<?php if($jobPosition !== 'CAD Operator' && $jobPosition !== 'Compliance Officer'): ?>
-<span class="result">Reports</span>
-<div id="liveResults">
-    <p>Type a description to begin...</p>
-</div>
+<?php if ($jobPosition !== 'CAD Operator' && $jobPosition !== 'Compliance Officer'): ?>
+
+    <div class="search-dropdown">
+        <span class="result">Reports</span>
+        <select id="reportStatus">
+            <option value="">Select Report Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="RESOLVED">Resolved</option>
+        </select>
+    </div>
+
+    <div id="liveResults">
+
+    </div>
 <?php endif; ?>

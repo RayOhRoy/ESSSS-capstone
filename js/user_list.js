@@ -31,6 +31,8 @@ function loadAdminPage(page) {
       } else if (page === 'report.php') {
         initReportFilter();
         reportForm();
+        initReportStatusFilter();
+        loadReports();
       } else if (cleanPage === 'project.php') {
         initBackButton();
         initImageModal();
@@ -39,7 +41,7 @@ function loadAdminPage(page) {
         initQRFormToggles();
       } else if (cleanPage === 'edit_project.php') {
         setTimeout(() => {
-          initDeleteProjectButton() 
+          initDeleteProjectButton()
           initializeEditForm();
           initeditBackButton();
         }, 0);
@@ -205,7 +207,7 @@ function initPreviewModal() {
       if (details) details.innerHTML = '<p>Loading project details...</p>';
       if (docTableBody) docTableBody.innerHTML = '<tr><td colspan="3">Loading documents...</td></tr>';
 
-      
+
       // Fetch project info from server
       fetch('model/get_project_info.php', {
         method: 'POST',
@@ -568,27 +570,27 @@ function initUserListHandlers() {
   });
 }
 
-$(document).ready(function() {
-    $('#reportType').select2();
-    $('#reportProject').select2();
+$(document).ready(function () {
+  $('#reportType').select2();
+  $('#reportProject').select2();
 
-    $('#reportType').on('change', function() {
-        const selectedType = $(this).val();
+  $('#reportType').on('change', function () {
+    const selectedType = $(this).val();
 
-        // Clear and show loading state
-        $('#reportProject').html('<option>Loading...</option>');
+    // Clear and show loading state
+    $('#reportProject').html('<option>Loading...</option>');
 
-        // Fetch filtered projects
-        $.ajax({
-            url: 'model/get_projectbytype.php',
-            method: 'GET',
-            data: { type: selectedType },
-            success: function(data) {
-                $('#reportProject').html(data);
-            },
-            error: function() {
-                $('#reportProject').html('<option>Error loading projects</option>');
-            }
-        });
+    // Fetch filtered projects
+    $.ajax({
+      url: 'model/get_projectbytype.php',
+      method: 'GET',
+      data: { type: selectedType },
+      success: function (data) {
+        $('#reportProject').html(data);
+      },
+      error: function () {
+        $('#reportProject').html('<option>Error loading projects</option>');
+      }
     });
+  });
 });

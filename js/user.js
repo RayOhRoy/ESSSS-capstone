@@ -5,6 +5,7 @@ function initAdminPage() {
     loadScript('https://cdn.jsdelivr.net/npm/chart.js');
     loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels', 'initDocumentPieChart');
     loadScript('js/upload.js');
+    loadScript('js/report.js');
     loadScript('js/documents.js');
     loadScript('js/project_list.js');
     loadScript('js/qr_search.js');
