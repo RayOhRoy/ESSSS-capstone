@@ -195,7 +195,7 @@ $conn->close();
 
 <div class="mid-section">
     <div class="chart-section">
-        <h3>DOCUMENT TYPE BREAKDOWN</h3>
+        <h3>PROJECT STATUS</h3>
         <canvas class="piechart" id="docPieChart" data-sketch-completed="<?= $chart_data['Sketch Completed'] ?>"
             data-sketch-pending="<?= $chart_data['Sketch Pending'] ?>"
             data-lra-approval-completed="<?= $chart_data['LRA Approval Completed'] ?>"

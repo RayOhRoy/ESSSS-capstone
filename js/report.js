@@ -252,7 +252,7 @@ async function loadReports(filterStatus = "") {
               });
               const result = await response.json();
               if (result.status === "success") {
-                alert(`Report ${r.ReportID} successfully resolved!`);
+                alert(`Report successfully resolved!`);
                 btnContainer.innerHTML = `
               <button disabled style="
                 background-color: #6c757d; 

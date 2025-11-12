@@ -449,6 +449,11 @@ a.menu-item.active {
         padding: 60px;
 
     }
+    .chart-section {
+    flex: 1;
+    
+}
+
 
     .main {
         margin-left: 20px;

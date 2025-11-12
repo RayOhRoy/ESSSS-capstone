@@ -233,8 +233,9 @@ a.signout-button:hover {
 
     .piechart {
         width: 100%;
-        max-width: 35rem;
+        max-width: 60rem;
         align-items: center;
+        margin-left:50px;
     }
 
     .recent-list H3 {
